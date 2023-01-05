@@ -168,7 +168,14 @@ def dryrun_bar(
         if not isinstance(outputs,list):
             outputs = [outputs]
         else:
-            statements = [out['description'] for out in outputs]
+            statements = []
+            for j,out in enumerate(outputs):
+                out['acq_step']=j
+                out['queue_step']=i
+                out['acq_time'] = step[4]
+                out['cummulative_time'] = total_time
+                out['priority'] = step[13]
+                statements.append(out['description'])
             text += ''.join(statements)
         acq_queue.extend(outputs)
         total_time += step[4]
