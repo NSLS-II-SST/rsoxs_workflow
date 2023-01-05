@@ -4,6 +4,8 @@ import numpy as np
 import matplotlib.pyplot as plt
 import math
 from copy import deepcopy
+from .defaults import *
+
 def get_nexafs_scan_params(edge, speed = default_speed, ratios = None, quiet=False,**kwargs):
     """ 
     creates fly NEXAFS scan parameters, given an edge (which includes thresholds for different speed regions) base speed (eV/sec) and speed ratios between the different regions 
