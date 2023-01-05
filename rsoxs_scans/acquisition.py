@@ -11,30 +11,39 @@ from .spirals import dryrun_spiral_plan
 
 
 
-def dryrun_acquisition(acq,sample={}):
+def dryrun_acquisition(acq,sample={},sim_mode=True):
     # runs an acquisition from a sample
+    outputs = []
     # load the configuration
-        #NON SIM #yield from load_configuration(acq['configuration'])
+    outputs.append({'description':f"load configuration {acq['configuration']}\n",'action':'load_configuration','kwargs':{"configuration":acq['configuration']}})
+    # load the sample
+    samp_dict = deepcopy(sample)
+    del samp_dict['acquisitions'] # this becomes weirdly verbose
+    outputs.append({'description':f"load sample {sample['sample_name']}\n",'action':'load_sample','kwargs':{"sample":samp_dict}})
+    
     if acq['configuration']=='WAXS':
         sample.update({'RSoXS_Main_DET':'waxs_det'})
     else:
         sample.update({'RSoXS_Main_DET':'saxs_det'})
-    # load the sample
-        #NON SIM #yield from load_sample(sample)
     if 'type' in acq:
         if acq['type']== 'rsoxs':
-            return dryrun_rsoxs_plan(**acq,md=sample)
+            outputs.extend(dryrun_rsoxs_plan(**acq,md=sample))
+            return outputs
         elif acq['type'] == 'nexafs':
-            return dryrun_nexafs_plan(**acq,md=sample)
+            outputs.extend(dryrun_nexafs_plan(**acq,md=sample))
+            return outputs
         elif acq['type'] == 'spiral':
-            return dryrun_spiral_plan(**acq,md=sample)
-        elif acq['type'] == 'wait':
-            #yield from bps.sleep(acq['edge'])
-            return f"sleep for {acq['edge']} seconds"
+            outputs.extend(dryrun_spiral_plan(**acq,md=sample))
+            return outputs
+        elif acq['type'].lower() in ['wait','sleep','pause']:
+            outputs.append({'description':f"sleep for {acq['edge']} seconds\n",'action':'sleep','kwargs':{"sleep_time":acq['edge']}})
+            return outputs
         else:
-            return f'\n\nError: {acq["type"]} is not valid\n\n'
+            outputs.append({'description':f'\n\nError: {acq["type"]} is not valid\n\n','action':'error'})
+            return outputs
     else:
-        return '\n\nError: no acquisition type specified\n\n'
+        outputs.append({'description':'\n\nError: no acquisition type specified\n\n','action':'error'})
+        return outputs
 
 config_list = [
     'WAXSNEXAFS',
@@ -43,13 +52,22 @@ config_list = [
     'SAXSNEXAFS',
     'SAXS_liquid',
     'WAXS_liquid',]
+
+
+
+
 def time_sec(seconds):
     dt = datetime.timedelta(seconds=seconds)
     return str(dt).split(".")[0]
+
+
+
+
 def dryrun_bar(
     bar,
     sort_by=["sample_num"],
     rev=[False],
+    print_dry_run = True,
 ):
     """
     dry run all sample dictionaries stored in the list bar
@@ -127,6 +145,7 @@ def dryrun_bar(
     text = ""
     total_time = 0
     previous_config = ""
+    acq_queue = []
     for i, step in enumerate(list_out):
         text += f"________________________________________________\nAcquisition # {i} from sample {step[5]['sample_name']}\n\n"
         text += "Summary: load {} from {}, config {}, run {} (p {} a {}), starts @ {} takes {}\n".format(
@@ -145,19 +164,23 @@ def dryrun_bar(
         text += "\n"
         if(step[2] not in config_list ):
             text += "Warning invalid configuration" + step[2]
-        newtext = dryrun_acquisition(step[6],step[5])
-        if isinstance(newtext,list):
-            words = list(chain(*newtext))
-            text += ''.join(words)
+        outputs = dryrun_acquisition(step[6],step[5])
+        if not isinstance(outputs,list):
+            outputs = [outputs]
         else:
-            text += newtext
+            statements = [out['description'] for out in outputs]
+            text += ''.join(statements)
+        acq_queue.extend(outputs)
         total_time += step[4]
         text += "\n________________________________________________\n"
         previous_config = step[2]
     text += (
         f"\n\nTotal estimated time including config changes {time_sec(total_time)}"
     )
-    print( text )
+    if print_dry_run:
+        print( text )
+    
+    return acq_queue
 
     
 def est_scan_time(acq):
@@ -198,6 +221,8 @@ def est_scan_time(acq):
                 total_time *= len(acq['angles'])
                 total_time += 30*len(acq['angles']) # 30 seconds for each angle change
             return total_time
+        elif acq['type'].lower() in ['wait','sleep','pause']:
+            return float(acq['edge'])
         else:
             return 0
     else:

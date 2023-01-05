@@ -123,10 +123,9 @@ def sanatize_angle(samp, force=False):
 
 
 
-def new_en_scan_core_sim(
+def rsoxs_scan_enqueue(
     # this function is very different as it touches a ton of hardware throughout, so I've just taken the validation parts from it here
     dets=None,    # a list of detectors to run at each step - get from md by default
-    lockscan = True, # whether to lock the harmonic and other energy components during a scan
     grating="no change", # what grating to use for this scan
 
     energies=None,# a list of energies to run through in the inner loop
@@ -139,13 +138,12 @@ def new_en_scan_core_sim(
     temperatures=None,       # locations to run as an outer loop  (cycler multiply with previous generally, but optionally add to locations - see next)
 
     temps_with_locations = False, # indicates to move locations and temperatures at the same time, not multiplying exposures (they must be the same length!)
-
-    enscan_type=None,     # optional extra string name to describe this type of scan - will make timing
-    master_plan=None,   # if this is lying within an outer plan, that name can be stored here
-    sim_mode=False,  # if true, check all inputs but do not actually run anything
-    md=None,  # md to pass to the scan
-    **kwargs #extraneous settings from higher level plans are ignored
+    
+    md=None,
+    **kwargs #extraneous settings from higher level plans are just passed along
 ):
+    if md is None:
+        md={}
     if dets is None:
         if md['RSoXS_Main_DET'] == 'waxs_det':
             dets = ['waxs_det']
@@ -159,20 +157,20 @@ def new_en_scan_core_sim(
         polarizations = []
     if locations is None:
         locations = []
-    if temperatures is None:
-        temperatures = []
-    if md is None:
-        md = {}
-    if md is None:
-        md = {}
    
     # validate inputs
     valid = True
     validation = ""
     for det in dets:
-        if det not in ['saxs_det','waxs_det']:
-            valid = False
-            validation += f"invalid detector {det} is given\n"
+        if det == None:
+            if 'RSoXS_Main_DET' in md:
+                if md['RSoXS_Main_DET'] == 'waxs_det':
+                    dets = ['waxs_det']
+                else:
+                    dets = ['saxs_det']
+            else:
+                valid= False
+                validation += "No metadata was passed with detector information\n"
     if len(dets) < 1:
         valid = False
         validation += "No detectors are given\n"
@@ -206,9 +204,10 @@ def new_en_scan_core_sim(
     if min(polarizations) < -1 or max(polarizations) > 180:
         valid = False
         validation += f"a provided polarization is not valid\n"
-    if min(temperatures,default=35) < 20 or max(temperatures,default=35) > 300:
-        valid = False
-        validation += f"temperature out of range\n"
+    if temperatures is not None:
+        if min(temperatures,default=35) < 20 or max(temperatures,default=35) > 300:
+            valid = False
+            validation += f"temperature out of range\n"
     motor_positions=[]
     angles = None
     xs = None
@@ -257,71 +256,71 @@ def new_en_scan_core_sim(
             valid = False
             validation += f"temperatures and locations are different lengths, cannot be simultaneously changed\n"
     retstr = ''
-    if sim_mode:
-        if valid:
-            if len(polarizations) > 1:
-                retstr += f"\n setting {len(polarizations)} polarizations from {np.min(polarizations)} to {np.max(polarizations)}"
-            elif len(polarizations):
-                retstr += f"\n setting polarization to {polarizations[0]}"
-            if angles is not None:
-                if len(angles) > 1:
-                    retstr += f"\n setting {len(list(angles))} angles from {np.min(list(angles))} to {np.max(list(angles))}"
-                    retstr += f", x from {np.min(list(xs))} to {np.max(list(xs))}"
-                    retstr += f", y from {np.min(list(ys))} to {np.max(list(ys))}"
-                    if len(zs):
-                        retstr += f", z from {np.min(list(zs))} to {np.max(list(zs))}"
-                    if len(temzs):
-                        retstr += f", TEMz from {np.min(list(temzs))} to {np.max(list(temzs))}"
-                else:
-                    retstr += f"\n setting angle to {angles}"
-                    retstr += f", x to {xs}"
-                    retstr += f", y to {ys}"
-                    if len(zs):
-                        retstr += f", z to {zs}"
-                    if len(temzs):
-                        retstr += f", and TEMz to {temzs}"
-            if temperatures is not None:
-                if len(temperatures) > 1:
-                    retstr += f"\n setting {len(temperatures)} temperatures from {np.min(temperatures)} to {np.max(temperatures)}"
-                elif len(temperatures):
-                    retstr += f"\n setting temperature to {temperatures}"
-            retstr += f"\n RSoXS scanning {detnames} from {np.min(energies)} eV to {np.max(energies)} eV on the {grating} l/mm grating\n"
-            retstr += f"    in {len(times)} steps with exposure times from {np.min(times)} to {np.max(times)} seconds\n"
-            if repeats > 1:
-                retstr += f"    repeating each exposure {repeats} times\n"
-            return retstr
-        else:
-            return f'\n\n\n\n_______________ERROR_____________________\n\n\n\n{validation}\n\n\n\n'
+    if valid:
+        if len(polarizations) > 1:
+            retstr += f"\n setting {len(polarizations)} polarizations from {np.min(polarizations)} to {np.max(polarizations)}"
+            kwargs['polarizations'] = polarizations
+        elif len(polarizations):
+            retstr += f"\n setting polarization to {polarizations[0]}"
+            kwargs['polarizations'] = polarizations
+        if angles is not None:
+            kwargs['locations'] = locations
+            kwargs['temps_with_locations'] = temps_with_locations
+            if len(angles) > 1:
+                retstr += f"\n setting {len(list(angles))} angles from {np.min(list(angles))} to {np.max(list(angles))}"
+                retstr += f", x from {np.min(list(xs))} to {np.max(list(xs))}"
+                retstr += f", y from {np.min(list(ys))} to {np.max(list(ys))}"
+                if len(zs):
+                    retstr += f", z from {np.min(list(zs))} to {np.max(list(zs))}"
+                if len(temzs):
+                    retstr += f", TEMz from {np.min(list(temzs))} to {np.max(list(temzs))}"
+            else:
+                retstr += f"\n setting angle to {angles}"
+                retstr += f", x to {xs}"
+                retstr += f", y to {ys}"
+                if len(zs):
+                    retstr += f", z to {zs}"
+                if len(temzs):
+                    retstr += f", and TEMz to {temzs}"
+        if temperatures is not None:
+            if len(temperatures) > 1:
+                retstr += f"\n setting {len(temperatures)} temperatures from {np.min(temperatures)} to {np.max(temperatures)}"
+                kwargs['temperatures'] = temperatures
+            elif len(temperatures):
+                retstr += f"\n setting temperature to {temperatures}"
+                kwargs['temperatures'] = temperatures
+        retstr += f"\n RSoXS scanning {detnames} from {np.min(energies)} eV to {np.max(energies)} eV on the {grating} l/mm grating\n"
+        retstr += f"    in {len(times)} steps with exposure times from {np.min(times)} to {np.max(times)} seconds\n"
+        kwargs['times'] = times
+        kwargs['detnames'] = detnames
+        kwargs['energies'] = energies
+        kwargs['grating'] = grating
+        if repeats > 1:
+            retstr += f"    repeating each exposure {repeats} times\n"
+            kwargs['repeats'] = repeats
+        return {'description':retstr,'action':'rsoxs_scan_core','kwargs':kwargs}
+    else:
+        return {'description':f'\n\n\n\n_______________ERROR_____________________\n\n\n\n{validation}\n\n\n\n','action':'error'}
 
 def dryrun_rsoxs_plan(edge, exposure = 1, frames='full', ratios=None,exposure_time=1, repeats =1, polarizations = [0],angles = None,grating='rsoxs',diode_range='high',temperatures=None,temp_ramp_speed=10,temp_wait=True, md=None,**kwargs):
     energies = get_energies(edge,frames,ratios,quiet=1)
     times, time = construct_exposure_times(energies,exposure_time,repeats,quiet=1)
     ret_text = ''
-    sim_mode=True
+    outputs = []
+    
+    # actually set things up
     if isinstance(temperatures,list):
-        if(sim_mode):
-            ret_text += f'setting the temperature ramp rate to{temp_ramp_speed}\n'
-        else:
-            ...
-            #NON-SIM #yield from bps.mv(tem_tempstage.ramp_rate,temp_ramp_speed)
+        outputs.append({'description':f'setting the temperature ramp rate to{temp_ramp_speed}\n',
+                       'action':'move',
+                       'kwargs':{'motor':'temp_ramp_rate','position':temp_ramp_speed}})
+    else:
+        temperatures = None
     if diode_range=='high':
-        if(sim_mode):
-            ret_text += 'set Diode range to high\n'
-        else:
-            ...
-            #NON-SIM #yield from setup_diode_i400()
+        outputs.append({'description':'set Diode range to high\n',
+                       'action':'diode_high'})
     elif diode_range=='low':
-        if(sim_mode):
-            ret_text += 'set Diode range to low\n'
-        else:
-            ...
-            #NON-SIM #yield from High_Gain_diode_i400() 
-    if max(energies) > 1200 and grating == 'rsoxs':
-        if(sim_mode):
-            ret_text += 'energy is not appropriate for this grating\n'
-        else:
-            ...
-            #NON-SIM # raise ValueError('energy is not appropriate for this grating')
+        outputs.append({'description':'set Diode range to low\n',
+                       'action':'diode_low'})
 
     # construct the locations list
     locations = []
@@ -335,12 +334,12 @@ def dryrun_rsoxs_plan(edge, exposure = 1, frames='full', ratios=None,exposure_ti
             
             rotate_sample(md) # doesn't rotate the actual sample yet, just does the math to update the location of the sample
             locations += [deepcopy(md['location'])] # read that rotated location as a location for the acquisition
-    ret_text += new_en_scan_core_sim(grating=grating, #NON-SIM #new_en_scan_core
-                                     energies=energies,
-                                     times=times,
-                                     repeats=repeats,
-                                     polarizations=polarizations,
-                                     locations=locations,
-                                     temperatures=temperatures,
-                                     md=md,sim_mode=sim_mode)
-    return ret_text
+    outputs.append(rsoxs_scan_enqueue(grating=grating,
+                                             energies=energies,
+                                             times=times,
+                                             repeats=repeats,
+                                             polarizations=polarizations,
+                                             locations=locations,
+                                             temperatures=temperatures,
+                                             md=md))
+    return outputs

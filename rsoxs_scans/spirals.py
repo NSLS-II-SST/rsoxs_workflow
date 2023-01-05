@@ -2,23 +2,23 @@
 from copy import deepcopy
 from .defaults import *
 
-def spiralsearch(
+def spiral_scan_enqueue(
     diameter=default_diameter,
     stepsize=default_spiral_step,
     energy=270,
     pol=0,
     angle=None,
     exposure=1,
-    master_plan=None,
     grating='rsoxs',
-    sim_mode=True,
     md=None,
-    dets=None
+    dets=None,
+    **kwargs
 ):
 
     valid = True
     validation = ""
-    
+    if md ==None:
+        md=[]
     if grating in ["1200",1200]:
         if energy < 150:
             valid = False
@@ -35,11 +35,14 @@ def spiralsearch(
         valid = False
         validation += "invalid grating was chosen"
     if dets is None:
-        if md['RSoXS_Main_DET'] == 'waxs_det':
-            dets = ['waxs_det']
+        if 'RSoXS_Main_DET' in md:
+            if md['RSoXS_Main_DET'] == 'waxs_det':
+                dets = ['waxs_det']
+            else:
+                dets = ['saxs_det']
         else:
-            dets = ['saxs_det']
-    newdets = dets
+            valid= False
+            validation += "No metadata was passed with detector information\n"
     for det in dets:
         if det not in ['saxs_det','waxs_det']:
             valid = False
@@ -52,17 +55,24 @@ def spiralsearch(
                 valid = False
                 validation += f"angle of {angle} is out of range\n"
     if valid:
-        retstr = f"\nspiral scanning {newdets} at {energy} eV \n"
+        retstr = f"\nspiral scanning {dets} at {energy} eV \n"
         retstr += f"    with a diameter of {diameter} mm  and stepsize of {stepsize} mm\n"
-        return retstr
+        kwargs['dets'] = dets
+        kwargs['energy'] = energy
+        kwargs['diameter'] = diameter
+        kwargs['stepsize'] = stepsize
+        kwargs['grating'] = grating
+        kwargs['angle'] = angle
+        kwargs['pol'] = pol
+        kwargs['exposure'] = exposure
+        return {'description':retstr,'action':'spiral_scan_core','kwargs':kwargs}
     else:
-        return f'\n\n\n\n_______________ERROR_____________________\n\n\n\n{validation}\n\n\n\n'
+        return {'description':f'\n\n\n\n_______________ERROR_____________________\n\n\n\n{validation}\n\n\n\n','action':'error'}
 
 
 
 def dryrun_spiral_plan(edge = 270,diameter = default_diameter, spiral_step = default_spiral_step,exposure_time = default_exposure_time,pol_mode='lab', polarizations = [0],
-                       angles = None,grating='rsoxs',diode_range='high', md = None, **kwargs):
-    sim_mode=True
+                       angles = None,grating='rsoxs',diode_range='high', md = None,dets=None, **kwargs):
     valid = True
     valid_text = ''
     if not isinstance(edge,(float,int)):
@@ -73,18 +83,9 @@ def dryrun_spiral_plan(edge = 270,diameter = default_diameter, spiral_step = def
     if not isinstance(edge,(float,int)):
         valid = False
         valid_text += f'\n\nERROR a single energy should be entered in the "edge" column for spiral scans not {edge} '
-    if diode_range=='high':
-        if(sim_mode):
-            valid_text += 'set Diode range to high\n'
-        else:
-            ...
-            #NON-SIM #yield from setup_diode_i400()
-    elif diode_range=='low':
-        if(sim_mode):
-            valid_text += 'set Diode range to low\n'
-        else:
-            ...
-            #NON-SIM #yield from High_Gain_diode_i400()
+    
+    
+
     if not isinstance(exposure_time,(int,float)):
         valid = False
         valid_text += f'\n\nERROR - invalid exposure time for spiral scans was given {exposure_time}\n\n'
@@ -93,24 +94,28 @@ def dryrun_spiral_plan(edge = 270,diameter = default_diameter, spiral_step = def
         valid_text += f'\n\nERROR - energy is not appropriate for this grating\n\n'
     if not valid:
         # don't go any further, even in simulation mode, because we know the inputs are wrong
-        if not sim_mode:
-            ...
-            #NON-SIM #raise ValueError(valid_text)
-        else:
-            return valid_text
-        # if we are still valid - try to continue
+        return {'description':f'\n\n\n\n_______________ERROR_____________________\n\n\n\n{validation}\n\n\n\n','action':'error'}
+    
+    output = []
+    # if valid, continue with other commands
+    if diode_range=='high':
+        output.append({'description':'set Diode range to high\n',
+                       'action':'diode_high'})
+    elif diode_range=='low':
+        output.append({'description':'set Diode range to low\n',
+                       'action':'diode_low'})
     if angles is None:
         angles = [None]
     for angle in angles:
         for pol in polarizations:
-            valid_text += spiralsearch( #NON-SIM #yield from spiralsearch
+            output.append(spiral_scan_enqueue(
+                                dets=dets,
                                 diameter=diameter,
                                 stepsize=spiral_step,
                                 energy=edge,
                                 pol=pol,
                                 angle=angle,
                                 exposure=exposure_time,
-                                md=md,
-                                sim_mode=True)
-    return valid_text
+                                md=md))
+    return output
         
