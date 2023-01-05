@@ -1,5 +1,6 @@
 #imports
 from copy import deepcopy
+from .defaults import *
 
 def spiralsearch(
     diameter=default_diameter,

@@ -1,6 +1,7 @@
 #imports
 import numpy as np
 from copy import deepcopy
+from .constructor import get_energies, construct_exposure_times
 
 # code for finding a rotated position of a sample - needed to test locations
 def rotate_sample(samp, force=False):

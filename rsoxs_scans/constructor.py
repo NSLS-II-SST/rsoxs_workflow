@@ -2,7 +2,6 @@
 import datetime
 import numpy as np
 import matplotlib.pyplot as plt
-import math
 from copy import deepcopy
 import warnings
 from .defaults import *
@@ -209,7 +208,7 @@ def get_energies(edge,frames = default_frames, ratios = None,quiet=False,**kwarg
     if not isinstance(edge,(tuple,list)):
         raise TypeError(f"invalid edge {edge} - no key of that name was found")
     if isinstance(frames,float):
-        if math.isnan(frames):
+        if np.isnan(frames):
             frames = 'full'
     if isinstance(frames,str):
         if frames.lower() in frames_table.keys():
@@ -243,8 +242,6 @@ def get_energies(edge,frames = default_frames, ratios = None,quiet=False,**kwarg
     for i, interval in enumerate(ratios):
         if interval < 0.01:
             raise ValueError(f'ratio value of {interval} invalid')
-        if multiple < 0.01:
-            raise ValueError(f'ratio value of {multiple} invalid')
         numpnt = max(1,int(np.round(np.abs(edge[i+1] - edge[i])/max(0.01,interval*multiple)))) # get the number of points using this multiple
         at_end = i==len(ratios)-1 and not singleinput # if we are at the end, add the last point (built into linspace)
         energies = np.append(energies,np.around(np.linspace(edge[i],edge[i+1],numpnt+at_end,endpoint=at_end)*2,1)/2) # rounds to nearest 0.05 eV for clarity

@@ -1,6 +1,7 @@
 #imports
 import numpy as np
 from copy import deepcopy
+from .constructor import get_nexafs_scan_params
 
 def NEXAFS_fly_scan_core_sim(
     scan_params,

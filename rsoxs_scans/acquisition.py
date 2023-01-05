@@ -1,9 +1,13 @@
 #imports
 import datetime
 from copy import deepcopy
+from operator import itemgetter
+import bluesky.plan_stubs as bps
 from .constructor import construct_exposure_times, get_energies, get_nexafs_scan_params
 from .defaults import *
-
+from .rsoxs import dryrun_rsoxs_plan
+from .nexafs import dryrun_nexafs_plan
+from .spirals import dryrun_spiral_plan
 
 
 
@@ -25,7 +29,8 @@ def dryrun_acquisition(acq,sample={}):
         elif acq['type'] == 'spiral':
             return dryrun_spiral_plan(**acq,md=sample)
         elif acq['type'] == 'wait':
-            yield from bps.sleep(acq['edge'])
+            #yield from bps.sleep(acq['edge'])
+            return f"sleep for {acq['edge']} seconds"
         else:
             return f'\n\nError: {acq["type"]} is not valid\n\n'
     else:
