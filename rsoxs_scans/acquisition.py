@@ -148,7 +148,7 @@ def dryrun_bar(
     acq_queue = []
     for i, step in enumerate(list_out):
         text += f"________________________________________________\nAcquisition # {i} from sample {step[5]['sample_name']}\n\n"
-        text += "Summary: load {} from {}, config {}, run {} (p {} a {}), starts @ {} takes {}\n".format(
+        text += "Summary: load {} from {}, config {}, run {} priority(sample {} acquisition {}), starts @ {} takes {}\n".format(
             step[5]["sample_name"],
             step[1],
             step[2],
