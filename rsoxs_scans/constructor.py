@@ -4,6 +4,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import math
 from copy import deepcopy
+import warnings
 from .defaults import *
 
 def get_nexafs_scan_params(edge, speed = default_speed, ratios = None, quiet=False,**kwargs):
