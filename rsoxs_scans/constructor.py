@@ -213,38 +213,64 @@ def get_energies(edge,frames = default_frames, ratios = None,quiet=False,**kwarg
     if isinstance(frames,str):
         if frames.lower() in frames_table.keys():
             frames = frames_table[frames.lower()]
-    if not isinstance(frames, (int,float)):
+    if isinstance(frames,(list,tuple)):
+        if singleinput:
+            raise TypeError(f"when only a single edge threshold is given there is no valid list option for frames")
+        for frame in frames:
+            if not isinstance(frame,(int,float)):
+                raise TypeError(f"if a list of frames is given all must be numbers {frame} is not a valid number")
+            if frame<0 or frame>1000:
+                raise ValueError(f"frame numbers should be between 0 and 1000 {frame} is not a valid number")
+    if not isinstance(frames, (int,float,list)):
         raise TypeError(f"frame number {frames} was not found or is not a valid number")
-    
+    read_frames = False
     if ratios == None or ratios == "":
-        if str(edge_input).lower() in intervals_table.keys():
+        if isinstance(frames,(list,tuple)):
+            ratios = None
+            read_frames = True
+        elif str(edge_input).lower() in intervals_table.keys():
             ratios = intervals_table[edge_input.lower()]
         elif f"default {len(edge)}" in intervals_table.keys():
             ratios = intervals_table[f"default {len(edge)}"]
         else:
             ratios = (1,)*(len(edge)-1)
     else:
+        if isinstance(frames,(list,tuple)):
+            ValueError(f"frames and ratios cannot both be specified")
         if not isinstance(ratios,(tuple,int,float,list)):
             ratios = intervals_table[ratios]
-    if not isinstance(ratios,(tuple,int,float,list)):
-        raise TypeError(f"invalid intervals {ratios}")
+    if not isinstance(ratios,(tuple,list)) and not read_frames:
+        raise TypeError(f"invalid ratios {ratios}")
+    if read_frames:
+        ratios = (1,)*(len(edge)-1)
+        if len(frames) + 1 != len(edge) or len(frames) < 1:
+            raise ValueError(f'got the wrong number of frames. got {len(frames)}. expected {len(edge)-1}')
     if len(ratios) + 1 != len(edge):
-        raise ValueError(f'got the wrong number of intervals {len(ratios)} expected {len(edge)-1}')
-    steps = 0
-    multiple = 1
-    numpnts = np.zeros_like(ratios)
-    for i, interval in enumerate(ratios):
-        numpnts[i] = np.round(np.abs(edge[i+1] - edge[i])/(interval*multiple))
-    steps =sum(numpnts)
-    multiple  *= steps / frames # if there are too many steps, multiple will reduce to approximately match the frames needed
-    steps = 0
+        raise ValueError(f'got the wrong number of intervals. got {len(ratios)}. expected {len(edge)-1}')
     energies = np.zeros(0)
-    for i, interval in enumerate(ratios):
-        if interval < 0.01:
-            raise ValueError(f'ratio value of {interval} invalid')
-        numpnt = max(1,int(np.round(np.abs(edge[i+1] - edge[i])/max(0.01,interval*multiple)))) # get the number of points using this multiple
-        at_end = i==len(ratios)-1 and not singleinput # if we are at the end, add the last point (built into linspace)
-        energies = np.append(energies,np.around(np.linspace(edge[i],edge[i+1],numpnt+at_end,endpoint=at_end)*2,1)/2) # rounds to nearest 0.05 eV for clarity
+    if not read_frames:
+        steps = 0
+        multiple = 1
+        numpnts = np.zeros_like(ratios)
+        for i, interval in enumerate(ratios):
+            numpnts[i] = np.round(np.abs(edge[i+1] - edge[i])/(interval*multiple))
+        steps =sum(numpnts)
+        multiple  *= steps / frames # if there are too many steps, multiple will reduce to approximately match the frames needed
+        steps = 0
+        for i, interval in enumerate(ratios):
+            if interval < 0.01:
+                raise ValueError(f'ratio value of {interval} invalid')
+            numpnt = max(1,int(np.round(np.abs(edge[i+1] - edge[i])/max(0.01,interval*multiple)))) # get the number of points using this multiple
+            at_end = i==len(ratios)-1 and not singleinput # if we are at the end, add the last point (built into linspace)
+            energies = np.append(energies,np.around(np.linspace(edge[i],edge[i+1],numpnt+at_end,endpoint=at_end)*2,1)/2) # rounds to nearest 0.05 eV for clarity
+    else:
+        for i, frame in enumerate(frames):
+            numpnt = frame # add in the endpoints
+            at_end = i==len(frames)-1  # if we are at the end, add the last point (built into linspace)
+            energies = np.append(energies,np.around(np.linspace(edge[i],edge[i+1],numpnt+at_end,endpoint=at_end)*2,1)/2) # rounds to nearest 0.05 eV for clarity
+        
+        
+        
     if not quiet:
         # ------- remove this for production, it's just for looking at the output conveniently during development
         print(energies)

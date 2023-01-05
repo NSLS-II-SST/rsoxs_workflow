@@ -8,4 +8,4 @@ default_spiral_step = 0.3
 default_exposure_time = 1
 dafault_warning_step_time = 1800
 
-actions = {'move', 'scannd', 'fly_core', 'load_configuration', 'load_sample', 'wait', 'error'}
+actions = {'load_configuration', 'rsoxs_scan_core', 'temp', 'spiral_scan_core', 'move', 'load_sample', 'message', 'diode_high', 'nexafs_scan_core', 'error'}
