@@ -82,6 +82,7 @@ def load_samplesxlsx(filename):
         new_bar[i]["location"] = json.loads(sam.get("location",'[]'))
 
         new_bar[i]["bar_loc"] = json.loads(sam.get("bar_loc",'{}'))
+        new_bar[i]["acq_history"] = json.loads(sam.get("acq_history",'[]'))
         
         if 'proposal_id' in sam:
             proposal = sam['proposal_id']
@@ -93,10 +94,7 @@ def load_samplesxlsx(filename):
         sam['data_session'],sam['analysis_dir'],sam['SAF'],sam['proposal'] = get_proposal_info(proposal)
         if sam['SAF'] ==None:
             print(f'line {i}, sample {sam["sample_name"]} - data will not be accessible')
-        if "acq_history" in sam.keys():
-            new_bar[i]["acq_history"] = json.loads(sam["acq_history"])
-        else:
-            new_bar[i]["acq_history"] = []
+
         new_bar[i]["bar_loc"]["spot"] = sam["bar_spot"]
         for key in [key for key, value in sam.items() if "named" in key.lower()]: # get rid of the stupid unnamed columns thrown in by pandas
             del new_bar[i][key]
@@ -126,19 +124,23 @@ def get_proposal_info(proposal_id, beamline='SST1', path_base='/sst/', cycle='20
     res = responce.json()
     if "safs" not in res:
         warnings.warn(f'proposal {proposal} does not appear to have any safs'+warn_text)
+        pass_client.close()
         return None, None, None, None
     comissioning = 1
     if "cycles" in res:
         comissioning = 0
         if cycle not in res['cycles']:
             warnings.warn(f'proposal {proposal} is not valid for the {cycle} cycle'+warn_text)
+            pass_client.close()
             return None, None, None, None
     elif "Commissioning" not in res['type']:
         warnings.warn(
             f'proposal {proposal} does not have a valid cycle, and does not appear to be a commissioning proposal'+warn_text)
+        pass_client.close()
         return -1
     if len(res['safs']) < 0:
         warnings.warn(f'proposal {proposal} does not have a valid SAF in the system'+warn_text)
+        pass_client.close()
         return None, None, None, None
     valid_SAF = ""
     for saf in res['safs']:
@@ -146,12 +148,14 @@ def get_proposal_info(proposal_id, beamline='SST1', path_base='/sst/', cycle='20
             valid_SAF = saf['saf_id']
     if len(valid_SAF) == 0:
         warnings.warn(f'proposal {proposal} does not have a SAF for {beamline} active in the system'+warn_text)
+        pass_client.close()
         return None, None, None, None
     proposal_info = res
     dir_responce = pass_client.get(f"/proposal/{proposal}/directories")
     dir_res = dir_responce.json()
     if len(dir_res) < 1:
         warnings.warn(f'proposal{proposal} have any directories'+warn_text)
+        pass_client.close()
         return None, None, None, None
     valid_path = ""
     for dir in dir_res:
@@ -161,7 +165,10 @@ def get_proposal_info(proposal_id, beamline='SST1', path_base='/sst/', cycle='20
             valid_path = dir['path']
     if len(valid_path) == 0:
         warnings.warn(f'no valid paths (containing {path_base} and {cycle} were found for proposal {proposal}'+warn_text)
+        pass_client.close()
         return None, None, None, None
+    
+    pass_client.close()
     return res['data_session'], valid_path, valid_SAF, proposal_info
 
 
