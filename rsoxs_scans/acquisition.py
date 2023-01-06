@@ -1,5 +1,5 @@
 #imports
-import datetime, warnings
+import datetime, warnings, uuid
 from copy import deepcopy
 from operator import itemgetter
 import bluesky.plan_stubs as bps
@@ -100,6 +100,9 @@ def dryrun_bar(
         sample_id = s["sample_id"]
         sample_project = s["project_name"]
         for acq_num, a in enumerate(s["acquisitions"]):
+            if 'uid' not in a.keys():
+                a['uid'] = str(uuid.uuid1())
+            a['uid']=str(a['uid'])
             if "priority" not in a.keys():
                 a["priority"] = 50
             list_out.append( # list everything we might possibly want for each acquisition
@@ -117,7 +120,8 @@ def dryrun_bar(
                     s["density"],  # 10
                     s["proposal_id"],  # 11 X
                     s["sample_priority"],  # 12 X
-                    a["priority"],
+                    a["priority"], # 13
+                    a['uid'], #14
                 ]
             )  # 13 X
     switcher = { # all the possible things we might want to sort by
@@ -193,6 +197,7 @@ def dryrun_bar(
                 out['acq_time'] = step[4]
                 out['cummulative_time'] = total_time
                 out['priority'] = step[13]
+                out['uuid'] = step[14]
                 statements.append(out['description'])
                 if(out['action']) == 'error':
                     warnings.warn(f"WARNING: acquisition # {i} has a step with and error\n{out['description']}")

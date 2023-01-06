@@ -46,7 +46,7 @@ def rotatedx(x0, theta, zoff, xoff=1.88, thoff=1.6):
     and a rotation angle, the offset of rotation in z and x (as well as a potential theta offset)
     find the correct x position to move to at a different rotation angle
     """
-    return (
+    return float(
         xoff
         + (x0 - xoff) * np.cos((theta - thoff) * np.pi / 180)
         - zoff * np.sin((theta - thoff) * np.pi / 180)
@@ -71,16 +71,16 @@ def sanatize_angle(samp, force=False):
         if samp["front"]:
             # sample is on the front of the bar, so valid outputs are between -90 and 90
             if goodnumber:
-                samp["bar_loc"]["th"] = 90-np.mod(samp['angle']+3600,180)
+                samp["bar_loc"]["th"] = float(90-np.mod(samp['angle']+3600,180))
             else:
                 samp["bar_loc"]["th"] = 70 # default grazing incidence samples to 20 degrees incidence angle
                 samp["angle"] = 70
                 # front grazing sample angle is interpreted as grazing angle
         else:
             if goodnumber:
-                angle = np.mod(435-np.mod(-samp['angle']+3600,180),360)-165
+                angle = float(np.mod(435-np.mod(-samp['angle']+3600,180),360)-165)
                 if(angle < -155):
-                    angle = np.mod(435 - np.mod(samp['angle'] + 3600, 180), 360) - 165
+                    angle = float(np.mod(435 - np.mod(samp['angle'] + 3600, 180), 360) - 165)
                 samp["bar_loc"]["th"] = angle
             else:
                 samp["bar_loc"]["th"] = 110
@@ -89,13 +89,13 @@ def sanatize_angle(samp, force=False):
     else:
         if samp["front"]:
             if goodnumber:
-                samp["bar_loc"]["th"] = (
+                samp["bar_loc"]["th"] = float(
                     np.mod(345-np.mod(90+samp["angle"]+3600,180)+90,360)-165
                 )
                 if samp["bar_loc"]["x0"] < -1.8 and np.abs(samp['angle']) > 30:
                     # transmission from the left side of the bar at a incident angle more than 20 degrees,
                     # flip sample around to come from the other side - this can take a minute or two
-                    samp["bar_loc"]["th"] = (
+                    samp["bar_loc"]["th"] = float(
                         np.mod(345-np.mod(90-samp['angle']+3600,180)+90,360)-165
                     )
                 if samp["bar_loc"]["th"] >=195:
@@ -107,11 +107,11 @@ def sanatize_angle(samp, force=False):
                 samp["angle"] = 180
         else:
             if goodnumber:
-                samp["bar_loc"]["th"] = np.mod(90+samp['angle']+3600,180)-90
+                samp["bar_loc"]["th"] = float(np.mod(90+samp['angle']+3600,180)-90)
                 if samp["bar_loc"]["x0"] > -1.8 and np.abs(samp['angle']) > 30:
                     # transmission from the right side of the bar at a incident angle more than 20 degrees,
                     # flip to come from the left side
-                    samp["bar_loc"]["th"] = np.mod(90-samp['angle']+3600,180)-90
+                    samp["bar_loc"]["th"] = float(np.mod(90-samp['angle']+3600,180)-90)
             else:
                 samp["bar_loc"]["th"] = 0
                 samp["angle"] = 0
