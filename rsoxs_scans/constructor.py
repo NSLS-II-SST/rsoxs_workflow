@@ -4,7 +4,18 @@ import numpy as np
 import matplotlib.pyplot as plt
 from copy import deepcopy
 import warnings
-from .defaults import *
+from .defaults import (
+    default_speed, 
+    default_frames, 
+    edge_names,
+    rsoxs_edges,
+    rsoxs_ratios_table,
+    frames_table,
+    nexafs_ratios_table,
+    nexafs_edges,
+    nexafs_speed_table,
+    dafault_warning_step_time,
+)
 
 def get_nexafs_scan_params(edge, speed = default_speed, ratios = None, quiet=False,**kwargs):
     """ 
@@ -24,76 +35,33 @@ def get_nexafs_scan_params(edge, speed = default_speed, ratios = None, quiet=Fal
                 
     """
     
-    edge_names = {"c":"Carbon",
-              "carbonk": "Carbon",
-              "ck": "Carbon",
-              "n": "Nitrogen",
-              "nitrogenk": "Nitrogen",
-              "nk": "Nitrogen",
-              "f": "Fluorine",
-              "fluorinek": "Fluorine",
-              "fk": "Fluorine",
-              "o": "Oxygen",
-              "oxygenk": "Oxygen",
-              "ok": "Oxygen",
-              "ca": "Calcium",
-              "calciumk": "Calcium",
-              "cak": "Calcium",
-             }
 
 
-     # these define the default edges of the intervals
-    edges = {"carbon":(250,282,297,350),
-             "oxygen":(500,525,540,560),
-             "fluorine":(650,680,700,740),
-             "aluminium":(1500,1560,1580,1600),
-             "nitrogen":(370,397,407,440),
-             "zincl": (1000,1015,1035,1085),
-             "sulfurl":(150,160,170,200),
-             "calcium":(320,345,355,380)
-            }
-     # these are the default interval ratios for each section
-    ratios_table = {
-                     "default 4":(5,1,5),
-                     "default 5":(5,1,2,5),
-                     "default 6":(5,2,1,2,5),
-                     "default 2":(1,),
-                     "default 3":(5,1),
-                    }
-
-    speed_table = {"normal": 0.2,"": 0.2,
-                   "quick":0.4,
-                   "fast":0.5,
-                   "very fast":1,
-                   "slow":0.1,
-                   "very slow":0.05,
-                  }
-    
     edge_input = edge
     singleinput = False
     if isinstance(edge,str):
         if edge.lower() in edge_names.keys():
             edge = edge_names[edge.lower()]
             edge_input = edge.lower()
-        if edge.lower() in edges.keys():
-            edge = edges[edge.lower()]
+        if edge.lower() in nexafs_edges.keys():
+            edge = nexafs_edges[edge.lower()]
     if not isinstance(edge,(tuple,list)):
         raise TypeError(f"invalid edge {edge} - no key of that name was found")
     if isinstance(speed,str):
-        if speed.lower() in speed_table.keys():
-            speed = speed_table[speed.lower()]
+        if speed.lower() in nexafs_speed_table.keys():
+            speed = nexafs_speed_table[speed.lower()]
     if not isinstance(speed, (float,int)):
         raise TypeError(f"NEXAFS scan speed {speed} was not found or is not a valid number")
     if ratios == None or ratios == '':
-        if str(edge_input).lower() in ratios_table.keys():
-            ratios = ratios_table[edge_input.lower()]
-        elif f"default {len(edge)}" in ratios_table.keys():
-            ratios = ratios_table[f"default {len(edge)}"]
+        if str(edge_input).lower() in nexafs_ratios_table.keys():
+            ratios = nexafs_ratios_table[edge_input.lower()]
+        elif f"default {len(edge)}" in nexafs_ratios_table.keys():
+            ratios = nexafs_ratios_table[f"default {len(edge)}"]
         else:
             ratios = (1,)*(len(edge)-1)
     else:
         if not isinstance(ratios,(tuple,list)):
-            ratios = ratios_table[ratios]
+            ratios = nexafs_ratios_table[ratios]
     if not isinstance(ratios,(tuple,list)):
         raise TypeError(f"invalid ratios {ratios}")
     if len(ratios) + 1 != len(edge):
@@ -151,57 +119,15 @@ def get_energies(edge,frames = default_frames, ratios = None,quiet=False,**kwarg
     2.) direct time estimation output - added to function for exposure times below
     """
     
-    edge_names = {"c":"Carbon",
-              "carbonk": "Carbon",
-              "ck": "Carbon",
-              "n": "Nitrogen",
-              "nitrogenk": "Nitrogen",
-              "nk": "Nitrogen",
-              "f": "Fluorine",
-              "fluorinek": "Fluorine",
-              "fk": "Fluorine",
-              "o": "Oxygen",
-              "oxygenk": "Oxygen",
-              "ok": "Oxygen",
-              "ca": "Calcium",
-              "calciumk": "Calcium",
-              "cak": "Calcium",
-             }
 
-
-     # these define the default edges of the intervals
-    edges = {"carbon":(250,270,282,287,292,305,350),
-             "oxygen":(510,525,540,560),
-             "fluorine":(670,680,690,700,740),
-             "aluminium":(1540,1560,1580,1600),
-             "nitrogen":(380,397,407,440),
-             "zincl": (1000,1015,1035,1085),
-             "sulfurl":(150,160,170,200),
-             "calcium":(320,340,345,349,349.5,352.5,353,355,360,380)
-            }
-     # these are the default interval ratios for each section
-    intervals_table = {"carbon":(5,1,.1,.2,1,5),
-                     "carbon nonaromatic":(5,1,.2,.1,1,5),
-                     "default 4":(2,.2,2),
-                     "default 5":(2,.2,.6,2),
-                     "default 6":(2,.6,.2,.6,2),
-                     "default 2":(2,),
-                     "default 3":(2,.2),
-                     "calcium": (5,1,0.5,0.1,0.25,0.1,0.5,1,5),
-                    }
-
-    frames_table = {"full": 112,"": 112,
-              "short":56,
-              "very short":40,
-             }
     edge_input = edge
     singleinput = False
     if isinstance(edge,str):
         if edge.lower() in edge_names.keys():
             edge = edge_names[edge.lower()]
             edge_input = edge.lower()
-        if edge.lower() in edges.keys():
-            edge = edges[edge.lower()]
+        if edge.lower() in rsoxs_edges.keys():
+            edge = rsoxs_edges[edge.lower()]
     if isinstance(edge_input,(float,int)):
         edge = (edge_input,edge_input)
         singleinput = True
@@ -228,17 +154,17 @@ def get_energies(edge,frames = default_frames, ratios = None,quiet=False,**kwarg
         if isinstance(frames,(list,tuple)):
             ratios = None
             read_frames = True
-        elif str(edge_input).lower() in intervals_table.keys():
-            ratios = intervals_table[edge_input.lower()]
-        elif f"default {len(edge)}" in intervals_table.keys():
-            ratios = intervals_table[f"default {len(edge)}"]
+        elif str(edge_input).lower() in rsoxs_ratios_table.keys():
+            ratios = rsoxs_ratios_table[edge_input.lower()]
+        elif f"default {len(edge)}" in rsoxs_ratios_table.keys():
+            ratios = rsoxs_ratios_table[f"default {len(edge)}"]
         else:
             ratios = (1,)*(len(edge)-1)
     else:
         if isinstance(frames,(list,tuple)):
             ValueError(f"frames and ratios cannot both be specified")
         if not isinstance(ratios,(tuple,int,float,list)):
-            ratios = intervals_table[ratios]
+            ratios = rsoxs_ratios_table[ratios]
     if not isinstance(ratios,(tuple,list)) and not read_frames:
         raise TypeError(f"invalid ratios {ratios}")
     if read_frames:
