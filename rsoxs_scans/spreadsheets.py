@@ -7,6 +7,12 @@ import re, warnings, httpx
 import numpy as np
 
 def load_samplesxlsx(filename):
+    skiprows=[1,2,3,4]
+    try:
+        dummy = pd.read_excel(filename,sheet_name="Instructions")
+    except ValueError:
+        skiprows=[]
+        pass
     df = pd.read_excel(
         filename,
         na_values="",
@@ -14,7 +20,7 @@ def load_samplesxlsx(filename):
         keep_default_na=True,
         converters={"sample_date": str},
         sheet_name="Bar",
-        skiprows=[1,2,3,4],
+        skiprows=skiprows,
         verbose=True,
     )
     df.replace(np.nan, "", regex=True, inplace=True)
@@ -29,7 +35,7 @@ def load_samplesxlsx(filename):
         engine="openpyxl",
         keep_default_na=True,
         sheet_name="Acquisitions",
-        skiprows=[1,2,3,4],
+        skiprows=skiprows,
         #usecols="A:U",
         verbose=True,
     )
@@ -172,9 +178,6 @@ def save_samplesxls(bar, filename):
     }
     acqlist = []
     for i, sam in enumerate(bar):
-        for j, loc in enumerate(sam["location"]):
-            if isinstance(loc["motor"], Device):
-                bar[i]["location"][j]["motor"] = switch[loc["motor"].name]
         for acq in sam["acquisitions"]:
             acq.update({"sample_id": sam["sample_id"]})
             cleanacq = {}
@@ -197,15 +200,7 @@ def save_samplesxls(bar, filename):
         testdict[i]["proposal"] = json.dumps(testdict[i]["proposal"])
         
         testdict[i]["acq_history"] = json.dumps(testdict[i]["acq_history"])
-    testdict.insert(0,{})
-    testdict.insert(0,{})
-    testdict.insert(0,{})
-    testdict.insert(0,{})
-    acqlist.insert(0,{})
-    acqlist.insert(0,{})
-    acqlist.insert(0,{})
-    acqlist.insert(0,{})
-    
+
     sampledf = pd.DataFrame.from_dict(testdict, orient="columns")
     sampledf = sampledf.loc[:, df.columns != "acquisitions"]
     acqdf = pd.DataFrame.from_dict(acqlist, orient="columns")
