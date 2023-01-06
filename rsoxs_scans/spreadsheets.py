@@ -4,7 +4,6 @@ from copy import deepcopy
 import pandas as pd
 import json
 import re, warnings, httpx
-import numpy as np
 
 def load_samplesxlsx(filename):
     skiprows=[1,2,3,4]
