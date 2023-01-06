@@ -72,8 +72,7 @@ def nexafs_scan_enqueue(
 
         kwargs['angle'] = angle
         kwargs['pol'] = pol
-        kwargs['energies'] = energies
-        kwargs['speeds'] = speeds
+        kwargs['scan_params'] = scan_params
         kwargs['grating'] = grating
         kwargs['cycles'] = cycles
         return {'description':retstr,'action':'nexafs_scan_core','kwargs':kwargs}
