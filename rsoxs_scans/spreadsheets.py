@@ -14,7 +14,7 @@ def load_samplesxlsx(filename):
         keep_default_na=True,
         converters={"sample_date": str},
         sheet_name="Bar",
-        skiprows=[2,3,4,5],
+        skiprows=[1,2,3,4],
         verbose=True,
     )
     df.replace(np.nan, "", regex=True, inplace=True)
@@ -29,7 +29,7 @@ def load_samplesxlsx(filename):
         engine="openpyxl",
         keep_default_na=True,
         sheet_name="Acquisitions",
-        skiprows=[2,3,4,5],
+        skiprows=[1,2,3,4],
         #usecols="A:U",
         verbose=True,
     )
