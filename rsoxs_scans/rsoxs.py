@@ -139,6 +139,7 @@ def rsoxs_scan_enqueue(
 
     temps_with_locations = False, # indicates to move locations and temperatures at the same time, not multiplying exposures (they must be the same length!)
     
+    plan_name='rsoxs',
     md=None,
     **kwargs #extraneous settings from higher level plans are just passed along
 ):
@@ -292,9 +293,11 @@ def rsoxs_scan_enqueue(
         retstr += f"\n RSoXS scanning {detnames} from {np.min(energies)} eV to {np.max(energies)} eV on the {grating} l/mm grating\n"
         retstr += f"    in {len(times)} steps with exposure times from {np.min(times)} to {np.max(times)} seconds\n"
         kwargs['times'] = times
-        kwargs['detnames'] = detnames
+        kwargs['dets'] = detnames
         kwargs['energies'] = energies
         kwargs['grating'] = grating
+        kwargs['md'] = md
+        kwargs['enscan_type'] = plan_name
         if repeats > 1:
             retstr += f"    repeating each exposure {repeats} times\n"
             kwargs['repeats'] = repeats
@@ -302,10 +305,9 @@ def rsoxs_scan_enqueue(
     else:
         return {'description':f'\n\n\n\n_______________ERROR_____________________\n\n\n\n{validation}\n\n\n\n','action':'error'}
 
-def dryrun_rsoxs_plan(edge, exposure = 1, frames='full', ratios=None,exposure_time=1, repeats =1, polarizations = [0],angles = None,grating='rsoxs',diode_range='high',temperatures=None,temp_ramp_speed=10,temp_wait=True, md=None,**kwargs):
+def dryrun_rsoxs_plan(edge, exposure_time = 1, frames='full', ratios=None, repeats =1, polarizations = [0],angles = None,grating='rsoxs',diode_range='high',temperatures=None,temp_ramp_speed=10,temp_wait=True, md=None,**kwargs):
     energies = get_energies(edge,frames,ratios,quiet=1)
     times, time = construct_exposure_times(energies,exposure_time,repeats,quiet=1)
-    ret_text = ''
     outputs = []
     
     # actually set things up
@@ -335,11 +337,12 @@ def dryrun_rsoxs_plan(edge, exposure = 1, frames='full', ratios=None,exposure_ti
             rotate_sample(md) # doesn't rotate the actual sample yet, just does the math to update the location of the sample
             locations += [deepcopy(md['location'])] # read that rotated location as a location for the acquisition
     outputs.append(rsoxs_scan_enqueue(grating=grating,
-                                             energies=energies,
-                                             times=times,
-                                             repeats=repeats,
-                                             polarizations=polarizations,
-                                             locations=locations,
-                                             temperatures=temperatures,
-                                             md=md))
+                                        energies=energies,
+                                        times=times,
+                                        repeats=repeats,
+                                        polarizations=polarizations,
+                                        locations=locations,
+                                        temperatures=temperatures,
+                                        md=md,
+                                        plan_name=f'rsoxs_{edge}'))
     return outputs
