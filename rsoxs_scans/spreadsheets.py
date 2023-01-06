@@ -197,11 +197,19 @@ def save_samplesxls(bar, filename):
         testdict[i]["proposal"] = json.dumps(testdict[i]["proposal"])
         
         testdict[i]["acq_history"] = json.dumps(testdict[i]["acq_history"])
-        
+    testdict.insert(0,{})
+    testdict.insert(0,{})
+    testdict.insert(0,{})
+    testdict.insert(0,{})
+    acqlist.insert(0,{})
+    acqlist.insert(0,{})
+    acqlist.insert(0,{})
+    acqlist.insert(0,{})
+    
     sampledf = pd.DataFrame.from_dict(testdict, orient="columns")
     sampledf = sampledf.loc[:, df.columns != "acquisitions"]
     acqdf = pd.DataFrame.from_dict(acqlist, orient="columns")
     writer = pd.ExcelWriter(filename)
-    sampledf.to_excel(writer, index=False, sheet_name="Samples")
+    sampledf.to_excel(writer, index=False, sheet_name="Bar")
     acqdf.to_excel(writer, index=False, sheet_name="Acquisitions")
     writer.close()

@@ -252,7 +252,5 @@ def construct_exposure_times(energies,exposure_time=1,repeats=1,quiet=False):
     calc_times = times * repeats
     calc_times += 1*(repeats-1) # one second overhead between repeated exposures\
     time = sum(calc_times) + 4*len(times)
-    if time>dafault_warning_step_time:
-        warnings.warn('WARNING: step will take more than 30 minutes')
     return times, time
     

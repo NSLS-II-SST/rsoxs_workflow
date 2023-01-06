@@ -1,10 +1,24 @@
 #imports
-import datetime
+import datetime, warnings
 from copy import deepcopy
 from operator import itemgetter
 import bluesky.plan_stubs as bps
 from .constructor import construct_exposure_times, get_energies, get_nexafs_scan_params
-from .defaults import *
+from .defaults import (
+    default_speed, 
+    default_frames, 
+    edge_names,
+    rsoxs_edges,
+    rsoxs_ratios_table,
+    frames_table,
+    nexafs_ratios_table,
+    nexafs_edges,
+    nexafs_speed_table,
+    dafault_warning_step_time,
+    default_exposure_time,
+    default_diameter,
+    default_spiral_step,
+)
 from .rsoxs import dryrun_rsoxs_plan
 from .nexafs import dryrun_nexafs_plan
 from .spirals import dryrun_spiral_plan
@@ -147,6 +161,7 @@ def dryrun_bar(
     previous_config = ""
     acq_queue = []
     for i, step in enumerate(list_out):
+        warnings.resetwarnings()
         text += f"________________________________________________\nAcquisition # {i} from sample {step[5]['sample_name']}\n\n"
         text += "Summary: load {} from {}, config {}, run {} priority(sample {} acquisition {}), starts @ {} takes {}\n".format(
             step[5]["sample_name"],
@@ -162,7 +177,10 @@ def dryrun_bar(
             total_time += config_change_time
             text += " (+2 minutes for configuration change)\n"
         text += "\n"
+        if(step[4]>dafault_warning_step_time):
+            warnings.warn(f"WARNING: acquisition # {i} will take {step[4]/60} minutes, which is more than {dafault_warning_step_time/60} minutes")
         if(step[2] not in config_list ):
+            warnings.warn(f"WARNING: acquisition # {i} has an invalid configuration - no configuration will be loaded") 
             text += "Warning invalid configuration" + step[2]
         outputs = dryrun_acquisition(step[6],step[5])
         if not isinstance(outputs,list):
@@ -176,6 +194,8 @@ def dryrun_bar(
                 out['cummulative_time'] = total_time
                 out['priority'] = step[13]
                 statements.append(out['description'])
+                if(out['action']) == 'error':
+                    warnings.warn(f"WARNING: acquisition # {i} has a step with and error\n{out['description']}")
             text += ''.join(statements)
         acq_queue.extend(outputs)
         total_time += step[4]
