@@ -363,7 +363,7 @@ def dryrun_rsoxs_plan(
             polarizations=polarizations,
             locations=locations,
             temperatures=temperatures,
-            temp_wait = temp_wait,
+            temp_wait=temp_wait,
             md=md,
             plan_name=f"rsoxs_{edge}",
         )
