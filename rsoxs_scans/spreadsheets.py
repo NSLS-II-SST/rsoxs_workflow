@@ -250,7 +250,7 @@ def convertSampleSheetExcelMediaWiki(
     verbose: bool = "TRUE",
 ) -> str:
     """Converts Sample Sheet Parameter Metadata into a MediaWiki-compatible format string.
-    
+
     Parameters
     ----------
     excelSheet: Path
@@ -271,7 +271,7 @@ def convertSampleSheetExcelMediaWiki(
         Last excel column (by letter) that contains the metadata table
     verbose: bool
         Whether to print progress text to stdout
-    
+
 
     Returns
     -------
