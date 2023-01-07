@@ -97,6 +97,7 @@ def dryrun_bar(
     sort_by=["sample_num"],
     rev=[False],
     print_dry_run=True,
+    group='all',
 ):
     """
     dry run all sample dictionaries stored in the list bar
@@ -110,11 +111,15 @@ def dryrun_bar(
 
     config_change_time = 120  # time to change between configurations, in seconds.
     list_out = []
+    
     for samp_num, s in enumerate(bar):
         sample = s
         sample_id = s["sample_id"]
         sample_project = s["project_name"]
         for acq_num, a in enumerate(s["acquisitions"]):
+            if not (group=='all' or a.get('group','all')=='all' or a.get('group','all') == group):
+                continue # if the group filter or the acquisition group is "all" or not specified, 
+                            # of if the the acquisition group matches the filter pass.  if not, ignore this acquisition
             if "uid" not in a.keys():
                 a["uid"] = str(uuid.uuid1())
             a["uid"] = str(a["uid"])
