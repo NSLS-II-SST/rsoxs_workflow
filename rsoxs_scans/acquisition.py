@@ -215,9 +215,9 @@ def dryrun_bar(
                 out["queue_step"] = j
                 out["acq_time"] = step[4]
                 out["total_acq"] = len(list_out)
-                out["cummulative_time"] = total_time
+                out["time_before"] = total_time
                 out["priority"] = step[13]
-                out["uuid"] = step[14]
+                out["uid"] = step[14]
                 statements.append(out["description"])
                 if (out["action"]) == "error":
                     warnings.warn(f"WARNING: acquisition # {i} has a step with and error\n{out['description']}")
@@ -228,7 +228,7 @@ def dryrun_bar(
         previous_config = step[2]
     for queue_step in acq_queue:
         queue_step["total_queue_time"] = total_time
-        queue_step["time_after"] = total_time - queue_step["cummulative_time"]
+        queue_step["time_after"] = total_time - queue_step["time_before"]-queue_step["acq_time"]
 
     text += f"\n\nTotal estimated time including config changes {time_sec(total_time)}"
     if print_dry_run:

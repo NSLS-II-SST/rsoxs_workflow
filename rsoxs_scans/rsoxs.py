@@ -164,7 +164,6 @@ def rsoxs_scan_enqueue(
     if len(dets) < 1:
         valid = False
         validation += "No detectors are given\n"
-    newdets = dets
     detnames = dets
     repeats = int(repeats)
     if not 0 < repeats < 100:

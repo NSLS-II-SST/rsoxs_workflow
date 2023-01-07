@@ -3,7 +3,7 @@ import numpy as np
 from copy import deepcopy
 import pandas as pd
 import json
-import re, warnings, httpx
+import re, warnings, httpx, uuid
 
 
 def load_samplesxlsx(filename):
@@ -87,6 +87,7 @@ def load_samplesxlsx(filename):
         if "temperatures" in acq:
             if isinstance(acq["temperatures"], (int, float)):
                 acq["temperatures"] = [acq["temperatures"]]
+        acq["uid"] = str(uuid.uuid1())
         samp["acquisitions"].append(acq)  # no checking for validity here?
     for i, sam in enumerate(new_bar):
         new_bar[i]["location"] = json.loads(sam.get("location", "[]"))
@@ -106,6 +107,7 @@ def load_samplesxlsx(filename):
             print(f'line {i}, sample {sam["sample_name"]} - data will not be accessible')
 
         new_bar[i]["bar_loc"]["spot"] = sam["bar_spot"]
+        new_bar[i]["bar_loc"]["th"] = sam["angle"]
         for key in [
             key for key, value in sam.items() if "named" in key.lower()
         ]:  # get rid of the stupid unnamed columns thrown in by pandas
