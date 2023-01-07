@@ -1,12 +1,12 @@
-#imports
+# imports
 import datetime, warnings, uuid
 from copy import deepcopy
 from operator import itemgetter
 import bluesky.plan_stubs as bps
 from .constructor import construct_exposure_times, get_energies, get_nexafs_scan_params
 from .defaults import (
-    default_speed, 
-    default_frames, 
+    default_speed,
+    default_frames,
     edge_names,
     rsoxs_edges,
     rsoxs_ratios_table,
@@ -24,50 +24,67 @@ from .nexafs import dryrun_nexafs_plan
 from .spirals import dryrun_spiral_plan
 
 
-
-def dryrun_acquisition(acq,sample={},sim_mode=True):
+def dryrun_acquisition(acq, sample={}, sim_mode=True):
     # runs an acquisition from a sample
     outputs = []
     # load the configuration
-    outputs.append({'description':f"load configuration {acq['configuration']}\n",'action':'load_configuration','kwargs':{"configuration":acq['configuration']}})
+    outputs.append(
+        {
+            "description": f"load configuration {acq['configuration']}\n",
+            "action": "load_configuration",
+            "kwargs": {"configuration": acq["configuration"]},
+        }
+    )
     # load the sample
     samp_dict = deepcopy(sample)
-    del samp_dict['acquisitions'] # this becomes weirdly verbose
-    outputs.append({'description':f"load sample {sample['sample_name']}\n",'action':'load_sample','kwargs':{"sample":samp_dict}})
-    
-    if acq['configuration']=='WAXS':
-        sample.update({'RSoXS_Main_DET':'waxs_det'})
+    del samp_dict["acquisitions"]  # this becomes weirdly verbose
+    outputs.append(
+        {
+            "description": f"load sample {sample['sample_name']}\n",
+            "action": "load_sample",
+            "kwargs": {"sample": samp_dict},
+        }
+    )
+
+    if acq["configuration"] == "WAXS":
+        sample.update({"RSoXS_Main_DET": "waxs_det"})
     else:
-        sample.update({'RSoXS_Main_DET':'saxs_det'})
-    if 'type' in acq:
-        if acq['type']== 'rsoxs':
-            outputs.extend(dryrun_rsoxs_plan(**acq,md=sample))
+        sample.update({"RSoXS_Main_DET": "saxs_det"})
+    if "type" in acq:
+        if acq["type"] == "rsoxs":
+            outputs.extend(dryrun_rsoxs_plan(**acq, md=sample))
             return outputs
-        elif acq['type'] == 'nexafs':
-            outputs.extend(dryrun_nexafs_plan(**acq,md=sample))
+        elif acq["type"] == "nexafs":
+            outputs.extend(dryrun_nexafs_plan(**acq, md=sample))
             return outputs
-        elif acq['type'] == 'spiral':
-            outputs.extend(dryrun_spiral_plan(**acq,md=sample))
+        elif acq["type"] == "spiral":
+            outputs.extend(dryrun_spiral_plan(**acq, md=sample))
             return outputs
-        elif acq['type'].lower() in ['wait','sleep','pause']:
-            outputs.append({'description':f"sleep for {acq['edge']} seconds\n",'action':'sleep','kwargs':{"sleep_time":acq['edge']}})
+        elif acq["type"].lower() in ["wait", "sleep", "pause"]:
+            outputs.append(
+                {
+                    "description": f"sleep for {acq['edge']} seconds\n",
+                    "action": "sleep",
+                    "kwargs": {"sleep_time": acq["edge"]},
+                }
+            )
             return outputs
         else:
-            outputs.append({'description':f'\n\nError: {acq["type"]} is not valid\n\n','action':'error'})
+            outputs.append({"description": f'\n\nError: {acq["type"]} is not valid\n\n', "action": "error"})
             return outputs
     else:
-        outputs.append({'description':'\n\nError: no acquisition type specified\n\n','action':'error'})
+        outputs.append({"description": "\n\nError: no acquisition type specified\n\n", "action": "error"})
         return outputs
 
+
 config_list = [
-    'WAXSNEXAFS',
-    'WAXS',
-    'SAXS',
-    'SAXSNEXAFS',
-    'SAXS_liquid',
-    'WAXS_liquid',]
-
-
+    "WAXSNEXAFS",
+    "WAXS",
+    "SAXS",
+    "SAXSNEXAFS",
+    "SAXS_liquid",
+    "WAXS_liquid",
+]
 
 
 def time_sec(seconds):
@@ -75,13 +92,11 @@ def time_sec(seconds):
     return str(dt).split(".")[0]
 
 
-
-
 def dryrun_bar(
     bar,
     sort_by=["sample_num"],
     rev=[False],
-    print_dry_run = True,
+    print_dry_run=True,
 ):
     """
     dry run all sample dictionaries stored in the list bar
@@ -100,12 +115,12 @@ def dryrun_bar(
         sample_id = s["sample_id"]
         sample_project = s["project_name"]
         for acq_num, a in enumerate(s["acquisitions"]):
-            if 'uid' not in a.keys():
-                a['uid'] = str(uuid.uuid1())
-            a['uid']=str(a['uid'])
+            if "uid" not in a.keys():
+                a["uid"] = str(uuid.uuid1())
+            a["uid"] = str(a["uid"])
             if "priority" not in a.keys():
                 a["priority"] = 50
-            list_out.append( # list everything we might possibly want for each acquisition
+            list_out.append(  # list everything we might possibly want for each acquisition
                 [
                     sample_id,  # 0  X
                     sample_project,  # 1  X
@@ -120,11 +135,11 @@ def dryrun_bar(
                     s["density"],  # 10
                     s["proposal_id"],  # 11 X
                     s["sample_priority"],  # 12 X
-                    a["priority"], # 13
-                    a['uid'], #14
+                    a["priority"],  # 13
+                    a["uid"],  # 14
                 ]
             )  # 13 X
-    switcher = { # all the possible things we might want to sort by
+    switcher = {  # all the possible things we might want to sort by
         "sample_id": 0,
         "project": 1,
         "config": 2,
@@ -132,16 +147,16 @@ def dryrun_bar(
         "edge": 9,
         "proposal": 11,
         "spriority": 12,
-        "apriority": 13, # can just make this the default??
+        "apriority": 13,  # can just make this the default??
         "sample_num": 7,
     }
     # add anything to the above list, and make a key in the above dictionary,
     # using that element to sort by something else
     try:
-        sort_by.reverse() # we want to sort from the last to the first element to match peopls expectations
+        sort_by.reverse()  # we want to sort from the last to the first element to match peopls expectations
         rev.reverse()
     except AttributeError:
-        if isinstance(sort_by, str): # accept that someone might just put a single string
+        if isinstance(sort_by, str):  # accept that someone might just put a single string
             sort_by = [sort_by]
             rev = [rev]
         else:
@@ -151,7 +166,7 @@ def dryrun_bar(
             )
             return
     try:
-        for k, r in zip(sort_by, rev): # do all of the sorts in order
+        for k, r in zip(sort_by, rev):  # do all of the sorts in order
             list_out = sorted(list_out, key=itemgetter(switcher[k]), reverse=r)
     except KeyError:
         print(
@@ -159,7 +174,7 @@ def dryrun_bar(
             "such as project, configuration, sample_id, plan, plan_args, spriority, apriority"
         )
         return
-    failcount=0
+    failcount = 0
     text = ""
     total_time = 0
     previous_config = ""
@@ -181,87 +196,95 @@ def dryrun_bar(
             total_time += config_change_time
             text += " (+2 minutes for configuration change)\n"
         text += "\n"
-        if(step[4]>dafault_warning_step_time):
-            warnings.warn(f"WARNING: acquisition # {i} will take {step[4]/60} minutes, which is more than {dafault_warning_step_time/60} minutes")
-        if(step[2] not in config_list ):
-            warnings.warn(f"WARNING: acquisition # {i} has an invalid configuration - no configuration will be loaded") 
+        if step[4] > dafault_warning_step_time:
+            warnings.warn(
+                f"WARNING: acquisition # {i} will take {step[4]/60} minutes, which is more than {dafault_warning_step_time/60} minutes"
+            )
+        if step[2] not in config_list:
+            warnings.warn(
+                f"WARNING: acquisition # {i} has an invalid configuration - no configuration will be loaded"
+            )
             text += "Warning invalid configuration" + step[2]
-        outputs = dryrun_acquisition(step[6],step[5])
-        if not isinstance(outputs,list):
+        outputs = dryrun_acquisition(step[6], step[5])
+        if not isinstance(outputs, list):
             outputs = [outputs]
         else:
             statements = []
-            for j,out in enumerate(outputs):
-                out['acq_index']=i
-                out['queue_step']=j
-                out['acq_time'] = step[4]
-                out['total_acq'] = len(list_out)
-                out['cummulative_time'] = total_time
-                out['priority'] = step[13]
-                out['uuid'] = step[14]
-                statements.append(out['description'])
-                if(out['action']) == 'error':
+            for j, out in enumerate(outputs):
+                out["acq_index"] = i
+                out["queue_step"] = j
+                out["acq_time"] = step[4]
+                out["total_acq"] = len(list_out)
+                out["cummulative_time"] = total_time
+                out["priority"] = step[13]
+                out["uuid"] = step[14]
+                statements.append(out["description"])
+                if (out["action"]) == "error":
                     warnings.warn(f"WARNING: acquisition # {i} has a step with and error\n{out['description']}")
-            text += ''.join(statements)
+            text += "".join(statements)
         acq_queue.extend(outputs)
         total_time += step[4]
         text += "\n________________________________________________\n"
         previous_config = step[2]
     for queue_step in acq_queue:
-        queue_step['total_queue_time'] = total_time
-        queue_step['time_after'] = total_time - queue_step['cummulative_time'] 
-        
-    text += (
-        f"\n\nTotal estimated time including config changes {time_sec(total_time)}"
-    )
+        queue_step["total_queue_time"] = total_time
+        queue_step["time_after"] = total_time - queue_step["cummulative_time"]
+
+    text += f"\n\nTotal estimated time including config changes {time_sec(total_time)}"
     if print_dry_run:
-        print( text )
-    
+        print(text)
+
     return acq_queue
 
-    
+
 def est_scan_time(acq):
-    if 'type' in acq:
-        if acq['type']== 'rsoxs':
-            times, time = construct_exposure_times(get_energies(**acq,quiet=1),acq.get('exposure_time',default_exposure_time),acq.get('repeats',1),quiet=1)
-            total_time = time * len(acq.get('polarizations',[0])) # time is the estimate for a single energy scan
-            total_time += 30*len(acq.get('polarizations',[0])) # 30 seconds for each polarization change
-            if isinstance(acq.get('angles',None),list):
-                total_time *= len(acq['angles'])
-                total_time += 30*len(acq['angles']) # 30 seconds for each angle change
-            if isinstance(acq.get('temperatures',None),list):
-                total_time *= len(acq['temperatures'])
+    if "type" in acq:
+        if acq["type"] == "rsoxs":
+            times, time = construct_exposure_times(
+                get_energies(**acq, quiet=True),
+                acq.get("exposure_time", default_exposure_time),
+                acq.get("repeats", 1),
+                quiet=True,
+            )
+            total_time = time * len(acq.get("polarizations", [0]))  # time is the estimate for a single energy scan
+            total_time += 30 * len(acq.get("polarizations", [0]))  # 30 seconds for each polarization change
+            if isinstance(acq.get("angles", None), list):
+                total_time *= len(acq["angles"])
+                total_time += 30 * len(acq["angles"])  # 30 seconds for each angle change
+            if isinstance(acq.get("temperatures", None), list):
+                total_time *= len(acq["temperatures"])
             return total_time
-        elif acq['type'] == 'nexafs':
-            params, time = get_nexafs_scan_params(**acq,quiet=1)
-            if acq.get('cycles',0) > 0:
-                time *= 2*acq.get('cycles',0)
-            total_time = time * len(acq.get('polarizations',[0])) # time is the estimate for a single energy scan
-            total_time += 30*len(acq.get('polarizations',[0])) # 30 seconds for each polarization change
-            if isinstance(acq.get('angles',None),list):
-                total_time *= len(acq['angles'])
-                total_time += 30*len(acq['angles']) # 30 seconds for each angle change
-            if isinstance(acq.get('temperatures',None),list):
-                total_time *= len(acq['temperatures'])
+        elif acq["type"] == "nexafs":
+            params, time = get_nexafs_scan_params(quiet=True, **acq)
+            if acq.get("cycles", 0) > 0:
+                time *= 2 * acq.get("cycles", 0)
+            total_time = time * len(acq.get("polarizations", [0]))  # time is the estimate for a single energy scan
+            total_time += 30 * len(acq.get("polarizations", [0]))  # 30 seconds for each polarization change
+            if isinstance(acq.get("angles", None), list):
+                total_time *= len(acq["angles"])
+                total_time += 30 * len(acq["angles"])  # 30 seconds for each angle change
+            if isinstance(acq.get("temperatures", None), list):
+                total_time *= len(acq["temperatures"])
             return total_time
-        elif acq['type'] == 'spiral':
-            exp=1
-            exptime = acq.get('exposure_time',default_exposure_time)
-            if isinstance(exptime,(int,float)):
-                if exptime >0:
+        elif acq["type"] == "spiral":
+            exp = 1
+            exptime = acq.get("exposure_time", default_exposure_time)
+            if isinstance(exptime, (int, float)):
+                if exptime > 0:
                     exp = exptime
-            num = (round(acq.get('diameter',default_diameter) / acq.get('spiral_step',default_spiral_step)) + 1)**2
-            time = (exp+5.0)*num
-            total_time = time * len(acq.get('polarizations',[0])) # time is the estimate for a single energy scan
-            total_time += 30*len(acq.get('polarizations',[0])) # 30 seconds for each polarization change
-            if isinstance(acq.get('angles',None),list):
-                total_time *= len(acq['angles'])
-                total_time += 30*len(acq['angles']) # 30 seconds for each angle change
+            num = (
+                round(acq.get("diameter", default_diameter) / acq.get("spiral_step", default_spiral_step)) + 1
+            ) ** 2
+            time = (exp + 5.0) * num
+            total_time = time * len(acq.get("polarizations", [0]))  # time is the estimate for a single energy scan
+            total_time += 30 * len(acq.get("polarizations", [0]))  # 30 seconds for each polarization change
+            if isinstance(acq.get("angles", None), list):
+                total_time *= len(acq["angles"])
+                total_time += 30 * len(acq["angles"])  # 30 seconds for each angle change
             return total_time
-        elif acq['type'].lower() in ['wait','sleep','pause']:
-            return float(acq['edge'])
+        elif acq["type"].lower() in ["wait", "sleep", "pause"]:
+            return float(acq["edge"])
         else:
             return 0
     else:
         return 0
-
