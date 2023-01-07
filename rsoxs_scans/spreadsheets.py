@@ -1,9 +1,11 @@
 # imports
-import numpy as np
 from copy import deepcopy
-import pandas as pd
+from pathlib import Path
+from datetime import date
 import json
 import re, warnings, httpx, uuid
+import numpy as np
+import pandas as pd
 
 
 def load_samplesxlsx(filename):
@@ -234,3 +236,161 @@ def save_samplesxls(bar, filename):
     sampledf.to_excel(writer, index=False, sheet_name="Bar")
     acqdf.to_excel(writer, index=False, sheet_name="Acquisitions")
     writer.close()
+
+
+def convertSampleSheetExcelMediaWiki(
+    excelSheet: Path = None,
+    paramsSheetToOutput: str = "all",
+    rulesSheetName: str = "SheetRulesAndMetaData",
+    versionCell: str = "B4",
+    startRow_Params: int = 7,
+    endRow_Params: int = None,
+    startColumn_Params: str = "A",
+    endColumn_Params: str = "F",
+    verbose: bool = "TRUE",
+) -> str:
+    """Converts Sample Sheet Parameter Metadata into a MediaWiki-compatible format string.
+    
+    Parameters
+    ----------
+    excelSheet: Path
+        Path (or string) to the excel sheet to be loaded.
+    rulesSheetName: str
+        Name of the excel sheet which should be parsed for metadata
+    paramsSheetToOutput: str
+        Which set of params should be output (e.g., 'bar', 'acquisitions'). 'all' will sequentially output tables for the same wiki page
+    versionCell: str
+        Location (e.g., 'B4') of the cell that contains the sheet version number
+    startRow_Params: int
+        Excel row number which contains the header for the metadata table (excel starts at row 1)
+    endRow_Params: int
+        Excel row number which contains the last row of metadata (leave as -1 if scanning to end of file)
+    startColumn_Params: str
+        First excel column (by letter) that contains the metadata table
+    endColumn_Params:str
+        Last excel column (by letter) that contains the metadata table
+    verbose: bool
+        Whether to print progress text to stdout
+    
+
+    Returns
+    -------
+    str
+        A string containing the formatted table ready to copy-paste into MediaWiki
+    """
+
+    if verbose:
+        print("-" * 5 + " Start Log" + "-" * 5)
+        print("\tExtracting Sheet Version...", end=" ")
+
+    # Step 1: Extract Version Cell and add to wiki table header
+    ## Split versionCell in (row, column)
+    versRow, versColumn = [
+        int("".join(filter(str.isdigit, versionCell))),
+        "".join(filter(str.isalpha, versionCell)),
+    ]
+
+    ## Extract Version Code as a string
+    versionStr = pd.read_excel(
+        excelSheet, sheet_name=rulesSheetName, index_col=None, usecols=versColumn, nrows=0, header=versRow - 1
+    )
+    versionStr = versionStr.columns.values[0]
+    ###print(versionStr)
+
+    ## Get Current Date
+    date.today()
+
+    ## Add Wiki Page Header to Output string
+    outStr = f"== SST-1 Sample Sheet Syntax Version: {versionStr} Last Updated: {date.today()} ==\n"
+
+    if verbose:
+        print(f"Pass!\n\t\tVersion Number is -> {versionStr}")
+
+    # Step 2: Extract Metadata Table from Excel Sheet
+    if verbose:
+        print("\tExtracting Sheet Metadata...")
+
+    ## If endRow_Params is provided, limit the number of rows parsed
+    if endRow_Params is None:
+        numRows = None
+    else:
+        numRows = endRow_Params - startRow_Params
+
+    ## Convert column bounds to string
+    colString = startColumn_Params + ":" + endColumn_Params
+
+    excelMetadataIn = pd.read_excel(
+        excelSheet, sheet_name=rulesSheetName, header=startRow_Params - 1, nrows=numRows, usecols=colString
+    )
+
+    ## Drop empty rows (where 'Sheet' is NaN)
+    excelMetadataIn = excelMetadataIn.dropna(subset="Sheet")
+    ## Replace NaNs and 'nan's with blank
+    excelMetadataIn = excelMetadataIn.replace("nan", "")
+    excelMetadataIn = excelMetadataIn.fillna(" ")
+
+    ###display(excelMetadataIn)
+
+    ## Build MediaWiki Tables
+
+    ## Get list of unique sheets for which we have metadata
+    sheetList = excelMetadataIn.Sheet.unique()
+
+    if verbose:
+        print(f"\t\tFound Metadata for these sheets: {sheetList}")
+        print(f"\t\tUser requested tables for: {paramsSheetToOutput}")
+
+    # Filter down the list of tables to output
+    if paramsSheetToOutput.lower() == "all":
+        sheetListToRun = sheetList
+    else:
+        sheetListToRun = [paramsSheetToOutput]
+
+    if verbose:
+        print(f"\t\tOutputting tables for: {sheetListToRun}...")
+
+    # Create subset dataframes
+    dataframeList = []
+    for sheetName in sheetListToRun:
+        dataframeList.append(excelMetadataIn[excelMetadataIn.Sheet == sheetName])
+
+    ###print(dataframeList[1])
+
+    ## Make one table per value in the 'Sheet' column
+    for excelMetadataFrame in dataframeList:
+        excelMetadataFrame.reset_index(drop=True, inplace=True)
+        outStr += "\n" + r'{| class="wikitable sortable"' + "\n" + "|-\n"
+
+        # Add header row elements
+        outStr += "! "
+        for colHeader in excelMetadataFrame.columns:
+            filteredColHeader = str(colHeader).replace("\r", " ").replace("\n", " ")
+            outStr += f"{filteredColHeader} !! "
+
+        # trim extra "!! "
+        outStr = outStr[:-4]
+
+        ###display(excelMetadataFrame)
+
+        # Add Metadata Row Elements
+
+        ## Loop through metadata rows
+        for mdRow in excelMetadataFrame.index:
+            ###Loop through columns
+            outStr += "\n|-\n| "
+            ###print(mdRow)
+            for mdVal in excelMetadataFrame.iloc[mdRow].to_list():
+                filteredmdVal = str(mdVal).replace("\r", " ").replace("\n", " ")
+                outStr += f"{filteredmdVal} || "
+                ###print(f"\t{mdVal}")
+            # trim extra " || " at the end of each line
+            outStr = outStr[:-4]
+
+        # Add MediaWiki Table End
+        outStr += "\n|}\n"
+        # print(outStr)
+
+    if verbose:
+        print("-" * 5 + " End Log. Copy text below this line into the wiki" + "-" * 5)
+
+    return outStr
