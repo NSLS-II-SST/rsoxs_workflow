@@ -2,3 +2,5 @@
 numpy
 bluesky
 matplotlib
+pandas
+httpx
