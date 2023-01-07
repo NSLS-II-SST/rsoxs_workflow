@@ -97,7 +97,7 @@ def dryrun_bar(
     sort_by=["sample_num"],
     rev=[False],
     print_dry_run=True,
-    group='all',
+    group="all",
 ):
     """
     dry run all sample dictionaries stored in the list bar
@@ -111,15 +111,15 @@ def dryrun_bar(
 
     config_change_time = 120  # time to change between configurations, in seconds.
     list_out = []
-    
+
     for samp_num, s in enumerate(bar):
         sample = s
         sample_id = s["sample_id"]
         sample_project = s["project_name"]
         for acq_num, a in enumerate(s["acquisitions"]):
-            if not (group=='all' or a.get('group','all')=='all' or a.get('group','all') == group):
-                continue # if the group filter or the acquisition group is "all" or not specified, 
-                            # of if the the acquisition group matches the filter pass.  if not, ignore this acquisition
+            if not (group == "all" or a.get("group", "all") == "all" or a.get("group", "all") == group):
+                continue  # if the group filter or the acquisition group is "all" or not specified,
+                # of if the the acquisition group matches the filter pass.  if not, ignore this acquisition
             if "uid" not in a.keys():
                 a["uid"] = str(uuid.uuid1())
             a["uid"] = str(a["uid"])
@@ -142,9 +142,9 @@ def dryrun_bar(
                     s["sample_priority"],  # 12 X
                     a["priority"],  # 13
                     a["uid"],  # 14
-                    a.get("group",'all'),  # 15
-                    a.get("slack_message_start",''),  # 16
-                    a.get("slack_message_end",''),  # 17
+                    a.get("group", "all"),  # 15
+                    a.get("slack_message_start", ""),  # 16
+                    a.get("slack_message_end", ""),  # 17
                 ]
             )  # 13 X
     switcher = {  # all the possible things we might want to sort by
@@ -233,7 +233,7 @@ def dryrun_bar(
                 statements.append(out["description"])
                 if (out["action"]) == "error":
                     warnings.warn(f"WARNING: acquisition # {i} has a step with and error\n{out['description']}")
-                    acqs_with_errors.append((i,out['description']))
+                    acqs_with_errors.append((i, out["description"]))
             text += "".join(statements)
         acq_queue.extend(outputs)
         total_time += step[4]
@@ -241,12 +241,12 @@ def dryrun_bar(
         previous_config = step[2]
     for queue_step in acq_queue:
         queue_step["total_queue_time"] = total_time
-        queue_step["time_after"] = total_time - queue_step["time_before"]-queue_step["acq_time"]
+        queue_step["time_after"] = total_time - queue_step["time_before"] - queue_step["acq_time"]
 
     text += f"\n\nTotal estimated time including config changes {time_sec(total_time)}"
     if print_dry_run:
         print(text)
-    for index,error in acqs_with_errors:
+    for index, error in acqs_with_errors:
         warnings.resetwarnings()
         warnings.warn(f"WARNING: acquisition # {index} has a step with an error\n{error}\n\n")
     return acq_queue
