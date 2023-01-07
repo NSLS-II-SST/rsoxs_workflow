@@ -193,7 +193,7 @@ def get_proposal_info(proposal_id, beamline="SST1", path_base="/sst/", cycle="20
     return res["data_session"], valid_path, valid_SAF, proposal_info
 
 
-def save_samplesxls(bar, filename):
+def save_samplesxlsx(bar, filename):
     switch = {
         "RSoXS Sample Outboard-Inboard": "x",
         "RSoXS Sample Up-Down": "y",
