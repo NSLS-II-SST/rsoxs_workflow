@@ -187,6 +187,7 @@ def dryrun_bar(
     total_time = 0
     previous_config = ""
     acq_queue = []
+    acqs_with_errors = []
     for i, step in enumerate(list_out):
         warnings.resetwarnings()
         text += f"________________________________________________\nAcquisition # {i} from sample {step[5]['sample_name']}\n\n"
@@ -232,6 +233,7 @@ def dryrun_bar(
                 statements.append(out["description"])
                 if (out["action"]) == "error":
                     warnings.warn(f"WARNING: acquisition # {i} has a step with and error\n{out['description']}")
+                    acqs_with_errors.append((i,out['description']))
             text += "".join(statements)
         acq_queue.extend(outputs)
         total_time += step[4]
@@ -244,7 +246,9 @@ def dryrun_bar(
     text += f"\n\nTotal estimated time including config changes {time_sec(total_time)}"
     if print_dry_run:
         print(text)
-
+    for index,error in acqs_with_errors:
+        warnings.resetwarnings()
+        warnings.warn(f"WARNING: acquisition # {index} has a step with an error\n{error}\n\n")
     return acq_queue
 
 
