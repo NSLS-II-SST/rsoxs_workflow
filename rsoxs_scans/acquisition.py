@@ -23,6 +23,16 @@ from .rsoxs import dryrun_rsoxs_plan
 from .nexafs import dryrun_nexafs_plan
 from .spirals import dryrun_spiral_plan
 
+# List of Valid Measurement Configurations
+config_list = [
+    "WAXSNEXAFS",
+    "WAXS",
+    "SAXS",
+    "SAXSNEXAFS",
+    "SAXS_liquid",
+    "WAXS_liquid",
+]
+
 
 def dryrun_acquisition(acq, sample={}, sim_mode=True):
     # runs an acquisition from a sample
@@ -46,6 +56,7 @@ def dryrun_acquisition(acq, sample={}, sim_mode=True):
         }
     )
 
+    ### TODO: Handle other cases, like WAXSNEXAFS, WAXS_Liquid
     if acq["configuration"] == "WAXS":
         sample.update({"RSoXS_Main_DET": "waxs_det"})
     else:
@@ -77,27 +88,13 @@ def dryrun_acquisition(acq, sample={}, sim_mode=True):
         return outputs
 
 
-config_list = [
-    "WAXSNEXAFS",
-    "WAXS",
-    "SAXS",
-    "SAXSNEXAFS",
-    "SAXS_liquid",
-    "WAXS_liquid",
-]
-
-
 def time_sec(seconds):
     dt = datetime.timedelta(seconds=seconds)
     return str(dt).split(".")[0]
 
 
 def dryrun_bar(
-    bar,
-    sort_by=["sample_num"],
-    rev=[False],
-    print_dry_run=True,
-    group="all",
+    bar, sort_by=["sample_num"], rev=[False], print_dry_run=True, group="all",
 ):
     """
     dry run all sample dictionaries stored in the list bar
