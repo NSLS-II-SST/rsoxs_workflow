@@ -142,6 +142,9 @@ def dryrun_bar(
                     s["sample_priority"],  # 12 X
                     a["priority"],  # 13
                     a["uid"],  # 14
+                    a.get("group",'all'),  # 15
+                    a.get("slack_message_start",''),  # 16
+                    a.get("slack_message_end",''),  # 17
                 ]
             )  # 13 X
     switcher = {  # all the possible things we might want to sort by
@@ -223,6 +226,9 @@ def dryrun_bar(
                 out["time_before"] = total_time
                 out["priority"] = step[13]
                 out["uid"] = step[14]
+                out["group"] = step[15]
+                out["slack_message_start"] = step[16]
+                out["slack_message_end"] = step[17]
                 statements.append(out["description"])
                 if (out["action"]) == "error":
                     warnings.warn(f"WARNING: acquisition # {i} has a step with and error\n{out['description']}")
