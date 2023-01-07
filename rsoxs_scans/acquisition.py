@@ -197,7 +197,6 @@ def dryrun_bar(
                 out['acq_time'] = step[4]
                 out['total_acq'] = len(list_out)
                 out['cummulative_time'] = total_time
-                out['time_after'] = 
                 out['priority'] = step[13]
                 out['uuid'] = step[14]
                 statements.append(out['description'])
@@ -265,3 +264,4 @@ def est_scan_time(acq):
             return 0
     else:
         return 0
+
