@@ -151,7 +151,7 @@ def dryrun_bar(bar, sort_by=["sample_num"], rev=[False], print_dry_run=True, gro
 
             # Skip this acquisition unless any of these conditions are true
             if not (
-                group == "all"  # true if user specified all to be evaluated
+                group.lower() == "all"  # true if user specified all to be evaluated
                 or a.get("group", "").lower() == group.lower()  # true if group matches user selected group
             ):
                 continue
