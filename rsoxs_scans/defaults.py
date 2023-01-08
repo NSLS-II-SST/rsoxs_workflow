@@ -42,18 +42,23 @@ rsoxs_scan_core    : {'detnames', 'repeats', 'temperatures', 'temps_with_locatio
 # look up table for aliases of edges
 edge_names = {
     "c": "Carbon",
+    "carbon": "Carbon",
     "carbonk": "Carbon",
     "ck": "Carbon",
     "n": "Nitrogen",
+    "nitrogen": "Nitrogen",
     "nitrogenk": "Nitrogen",
     "nk": "Nitrogen",
     "f": "Fluorine",
+    "fluorine": "Fluorine",
     "fluorinek": "Fluorine",
     "fk": "Fluorine",
     "o": "Oxygen",
+    "oxygen": "Oxygen",
     "oxygenk": "Oxygen",
     "ok": "Oxygen",
     "ca": "Calcium",
+    "calcium": "Calcium",
     "calciumk": "Calcium",
     "cak": "Calcium",
 }
