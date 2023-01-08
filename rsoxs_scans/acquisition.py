@@ -279,7 +279,7 @@ def dryrun_bar(bar, sort_by=["apriority"], rev=[False], print_dry_run=True, grou
 
         else:
             statements = []
-            for j, out in acquisition['steps']:
+            for j, out in enumerate(acquisition['steps']):
                 out["queue_step"] = j
                 statements.append(f'>Step {j}:\n {out["description"].lstrip()}')
 
@@ -331,9 +331,14 @@ def get_acq_details(acqIndex, outputs, printOutput=True):
     list of dict
         list containing a dict for each 'queue step' [set of commands within an acquisition]
     """
-    outList = list(filter(lambda outputs: outputs["acq_index"] == acqIndex, outputs))
+    #outList = list(filter(lambda outputs: outputs["acq_index"] == acqIndex, outputs))
+    outList = [output['steps'] for output in outputs if output["acq_index"] == acqIndex]
+    if len(outList) == 1:
+        outList = outList[0]
+    elif len(outList) > 1:
+        outList = sum(outList)
     if printOutput:
-        for step in outList['steps']:
+        for step in outList:
             print("-" * 50)
             print(f">Step: {step['queue_step']}")
             print("-" * 50)
