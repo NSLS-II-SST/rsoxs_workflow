@@ -236,7 +236,7 @@ def dryrun_bar(
     # Loop through sorted acquisition steps and build output acquisition queue and dryrun text message
     for i, step in enumerate(list_out):
         warnings.resetwarnings()
-        text += f"________________________________________________\nAcquisition # {i} from sample {step[5]['sample_name']}\n\n"
+        text += f"________________________________________________\nAcquisition # {i} from sample {step[5]['sample_name']} group {step[15]}\n\n"
         text += "Summary: load {} from {}, config {}, run {} priority( sample {} acquisition {}), starts @ {} takes {}\n".format(
             step[5]["sample_name"],
             step[1],
@@ -271,8 +271,7 @@ def dryrun_bar(
         # if this step has a single output entry, we are done with this entry
         if not isinstance(outputs, list):
             outputs = [outputs]
-            ### TODO: Q: Won't this entry be lacking some fields that all the multistep ones have? Like acq index etc.
-        # if this step generated multiple output entries, provide more metadata labeling which step in the acquisition it is
+
         else:
             statements = []
             for j, out in enumerate(outputs):
@@ -287,10 +286,13 @@ def dryrun_bar(
                 out["slack_message_start"] = step[16]
                 out["slack_message_end"] = step[17]
                 statements.append(out["description"])
+
                 if (out["action"]) == "error":
                     warnings.warn(f"WARNING: acquisition # {i} has a step with and error\n{out['description']}")
                     acqs_with_errors.append((i, out["description"]))
+
             text += "".join(statements)
+
         acq_queue.extend(outputs)
         total_time += step[4]
         text += "\n________________________________________________\n"
