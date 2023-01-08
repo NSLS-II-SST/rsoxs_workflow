@@ -114,8 +114,8 @@ def load_samplesxlsx(filename: str):
             if isinstance(acq["temperatures"], (int, float)):
                 acq["temperatures"] = [acq["temperatures"]]
         acq["uid"] = str(uuid.uuid1())
-        if not isinstance(acq.get('group',0),str):
-            acq['group']=str(acq.get('group',''))
+        if not isinstance(acq.get("group", 0), str):
+            acq["group"] = str(acq.get("group", ""))
         samp["acquisitions"].append(acq)  # no checking for validity here?
     for i, sam in enumerate(new_bar):
         new_bar[i]["location"] = json.loads(sam.get("location", "[]"))
@@ -233,7 +233,7 @@ def save_samplesxlsx(bar, filename):
     bar : list of dict
         list of sample dicts
     filename : str
-        export file name, e.g., test.xlsx 
+        export file name, e.g., test.xlsx
     """
     switch = {
         "RSoXS Sample Outboard-Inboard": "x",

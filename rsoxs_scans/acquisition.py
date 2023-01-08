@@ -30,11 +30,10 @@ from .nexafs import dryrun_nexafs_plan
 from .spirals import dryrun_spiral_plan
 
 
-
 def dryrun_acquisition(acq, sample):
-    """Generates the output queue elements corresponding to a single acquisition. 
-    
-    Steps include loading configuration, loading sample, assigning detector, and running the appropriate measurement dryrun (e..g, NEXAFS, RSoXS, Spiral). 
+    """Generates the output queue elements corresponding to a single acquisition.
+
+    Steps include loading configuration, loading sample, assigning detector, and running the appropriate measurement dryrun (e..g, NEXAFS, RSoXS, Spiral).
 
     Parameters
     ----------
@@ -115,7 +114,7 @@ def dryrun_bar(bar, sort_by=["apriority"], rev=[False], print_dry_run=True, grou
     bar : list of dict
         elements are unique dictionaries for each sample on the bar sheet with full metadata and acquisitions
     sort_by : list of str, optional
-        specifies the sort priority to use when generating the acquisition queue, by default ["sample_num"]. 
+        specifies the sort priority to use when generating the acquisition queue, by default ["sample_num"].
         Valid options include: project, configuration, sample_id, plan, plan_args, spriority, apriority within which all of one acquisition, etc
     rev : list, optional
         whether to reverse the sort algorithm, list the same length of sort_by, or booleans, by default [False]
@@ -144,8 +143,9 @@ def dryrun_bar(bar, sort_by=["apriority"], rev=[False], print_dry_run=True, grou
             # Skip this acquisition unless any of these conditions are true
             if not (
                 str(group).lower() == "all"  # true if user specified all to be evaluated
-                or a.get("group","").lower() == "all" # If the acquisition has group "all"
-                or str(a.get("group", "")).lower() == str(group).lower()  # true if group matches user selected group
+                or a.get("group", "").lower() == "all"  # If the acquisition has group "all"
+                or str(a.get("group", "")).lower()
+                == str(group).lower()  # true if group matches user selected group
             ):
                 continue
 
@@ -158,7 +158,7 @@ def dryrun_bar(bar, sort_by=["apriority"], rev=[False], print_dry_run=True, grou
 
             # Generate list of lists, where each sub-list is a single acquisition
             list_out.append(  # list everything we might possibly want for each acquisition
-            # TODO - make this a dictionary
+                # TODO - make this a dictionary
                 [
                     sample_id,  # 0  X
                     sample_project,  # 1  X
