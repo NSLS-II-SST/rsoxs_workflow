@@ -289,6 +289,7 @@ def convertSampleSheetExcelMediaWiki(
     endColumn_Params: str = "F",
     verbose: bool = "TRUE",
 ) -> str:
+
     """Converts Sample Sheet Parameter Metadata into a MediaWiki-compatible formatted string.
 
     Parameters
