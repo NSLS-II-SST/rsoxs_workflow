@@ -281,6 +281,7 @@ def dryrun_bar(bar, sort_by=["apriority"], rev=[False], print_dry_run=True, grou
             statements = []
             for j, out in enumerate(acquisition['steps']):
                 out["queue_step"] = j
+                out["acq_index"] = i
                 statements.append(f'>Step {j}:\n {out["description"].lstrip()}')
 
                 if (out["action"]) == "error":
@@ -437,5 +438,7 @@ def time_sec(seconds):
     str
         timestamp formatted as hh:mm:ss
     """
+    if isinstance(seconds,datetime.timedelta):
+        seconds = seconds.total_seconds()
     dt = datetime.timedelta(seconds=seconds)
     return str(dt).split(".")[0]
