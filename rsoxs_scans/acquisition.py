@@ -112,11 +112,9 @@ def dryrun_acquisition(acq, sample={}, sim_mode=True):
         return outputs
 
 
-### TODO sort_by docstring is confusing
+### TODO sort_by docstring explanation is confusing
 def dryrun_bar(bar, sort_by=["sample_num"], rev=[False], print_dry_run=True, group="all"):
     """Generate output queue entries for all sample dicts in the bar list
-
-    _extended_summary_
 
     Parameters
     ----------
@@ -130,7 +128,7 @@ def dryrun_bar(bar, sort_by=["sample_num"], rev=[False], print_dry_run=True, gro
     print_dry_run : bool, optional
         whether to print the final scan queue to stdout, by default True
     group : str, optional
-        subset of acquisitions to execute the dry-run for (excel column 'group'), by default "all". not case-sensitive
+        subset of acquisitions to execute the dry-run for (excel column 'group'), by default "all". case-insensitive
 
     Returns
     -------
@@ -305,6 +303,7 @@ def dryrun_bar(bar, sort_by=["sample_num"], rev=[False], print_dry_run=True, gro
     text += f"\n\nTotal estimated time including config changes {time_sec(total_time)}"
     if print_dry_run:
         print(text)
+    # Warn user about acquisitions that contained errors
     for index, error in acqs_with_errors:
         warnings.resetwarnings()
         warnings.warn(f"WARNING: acquisition # {index} has a step with an error\n{error}\n\n")
@@ -312,6 +311,18 @@ def dryrun_bar(bar, sort_by=["sample_num"], rev=[False], print_dry_run=True, gro
 
 
 def est_scan_time(acq):
+    """Estimates scan duration in seconds for a given acquisition.
+
+    Parameters
+    ----------
+    acq : dict
+        dictionary containing acquisition parameters
+
+    Returns
+    -------
+    float
+        estimated scan duration in seconds
+    """
     if "type" in acq:
         if acq["type"] == "rsoxs":
             times, time = construct_exposure_times(
@@ -358,12 +369,24 @@ def est_scan_time(acq):
             return total_time
         elif acq["type"].lower() in ["wait", "sleep", "pause"]:
             return float(acq["edge"])
-        else:
+        else:  # not a matching type that takes time
             return 0
-    else:
+    else:  # acquisition has no type key
         return 0
 
 
 def time_sec(seconds):
+    """Generates a formatted timestamp (hh:mm:ss) from the input number of seconds
+
+    Parameters
+    ----------
+    seconds : float
+        number of seconds
+
+    Returns
+    -------
+    str
+        timestamp formatted as hh:mm:ss
+    """
     dt = datetime.timedelta(seconds=seconds)
     return str(dt).split(".")[0]
