@@ -130,7 +130,7 @@ def dryrun_bar(bar, sort_by=["sample_num"], rev=[False], print_dry_run=True, gro
     print_dry_run : bool, optional
         whether to print the final scan queue to stdout, by default True
     group : str, optional
-        subset of acquisitions to execute the dry-run for (excel column 'group'), by default "all"
+        subset of acquisitions to execute the dry-run for (excel column 'group'), by default "all". not case-sensitive
 
     Returns
     -------
@@ -150,7 +150,10 @@ def dryrun_bar(bar, sort_by=["sample_num"], rev=[False], print_dry_run=True, gro
         for acq_num, a in enumerate(s["acquisitions"]):
 
             # Skip this acquisition unless any of these conditions are true
-            if not (group == "all" or a.get("group", "") == group):  # true if user specified all to be evaluated
+            if not (
+                group == "all"  # true if user specified all to be evaluated
+                or a.get("group", "").lower() == group.lower()  # true if group matches user selected group
+            ):
                 continue
 
             if "uid" not in a.keys():
