@@ -14,7 +14,7 @@ from .defaults import (
     nexafs_ratios_table,
     nexafs_edges,
     nexafs_speed_table,
-    dafault_warning_step_time,
+    default_warning_step_time,
     default_exposure_time,
     default_diameter,
     default_spiral_step,
@@ -112,35 +112,57 @@ def dryrun_acquisition(acq, sample={}, sim_mode=True):
         return outputs
 
 
+### TODO sort_by docstring is confusing
 def dryrun_bar(
     bar, sort_by=["sample_num"], rev=[False], print_dry_run=True, group="all",
 ):
-    """
-    dry run all sample dictionaries stored in the list bar
-    @param bar: a list of sample dictionaries
-    @param sort_by: list of strings determining the sorting of scans
-                    strings include project, configuration, sample_id, plan, plan_args, spriority, apriority
-                    within which all of one acquisition, etc
-    @param rev: list the same length of sort_by, or booleans, wetierh to reverse that sort
-    @return:
+    """Generate output queue entries for all sample dicts in the bar list
+
+    _extended_summary_
+
+    Parameters
+    ----------
+    bar : list of dict
+        elements are unique dictionaries for each sample on the bar sheet with full metadata and acquisitions
+    sort_by : list of str, optional
+        specifies the sort priority to use when generating the acquisition queue, by default ["sample_num"]. 
+        Valid options include: project, configuration, sample_id, plan, plan_args, spriority, apriority within which all of one acquisition, etc
+    rev : list, optional
+        whether to reverse the sort algorithm, list the same length of sort_by, or booleans, by default [False]
+    print_dry_run : bool, optional
+        whether to print the final scan queue to stdout, by default True
+    group : str, optional
+        subset of acquisitions to execute the dry-run for (excel column 'group'), by default "all"
+
+    Returns
+    -------
+    list of dict
+        all acquisition queue entries for the matched group of scans as a list of dictionaries
     """
 
     config_change_time = 120  # time to change between configurations, in seconds.
     list_out = []
 
+    # Loop through sample dicts in the bar
     for samp_num, s in enumerate(bar):
         sample = s
         sample_id = s["sample_id"]
         sample_project = s["project_name"]
+        # Loop through acquisitions within the sample
         for acq_num, a in enumerate(s["acquisitions"]):
+
             if not (group == "all" or a.get("group", "all") == "all" or a.get("group", "all") == group):
                 continue  # if the group filter or the acquisition group is "all" or not specified,
-                # of if the the acquisition group matches the filter pass.  if not, ignore this acquisition
+                # or if the the acquisition group matches the filter pass.  if not, ignore this acquisition
+
             if "uid" not in a.keys():
                 a["uid"] = str(uuid.uuid1())
             a["uid"] = str(a["uid"])
+
             if "priority" not in a.keys():
-                a["priority"] = 50
+                a["priority"] = 50  ### TODO why 50?
+
+            # Generate list of lists, where each sub-list is a single acquisition
             list_out.append(  # list everything we might possibly want for each acquisition
                 [
                     sample_id,  # 0  X
@@ -163,6 +185,8 @@ def dryrun_bar(
                     a.get("slack_message_end", ""),  # 17
                 ]
             )  # 13 X
+
+    # Prepare for sorting scans
     switcher = {  # all the possible things we might want to sort by
         "sample_id": 0,
         "project": 1,
@@ -171,13 +195,13 @@ def dryrun_bar(
         "edge": 9,
         "proposal": 11,
         "spriority": 12,
-        "apriority": 13,  # can just make this the default??
+        "apriority": 13,  # TODO can just make this the default??
         "sample_num": 7,
     }
     # add anything to the above list, and make a key in the above dictionary,
     # using that element to sort by something else
     try:
-        sort_by.reverse()  # we want to sort from the last to the first element to match peopls expectations
+        sort_by.reverse()  # we want to sort from the last to the first element to match people's expectations
         rev.reverse()
     except AttributeError:
         if isinstance(sort_by, str):  # accept that someone might just put a single string
@@ -189,6 +213,8 @@ def dryrun_bar(
                 "such as project, configuration, sample_id, plan, plan_args, spriority, apriority"
             )
             return
+
+    # Generate list of properly sorted scans in list_out
     try:
         for k, r in zip(sort_by, rev):  # do all of the sorts in order
             list_out = sorted(list_out, key=itemgetter(switcher[k]), reverse=r)
@@ -198,16 +224,20 @@ def dryrun_bar(
             "such as project, configuration, sample_id, plan, plan_args, spriority, apriority"
         )
         return
+
+    # Generate the output acquisition queue
     failcount = 0
-    text = ""
+    text = ""  # Dry run output text for visual inspection
     total_time = 0
     previous_config = ""
-    acq_queue = []
+    acq_queue = []  # output queue
     acqs_with_errors = []
+
+    # Loop through sorted acquisition steps and build output acquisition queue and dryrun text message
     for i, step in enumerate(list_out):
         warnings.resetwarnings()
         text += f"________________________________________________\nAcquisition # {i} from sample {step[5]['sample_name']}\n\n"
-        text += "Summary: load {} from {}, config {}, run {} priority(sample {} acquisition {}), starts @ {} takes {}\n".format(
+        text += "Summary: load {} from {}, config {}, run {} priority( sample {} acquisition {}), starts @ {} takes {}\n".format(
             step[5]["sample_name"],
             step[1],
             step[2],
@@ -217,22 +247,32 @@ def dryrun_bar(
             time_sec(total_time),
             time_sec(step[4]),
         )
+
+        # Check for config change
         if step[2] != previous_config:
             total_time += config_change_time
-            text += " (+2 minutes for configuration change)\n"
+            text += f" (+{config_change_time} seconds for configuration change)\n"
         text += "\n"
-        if step[4] > dafault_warning_step_time:
+
+        # Check if acquisition will take too long
+        if step[4] > default_warning_step_time:
             warnings.warn(
-                f"WARNING: acquisition # {i} will take {step[4]/60} minutes, which is more than {dafault_warning_step_time/60} minutes"
+                f"WARNING: acquisition # {i} will take {step[4]/60} minutes, which is more than {default_warning_step_time/60} minutes"
             )
+
+        # Check if configuration is invalid
         if step[2] not in config_list:
             warnings.warn(
                 f"WARNING: acquisition # {i} has an invalid configuration - no configuration will be loaded"
             )
             text += "Warning invalid configuration" + step[2]
         outputs = dryrun_acquisition(step[6], step[5])
+
+        # if this step has a single output entry, we are done with this entry
         if not isinstance(outputs, list):
             outputs = [outputs]
+            ### TODO: Q: Won't this entry be lacking some fields that all the multistep ones have? Like acq index etc.
+        # if this step generated multiple output entries, provide more metadata labeling which step in the acquisition it is
         else:
             statements = []
             for j, out in enumerate(outputs):
@@ -319,6 +359,7 @@ def est_scan_time(acq):
             return 0
     else:
         return 0
+
 
 def time_sec(seconds):
     dt = datetime.timedelta(seconds=seconds)

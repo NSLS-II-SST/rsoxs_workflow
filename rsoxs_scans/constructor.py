@@ -14,7 +14,7 @@ from .defaults import (
     nexafs_ratios_table,
     nexafs_edges,
     nexafs_speed_table,
-    dafault_warning_step_time,
+    default_warning_step_time,
 )
 
 
