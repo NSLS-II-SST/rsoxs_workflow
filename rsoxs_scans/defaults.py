@@ -1,3 +1,7 @@
+"""Contains default measurement,timeout parameters as well as list of allowed actions.
+
+"""
+
 # set the defaults one place
 default_frames = "full"
 default_repeats = 1

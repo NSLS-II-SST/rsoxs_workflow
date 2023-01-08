@@ -1,3 +1,7 @@
+"""Does the NEXAFS #TODO Docs
+
+"""
+
 # imports
 import numpy as np
 from copy import deepcopy
