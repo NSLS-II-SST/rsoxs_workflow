@@ -231,7 +231,7 @@ def dryrun_bar(bar, sort_by=["apriority"], rev=[False], print_dry_run=True, grou
 
     # Loop through sorted acquisition steps and build output acquisition queue and dryrun text message
     for i, step in enumerate(list_out):
-        acquisition = {'acq_index':i,'acq_steps':[]}
+        acquisition = {'acq_index':i,'steps':[]}
         warnings.resetwarnings()
         text += f"________________________________________________\nAcquisition # {i} from sample {step[5]['sample_name']}, group {step[15]}\n\n"
         text += "Summary: load {} from {}, config {}, run {} priority( sample {} acquisition {}), starts @ {} takes {}\n".format(
@@ -276,19 +276,17 @@ def dryrun_bar(bar, sort_by=["apriority"], rev=[False], print_dry_run=True, grou
         # if this step has a single output entry, we are done with this entry
         if not isinstance(acquisition['steps'], list):
             acquisition['steps'] = [acquisition['steps']]
+        statements = []
+        for j, out in enumerate(acquisition['steps']):
+            out["queue_step"] = j
+            out["acq_index"] = i
+            statements.append(f'>Step {j}: {out["description"].lstrip()}')
 
-        else:
-            statements = []
-            for j, out in enumerate(acquisition['steps']):
-                out["queue_step"] = j
-                out["acq_index"] = i
-                statements.append(f'>Step {j}: {out["description"].lstrip()}')
+            if (out["action"]) == "error":
+                warnings.warn(f"WARNING: acquisition # {i} has a step with and error\n{out['description']}")
+                acqs_with_errors.append((i, out["description"]))
 
-                if (out["action"]) == "error":
-                    warnings.warn(f"WARNING: acquisition # {i} has a step with and error\n{out['description']}")
-                    acqs_with_errors.append((i, out["description"]))
-
-            text += "".join(statements)
+        text += "".join(statements)
 
         acq_queue.append(acquisition)
         total_time += step[4]
