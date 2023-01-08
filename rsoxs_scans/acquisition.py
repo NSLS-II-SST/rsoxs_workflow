@@ -282,7 +282,7 @@ def dryrun_bar(bar, sort_by=["apriority"], rev=[False], print_dry_run=True, grou
             for j, out in enumerate(acquisition['steps']):
                 out["queue_step"] = j
                 out["acq_index"] = i
-                statements.append(f'>Step {j}:\n {out["description"].lstrip()}')
+                statements.append(f'>Step {j}: {out["description"].lstrip()}')
 
                 if (out["action"]) == "error":
                     warnings.warn(f"WARNING: acquisition # {i} has a step with and error\n{out['description']}")
