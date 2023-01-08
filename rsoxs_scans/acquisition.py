@@ -289,7 +289,7 @@ def dryrun_bar(bar, sort_by=["sample_num"], rev=[False], print_dry_run=True, gro
                 out["group"] = step[15]
                 out["slack_message_start"] = step[16]
                 out["slack_message_end"] = step[17]
-                statements.append(f'Step {j}:\n {out["description"].lstrip()}')
+                statements.append(f'>Step {j}:\n {out["description"].lstrip()}')
 
                 if (out["action"]) == "error":
                     warnings.warn(f"WARNING: acquisition # {i} has a step with and error\n{out['description']}")
@@ -336,7 +336,7 @@ def get_acq_details(acqIndex, outputs, printOutput=True):
     if printOutput:
         for step in outList:
             print("-" * 50)
-            print(f"Step: {step['queue_step']}")
+            print(f">Step: {step['queue_step']}")
             print("-" * 50)
             for key, value in step.items():
                 if isinstance(value, dict):
