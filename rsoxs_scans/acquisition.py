@@ -4,7 +4,7 @@ Also estimates scan time at a high level, relying on constructor module function
 """
 
 # imports
-import datetime, warnings, uuid
+import datetime, warnings, uuid, json
 from copy import deepcopy
 from operator import itemgetter
 import bluesky.plan_stubs as bps
@@ -329,18 +329,19 @@ def get_acq_details(acqIndex, outputs, printOutput=True):
             print("-" * 50)
             print(f">Step: {step['queue_step']}")
             print("-" * 50)
-            for key, value in step.items():
-                if isinstance(value, dict):
-                    print(f"\t{key}", " : ")
-                    for key2, value2 in value.items():
-                        if isinstance(value2, dict):
-                            print(f"\t\t{key2}", " : ")
-                            for key3, value3 in value2.items():
-                                print(f"\t\t\t{key3}", " : ", value3)
-                        else:
-                            print(f"\t\t{key2}", " : ", value2)
-                else:
-                    print(f"\t{key}", " : ", value)
+            json.dumps(step, indent=4)
+            # for key, value in step.items():
+            #     if isinstance(value, dict):
+            #         print(f"\t{key}", " : ")
+            #         for key2, value2 in value.items():
+            #             if isinstance(value2, dict):
+            #                 print(f"\t\t{key2}", " : ")
+            #                 for key3, value3 in value2.items():
+            #                     print(f"\t\t\t{key3}", " : ", value3)
+            #             else:
+            #                 print(f"\t\t{key2}", " : ", value2)
+            #     else:
+            #         print(f"\t{key}", " : ", value)
 
     return
 

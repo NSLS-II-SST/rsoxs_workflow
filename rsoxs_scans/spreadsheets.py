@@ -114,6 +114,8 @@ def load_samplesxlsx(filename: str):
             if isinstance(acq["temperatures"], (int, float)):
                 acq["temperatures"] = [acq["temperatures"]]
         acq["uid"] = str(uuid.uuid1())
+        if not isinstance(acq.get('group',0),str):
+            acq['group']=str(acq.get('group',''))
         samp["acquisitions"].append(acq)  # no checking for validity here?
     for i, sam in enumerate(new_bar):
         new_bar[i]["location"] = json.loads(sam.get("location", "[]"))
