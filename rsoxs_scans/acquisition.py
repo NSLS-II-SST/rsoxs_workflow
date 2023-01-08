@@ -306,6 +306,13 @@ def dryrun_bar(bar, sort_by=["apriority"], rev=[False], print_dry_run=True, grou
     return acq_queue
 
 
+class NumpyEncoder(json.JSONEncoder):
+    def default(self, obj):
+        if isinstance(obj, np.ndarray):
+            return obj.tolist()
+        return json.JSONEncoder.default(self, obj)
+
+
 def get_acq_details(acqIndex, outputs, printOutput=True):
     """Provides full details of each step within an acquisition as a list of dicts, optionally prints (more human readible output)
 
@@ -329,7 +336,7 @@ def get_acq_details(acqIndex, outputs, printOutput=True):
             print("-" * 50)
             print(f">Step: {step['queue_step']}")
             print("-" * 50)
-            json.dumps(step, indent=4)
+            json.dumps(step, indent=4,cls=NumpyEncoder)
             # for key, value in step.items():
             #     if isinstance(value, dict):
             #         print(f"\t{key}", " : ")
