@@ -105,18 +105,17 @@ def load_samplesxlsx(filename: str):
                 acq["edge"] = [
                     float(num) for num in acq["edge"].split(",")
                 ]  # cast it as a list of floating point numbers instead
-        
-        if acq['type'].lower =='rsoxs':
+        if acq['type'].lower() == 'rsoxs':
             if acq['configuration'] not in rsoxs_configurations:
                 raise TypeError(f'{acq["configuration"]} on line {i} is not a valid configuration for an rsoxs scan')
             if not isinstance(acq.get('edge','c'),(tuple,list)):
-                if not str(acq.get('edge','c')).lower in edge_names:
+                if not str(acq.get('edge','c')).lower() in edge_names:
                     raise ValueError(f'{acq["edge"]} on line {i} is not a valid edge for an rsoxs scan')
-        elif acq['type'].lower == 'nexafs':
+        elif acq['type'].lower() == 'nexafs':
             if acq['configuration'] not in config_list:
                 raise TypeError(f'{acq["configuration"]} on line {i} is not a valid configuration for a nexafs scan')
             if not isinstance(acq.get('edge','c'),(tuple,list)):
-                if not str(acq.get('edge','c')).lower in edge_names:
+                if not str(acq.get('edge','c')).lower() in edge_names.keys():
                     raise ValueError(f'{acq["edge"]} on line {i} is not a valid edge for a nexafs scan')
         if "polarizations" in acq:
             if isinstance(acq["polarizations"], (int, float)):
