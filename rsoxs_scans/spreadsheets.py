@@ -24,8 +24,9 @@ def load_samplesxlsx(filename: str):
     Returns
     -------
     list of dicts
-        bar (list of sample dicts) which contain all imported data from samples sheet and acquisitions sheet
+        bar (list of sample dicts) which contain all imported data from the Bar sheet and Acquisitions sheet
     """
+    # Header rows with user instructions, to skip. Need the top row (0) for parameter names
     skiprows = [1, 2, 3, 4]
 
     ### TODO remove if this is just test code
@@ -35,6 +36,7 @@ def load_samplesxlsx(filename: str):
         skiprows = []
         pass
 
+    # Load Bar sheet
     df = pd.read_excel(
         filename,
         na_values="",
@@ -45,7 +47,7 @@ def load_samplesxlsx(filename: str):
         skiprows=skiprows,
         verbose=True,
     )
-    
+
     df.replace(np.nan, "", regex=True, inplace=True)
     new_bar = df.to_dict(orient="records")
     if not isinstance(new_bar, list):  # if the bar has one element, it's not a list
@@ -56,6 +58,8 @@ def load_samplesxlsx(filename: str):
         ] = (
             []
         )  # blank out any acquisitions elements which might be there (they shouldn't be there unless someone added a column for some reason
+
+    # Load Acquisitions Sheet
     acqsdf = pd.read_excel(
         filename,
         na_values="",
@@ -139,17 +143,23 @@ def load_samplesxlsx(filename: str):
 
 
 def get_proposal_info(proposal_id, beamline="SST1", path_base="/sst/", cycle="2023-1"):
-    """
-    proposal_id is either a string of a number, a string including a "GU-", "PU-", "pass-", or  "C-" prefix and a number, or a number
-    beamline is the beamline name from PASS,
-    path_base is the part of the path that indicates it's really for this beamline
-    cycle is the current cycle (or the cycle that is valid for this purpose)
+    """Query the api PASS database, and get the info corresponding to a proposal ID
 
-    queury the api PASS database, and get the info corresponding to a proposal ID
-    returns:
-    the data_session ID which should be put into the run engine metadata of every scan
-    the path to write analyzed data to
-    all of the proposal information for the metadata if needed
+    Parameters
+    ----------
+    proposal_id : str or int
+        string of a number, a string including a "GU-", "PU-", "pass-", or  "C-" prefix and a number, or a number
+    beamline : str, optional
+        the beamline name from PASS, by default "SST1"
+    path_base : str, optional
+        the part of the path that indicates it's really for this beamline, by default "/sst/"
+    cycle : str, optional
+        the current cycle (or the cycle that is valid for this purpose), by default "2023-1"
+
+    Returns
+    -------
+    tuple (res["data_session"], valid_path, valid_SAF, proposal_info)
+         data_session ID which should be put into the run engine metadata of every scan, the path to write analyzed data to, the SAF, and all of the proposal information for the metadata if needed
     """
     warn_text = "\n WARNING!!! no data taken with this proposal will be retrievable \n  it is HIGHLY suggested that you fix this"
     proposal_re = re.compile(r"^[GUCPpass]*-?(?P<proposal_number>\d+)$")
@@ -215,6 +225,15 @@ def get_proposal_info(proposal_id, beamline="SST1", path_base="/sst/", cycle="20
 
 
 def save_samplesxlsx(bar, filename):
+    """Exports the in-memory bar (list of sample dicts) as an excel sheet with 'Bar', and 'Acquisitions' sheets.
+
+    Parameters
+    ----------
+    bar : list of dict
+        list of sample dicts
+    filename : str
+        export file name, e.g., test.xlsx 
+    """
     switch = {
         "RSoXS Sample Outboard-Inboard": "x",
         "RSoXS Sample Up-Down": "y",
