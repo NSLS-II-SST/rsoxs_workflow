@@ -56,11 +56,15 @@ def dryrun_acquisition(acq, sample={}, sim_mode=True):
         }
     )
 
-    ### TODO: Handle other cases, like WAXSNEXAFS, WAXS_Liquid
-    if acq["configuration"] == "WAXS":
+    # Assign the RSoXS Detector based on configuration specified
+    if acq["configuration"] in ["WAXS", "WAXS_liquid", "WAXSNEXAFS"]:
         sample.update({"RSoXS_Main_DET": "waxs_det"})
-    else:
+    elif acq["configuration"] in ["SAXS", "SAXS_liquid", "SAXSNEXAFS"]:
         sample.update({"RSoXS_Main_DET": "saxs_det"})
+    else:  # Invalid configuration string
+        outputs.append({"description": f'\n\nError: {acq["configuration"]} is not valid\n\n', "action": "error"})
+
+    # Run the appropriate dryrun function based on acquisition type
     if "type" in acq:
         if acq["type"] == "rsoxs":
             outputs.extend(dryrun_rsoxs_plan(**acq, md=sample))
@@ -80,10 +84,10 @@ def dryrun_acquisition(acq, sample={}, sim_mode=True):
                 }
             )
             return outputs
-        else:
+        else:  # Invalid type string
             outputs.append({"description": f'\n\nError: {acq["type"]} is not valid\n\n', "action": "error"})
             return outputs
-    else:
+    else:  # No type specified
         outputs.append({"description": "\n\nError: no acquisition type specified\n\n", "action": "error"})
         return outputs
 
