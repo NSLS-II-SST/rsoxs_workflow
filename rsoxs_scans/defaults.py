@@ -132,3 +132,10 @@ config_list = [
     "SAXS_liquid",
     "WAXS_liquid",
 ]
+
+rsoxs_configurations = [
+    "WAXS",
+    "SAXS",
+    "SAXS_liquid",
+    "WAXS_liquid",
+]
