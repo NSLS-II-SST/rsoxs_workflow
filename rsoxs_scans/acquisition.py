@@ -1,3 +1,8 @@
+"""Handles conversion of the bar (list of sample dicts) into the output queue dict or dryrun printed text. 
+
+Also estimates scan time at a high level, relying on constructor module functions to generate ranges. Also contains a dict of valid sample configurations.
+"""
+
 # imports
 import datetime, warnings, uuid
 from copy import deepcopy

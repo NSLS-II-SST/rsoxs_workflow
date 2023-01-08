@@ -1,3 +1,8 @@
+"""Handles excel sample sheet import and export as well as proposal ID validation. 
+
+Contains code to parse excel sheet for bar (list of sample dict), export parsed excel sheet, and export excel metadata rules for mediaWiki.
+"""
+
 # imports
 from copy import deepcopy
 from pathlib import Path
@@ -8,7 +13,19 @@ import numpy as np
 import pandas as pd
 
 
-def load_samplesxlsx(filename):
+def load_samplesxlsx(filename: str):
+    """Imports data from excel sheet and online sources to generate bar (list of sample dicts)
+
+    Parameters
+    ----------
+    filename : str
+        String or Pathlike object that references the excel sheet to load
+
+    Returns
+    -------
+    list of dicts
+        bar (list of sample dicts) which contain all imported data from samples sheet and acquisitions sheet
+    """
     skiprows = [1, 2, 3, 4]
     try:
         dummy = pd.read_excel(filename, sheet_name="Instructions")
@@ -25,6 +42,7 @@ def load_samplesxlsx(filename):
         skiprows=skiprows,
         verbose=True,
     )
+    print(df)
     df.replace(np.nan, "", regex=True, inplace=True)
     new_bar = df.to_dict(orient="records")
     if not isinstance(new_bar, list):  # if the bar has one element, it's not a list
@@ -34,7 +52,7 @@ def load_samplesxlsx(filename):
             "acquisitions"
         ] = (
             []
-        )  # blank out any acquisitions elements which might be therer (they shouldn't be there unless someone added a column for some reason
+        )  # blank out any acquisitions elements which might be there (they shouldn't be there unless someone added a column for some reason
     acqsdf = pd.read_excel(
         filename,
         na_values="",
@@ -249,29 +267,28 @@ def convertSampleSheetExcelMediaWiki(
     endColumn_Params: str = "F",
     verbose: bool = "TRUE",
 ) -> str:
-    """Converts Sample Sheet Parameter Metadata into a MediaWiki-compatible format string.
-    
+    """Converts Sample Sheet Parameter Metadata into a MediaWiki-compatible formatted string.
+
     Parameters
     ----------
-    excelSheet: Path
+    excelSheet : Path, optional
         Path (or string) to the excel sheet to be loaded.
-    rulesSheetName: str
+    paramsSheetToOutput : str, optional
         Name of the excel sheet which should be parsed for metadata
-    paramsSheetToOutput: str
-        Which set of params should be output (e.g., 'bar', 'acquisitions'). 'all' will sequentially output tables for the same wiki page
-    versionCell: str
-        Location (e.g., 'B4') of the cell that contains the sheet version number
-    startRow_Params: int
-        Excel row number which contains the header for the metadata table (excel starts at row 1)
-    endRow_Params: int
-        Excel row number which contains the last row of metadata (leave as -1 if scanning to end of file)
-    startColumn_Params: str
-        First excel column (by letter) that contains the metadata table
-    endColumn_Params:str
-        Last excel column (by letter) that contains the metadata table
-    verbose: bool
-        Whether to print progress text to stdout
-    
+    rulesSheetName : str, optional
+        Which set of params should be output (e.g., 'bar', 'acquisitions'). 'all' will sequentially output tables for the same wiki page, by default "SheetRulesAndMetaData"
+    versionCell : str, optional
+        Location (e.g., 'B4') of the cell that contains the sheet version number, by default "B4"
+    startRow_Params : int, optional
+        Excel row number which contains the header for the metadata table (excel starts at row 1), by default 7
+    endRow_Params : int, optional
+        Excel row number which contains the last row of metadata (leave as -1 if scanning to end of file), by default None
+    startColumn_Params : str, optional
+        First excel column (by letter) that contains the metadata table, by default "A"
+    endColumn_Params : str, optional
+        Last excel column (by letter) that contains the metadata table, by default "F"
+    verbose : bool, optional
+        Whether to print progress text to stdout, by default "TRUE"
 
     Returns
     -------
