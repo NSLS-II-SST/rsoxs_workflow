@@ -1,3 +1,7 @@
+"""Does the RSoXS #TODO Docs
+
+"""
+
 # imports
 import numpy as np
 from copy import deepcopy
@@ -9,7 +13,7 @@ def rotate_sample(samp, force=False):
     rotate a sample position to the requested theta position
     the requested sample position is set in the angle metadata (sample['angle'])
     """
-    sanatize_angle(samp, force)  # makes sure the requested angle is translated into a real angle for acquisition
+    sanitize_angle(samp, force)  # makes sure the requested angle is translated into a real angle for acquisition
     theta_new = samp["bar_loc"]["th"]
     x0 = samp["bar_loc"]["x0"]
     y0 = samp["bar_loc"]["y0"]
@@ -49,7 +53,7 @@ def rotatedx(x0, theta, zoff, xoff=1.88, thoff=1.6):
     )
 
 
-def sanatize_angle(samp, force=False):
+def sanitize_angle(samp, force=False):
     # translates a requested angle (something in sample['angle']) into an actual angle depending on the kind of sample
     if type(samp["angle"]) == int or type(samp["angle"]) == float:
         goodnumber = True  # make the number fall in the necessary range

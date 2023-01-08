@@ -1,3 +1,7 @@
+"""Expands parameterized energy ranges, exposure times, and NEXAFS scan parameters into full parameter lists and time estimates
+
+"""
+
 # imports
 import datetime
 import numpy as np
@@ -14,26 +18,44 @@ from .defaults import (
     nexafs_ratios_table,
     nexafs_edges,
     nexafs_speed_table,
-    dafault_warning_step_time,
+    default_warning_step_time,
 )
 
 
 def get_nexafs_scan_params(edge, speed=default_speed, ratios=None, quiet=False, **kwargs):
-    """
-    creates fly NEXAFS scan parameters, given an edge (which includes thresholds for different speed regions) base speed (eV/sec) and speed ratios between the different regions
-    Args:
-        edge: String or tuple of 2 or more numbers (the only required entry)
+    """Creates fly NEXAFS scan parameters and time estimate, given an edge (which includes thresholds for different speed regions) base speed (eV/sec) and speed ratios between the different regions
+
+    Parameters
+    ----------
+    edge : str or tuple
+        Specifies absorption edge or energy range (the only required entry)
             if string, this should be a key in the lookup tables refering to an absorption edge energy
-            if tuple, this is the thresholds of the different ranges, i.e. start of pre edge, start of main edge, start of post edge, end etc.
-                the length of the tuple should correspond to 1- the speed ratios (or a default can be chosen if between 2 and 6 thresholds are given)
-        speed: String or Number (normal if not defined)
+            
+            if tuple, this is the thresholds of the different ranges, i.e. start of pre edge, start of main edge, start of post edge, end etc. the length of the tuple should correspond to 1- the speed ratios (or a default can be chosen if between 2 and 6 thresholds are given)    
+    
+    speed : str or number, optional
+        how fast to complete the scan, by default default_speed
+            
             if string, this should be in the lookup table of standard speeds for scans
             if number, this is the base speed in eV/sec
-        speed_ratios: string or tuple of numbers
+    
+    ratios : string or tuple of numbers, optional
+        describes coarseness of energy interval, by default None       
             if string, this should be in the lookup table of standard intervals
+            
             if a tuple, this must have one less element than the edge tuple (either explicitely entered or from the lookup table)
-                the values are the ratio of energy steps between the different regions defined by edge
+            
+            the values are the ratio of energy steps between the different regions defined by edge
+        
+    quiet : bool, optional
+        Whether to output progress report, by default False
 
+    Returns
+    -------
+    scan_params
+        _description_ #TODO docs
+    time
+        _description_ #TODO docs
     """
 
     edge_input = edge
@@ -71,6 +93,7 @@ def get_nexafs_scan_params(edge, speed=default_speed, ratios=None, quiet=False, 
     for i, ratio in enumerate(ratios):
         scan_params += [(edge[i], edge[i + 1], float(ratio) * float(speed))]
         time += abs(edge[i + 1] - edge[i]) / (float(ratio) * float(speed))
+
     if not quiet:
         # ------- remove this for production, it's just for looking at the output conveniently during development
         print(scan_params)
@@ -80,7 +103,7 @@ def get_nexafs_scan_params(edge, speed=default_speed, ratios=None, quiet=False, 
 
     return scan_params, time
 
-
+# TODO docs
 def get_energies(edge, frames=default_frames, ratios=None, quiet=False, **kwargs):
     """
     creates a usable list of energies, given an edge an estimated number of frames (energies) and intervals
@@ -212,7 +235,7 @@ def get_energies(edge, frames=default_frames, ratios=None, quiet=False, **kwargs
         # --------
     return energies
 
-
+# TODO docs
 def construct_exposure_times(energies, exposure_time=1, repeats=1, quiet=False):
     """
     construct an array of exposure times to go with the array of energies input

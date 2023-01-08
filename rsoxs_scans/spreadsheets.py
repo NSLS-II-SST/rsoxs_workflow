@@ -1,3 +1,8 @@
+"""Handles excel sample sheet import and export as well as proposal ID validation. 
+
+Contains code to parse excel sheet for bar (list of sample dict), export parsed excel sheet, and export excel metadata rules for mediaWiki.
+"""
+
 # imports
 from copy import deepcopy
 from pathlib import Path
@@ -8,13 +13,30 @@ import numpy as np
 import pandas as pd
 
 
-def load_samplesxlsx(filename):
+def load_samplesxlsx(filename: str):
+    """Imports data from excel sheet and online sources to generate bar (list of sample dicts)
+
+    Parameters
+    ----------
+    filename : str
+        String or Pathlike object that references the excel sheet to load
+
+    Returns
+    -------
+    list of dicts
+        bar (list of sample dicts) which contain all imported data from the Bar sheet and Acquisitions sheet
+    """
+    # Header rows with user instructions, to skip. Need the top row (0) for parameter names
     skiprows = [1, 2, 3, 4]
+
+    ### TODO remove if this is just test code
     try:
         dummy = pd.read_excel(filename, sheet_name="Instructions")
     except ValueError:
         skiprows = []
         pass
+
+    # Load Bar sheet
     df = pd.read_excel(
         filename,
         na_values="",
@@ -25,6 +47,7 @@ def load_samplesxlsx(filename):
         skiprows=skiprows,
         verbose=True,
     )
+
     df.replace(np.nan, "", regex=True, inplace=True)
     new_bar = df.to_dict(orient="records")
     if not isinstance(new_bar, list):  # if the bar has one element, it's not a list
@@ -34,7 +57,9 @@ def load_samplesxlsx(filename):
             "acquisitions"
         ] = (
             []
-        )  # blank out any acquisitions elements which might be therer (they shouldn't be there unless someone added a column for some reason
+        )  # blank out any acquisitions elements which might be there (they shouldn't be there unless someone added a column for some reason
+
+    # Load Acquisitions Sheet
     acqsdf = pd.read_excel(
         filename,
         na_values="",
@@ -42,7 +67,6 @@ def load_samplesxlsx(filename):
         keep_default_na=True,
         sheet_name="Acquisitions",
         skiprows=skiprows,
-        # usecols="A:U",
         verbose=True,
     )
     # acqsdf.replace(np.nan, "", regex=True, inplace=True)
@@ -90,6 +114,8 @@ def load_samplesxlsx(filename):
             if isinstance(acq["temperatures"], (int, float)):
                 acq["temperatures"] = [acq["temperatures"]]
         acq["uid"] = str(uuid.uuid1())
+        if not isinstance(acq.get("group", 0), str):
+            acq["group"] = str(acq.get("group", ""))
         samp["acquisitions"].append(acq)  # no checking for validity here?
     for i, sam in enumerate(new_bar):
         new_bar[i]["location"] = json.loads(sam.get("location", "[]"))
@@ -118,19 +144,25 @@ def load_samplesxlsx(filename):
 
 
 def get_proposal_info(proposal_id, beamline="SST1", path_base="/sst/", cycle="2023-1"):
-    """
-    proposal_id is either a string of a number, a string including a "GU-", "PU-", "pass-", or  "C-" prefix and a number, or a number
-    beamline is the beamline name from PASS,
-    path_base is the part of the path that indicates it's really for this beamline
-    cycle is the current cycle (or the cycle that is valid for this purpose)
+    """Query the api PASS database, and get the info corresponding to a proposal ID
 
-    queury the api PASS database, and get the info corresponding to a proposal ID
-    returns:
-    the data_session ID which should be put into the run engine metadata of every scan
-    the path to write analyzed data to
-    all of the proposal information for the metadata if needed
+    Parameters
+    ----------
+    proposal_id : str or int
+        string of a number, a string including a "GU-", "PU-", "pass-", or  "C-" prefix and a number, or a number
+    beamline : str, optional
+        the beamline name from PASS, by default "SST1"
+    path_base : str, optional
+        the part of the path that indicates it's really for this beamline, by default "/sst/"
+    cycle : str, optional
+        the current cycle (or the cycle that is valid for this purpose), by default "2023-1"
+
+    Returns
+    -------
+    tuple (res["data_session"], valid_path, valid_SAF, proposal_info)
+         data_session ID which should be put into the run engine metadata of every scan, the path to write analyzed data to, the SAF, and all of the proposal information for the metadata if needed
     """
-    warn_text = "\n WARNING!!! no data taken with this proposal will be retrievable \n  it is HIGHLY suggested that you fix this"
+    warn_text = "\n WARNING!!! no data taken with this proposal will be retrievable \n  it is HIGHLY suggested that you fix this \n if you are running this outside of the NSLS-II network, this is expected"
     proposal_re = re.compile(r"^[GUCPpass]*-?(?P<proposal_number>\d+)$")
     if isinstance(proposal_id, str):
         proposal = proposal_re.match(proposal_id).group("proposal_number")
@@ -194,6 +226,15 @@ def get_proposal_info(proposal_id, beamline="SST1", path_base="/sst/", cycle="20
 
 
 def save_samplesxlsx(bar, filename):
+    """Exports the in-memory bar (list of sample dicts) as an excel sheet with 'Bar', and 'Acquisitions' sheets.
+
+    Parameters
+    ----------
+    bar : list of dict
+        list of sample dicts
+    filename : str
+        export file name, e.g., test.xlsx
+    """
     switch = {
         "RSoXS Sample Outboard-Inboard": "x",
         "RSoXS Sample Up-Down": "y",
@@ -249,29 +290,29 @@ def convertSampleSheetExcelMediaWiki(
     endColumn_Params: str = "F",
     verbose: bool = "TRUE",
 ) -> str:
-    """Converts Sample Sheet Parameter Metadata into a MediaWiki-compatible format string.
+
+    """Converts Sample Sheet Parameter Metadata into a MediaWiki-compatible formatted string.
 
     Parameters
     ----------
-    excelSheet: Path
+    excelSheet : Path, optional
         Path (or string) to the excel sheet to be loaded.
-    rulesSheetName: str
+    paramsSheetToOutput : str, optional
         Name of the excel sheet which should be parsed for metadata
-    paramsSheetToOutput: str
-        Which set of params should be output (e.g., 'bar', 'acquisitions'). 'all' will sequentially output tables for the same wiki page
-    versionCell: str
-        Location (e.g., 'B4') of the cell that contains the sheet version number
-    startRow_Params: int
-        Excel row number which contains the header for the metadata table (excel starts at row 1)
-    endRow_Params: int
-        Excel row number which contains the last row of metadata (leave as -1 if scanning to end of file)
-    startColumn_Params: str
-        First excel column (by letter) that contains the metadata table
-    endColumn_Params:str
-        Last excel column (by letter) that contains the metadata table
-    verbose: bool
-        Whether to print progress text to stdout
-
+    rulesSheetName : str, optional
+        Which set of params should be output (e.g., 'bar', 'acquisitions'). 'all' will sequentially output tables for the same wiki page, by default "SheetRulesAndMetaData"
+    versionCell : str, optional
+        Location (e.g., 'B4') of the cell that contains the sheet version number, by default "B4"
+    startRow_Params : int, optional
+        Excel row number which contains the header for the metadata table (excel starts at row 1), by default 7
+    endRow_Params : int, optional
+        Excel row number which contains the last row of metadata (leave as -1 if scanning to end of file), by default None
+    startColumn_Params : str, optional
+        First excel column (by letter) that contains the metadata table, by default "A"
+    endColumn_Params : str, optional
+        Last excel column (by letter) that contains the metadata table, by default "F"
+    verbose : bool, optional
+        Whether to print progress text to stdout, by default "TRUE"
 
     Returns
     -------

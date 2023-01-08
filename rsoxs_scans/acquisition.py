@@ -1,5 +1,11 @@
+"""Handles conversion of the bar (list of sample dicts) into the output queue dict or dryrun printed text. 
+
+Also estimates scan time at a high level, relying on constructor module functions to generate ranges. Also contains a dict of valid sample configurations.
+"""
+
 # imports
-import datetime, warnings, uuid
+import datetime, warnings, uuid, json
+import numpy as np
 from copy import deepcopy
 from operator import itemgetter
 import bluesky.plan_stubs as bps
@@ -14,17 +20,35 @@ from .defaults import (
     nexafs_ratios_table,
     nexafs_edges,
     nexafs_speed_table,
-    dafault_warning_step_time,
+    default_warning_step_time,
     default_exposure_time,
     default_diameter,
     default_spiral_step,
+    config_list,
 )
 from .rsoxs import dryrun_rsoxs_plan
 from .nexafs import dryrun_nexafs_plan
 from .spirals import dryrun_spiral_plan
 
 
-def dryrun_acquisition(acq, sample={}, sim_mode=True):
+def dryrun_acquisition(acq, sample):
+    """Generates the output queue elements corresponding to a single acquisition.
+
+    Steps include loading configuration, loading sample, assigning detector, and running the appropriate measurement dryrun (e..g, NEXAFS, RSoXS, Spiral).
+
+    Parameters
+    ----------
+    acq : dict
+        acquisition dictionary entry containing all parameters needed to specify an acquisition (e.g., sample_id, configuration, type, priority, edge, etc.)
+    sample : dict
+        sample dictionary containing sample metadata (from bar sheet) and all relevant acquisitions (from Acquisitions sheet), by default {}
+
+    Returns
+    -------
+    list of dict
+        Output queue entries from a single acquisition as a list of dictionaries
+    """
+
     # runs an acquisition from a sample
     outputs = []
     # load the configuration
@@ -46,10 +70,15 @@ def dryrun_acquisition(acq, sample={}, sim_mode=True):
         }
     )
 
-    if acq["configuration"] == "WAXS":
+    # Assign the RSoXS Detector based on configuration specified
+    if acq["configuration"] in ["WAXS", "WAXS_liquid", "WAXSNEXAFS"]:
         sample.update({"RSoXS_Main_DET": "waxs_det"})
-    else:
+    elif acq["configuration"] in ["SAXS", "SAXS_liquid", "SAXSNEXAFS"]:
         sample.update({"RSoXS_Main_DET": "saxs_det"})
+    else:  # Invalid configuration string
+        outputs.append({"description": f'\n\nError: {acq["configuration"]} is not valid\n\n', "action": "error"})
+
+    # Run the appropriate dryrun function based on acquisition type and extend list to include their output queue dicts
     if "type" in acq:
         if acq["type"] == "rsoxs":
             outputs.extend(dryrun_rsoxs_plan(**acq, md=sample))
@@ -69,63 +98,68 @@ def dryrun_acquisition(acq, sample={}, sim_mode=True):
                 }
             )
             return outputs
-        else:
+        else:  # Invalid type string
             outputs.append({"description": f'\n\nError: {acq["type"]} is not valid\n\n', "action": "error"})
             return outputs
-    else:
+    else:  # No type specified
         outputs.append({"description": "\n\nError: no acquisition type specified\n\n", "action": "error"})
         return outputs
 
 
-config_list = [
-    "WAXSNEXAFS",
-    "WAXS",
-    "SAXS",
-    "SAXSNEXAFS",
-    "SAXS_liquid",
-    "WAXS_liquid",
-]
+### TODO sort_by docstring explanation is confusing
+def dryrun_bar(bar, sort_by=["apriority"], rev=[False], print_dry_run=True, group="all"):
+    """Generate output queue entries for all sample dicts in the bar list
 
+    Parameters
+    ----------
+    bar : list of dict
+        elements are unique dictionaries for each sample on the bar sheet with full metadata and acquisitions
+    sort_by : list of str, optional
+        specifies the sort priority to use when generating the acquisition queue, by default ["sample_num"].
+        Valid options include: project, configuration, sample_id, plan, plan_args, spriority, apriority within which all of one acquisition, etc
+    rev : list, optional
+        whether to reverse the sort algorithm, list the same length of sort_by, or booleans, by default [False]
+    print_dry_run : bool, optional
+        whether to print the final scan queue to stdout, by default True
+    group : str, optional
+        subset of acquisitions to execute the dry-run for (excel column 'group'), by default "all". case-insensitive
 
-def time_sec(seconds):
-    dt = datetime.timedelta(seconds=seconds)
-    return str(dt).split(".")[0]
-
-
-def dryrun_bar(
-    bar,
-    sort_by=["sample_num"],
-    rev=[False],
-    print_dry_run=True,
-    group="all",
-):
-    """
-    dry run all sample dictionaries stored in the list bar
-    @param bar: a list of sample dictionaries
-    @param sort_by: list of strings determining the sorting of scans
-                    strings include project, configuration, sample_id, plan, plan_args, spriority, apriority
-                    within which all of one acquisition, etc
-    @param rev: list the same length of sort_by, or booleans, wetierh to reverse that sort
-    @return:
+    Returns
+    -------
+    list of dict
+        all acquisition queue entries for the matched group of scans as a list of dictionaries
     """
 
     config_change_time = 120  # time to change between configurations, in seconds.
     list_out = []
 
+    # Loop through sample dicts in the bar
     for samp_num, s in enumerate(bar):
         sample = s
         sample_id = s["sample_id"]
         sample_project = s["project_name"]
+        # Loop through acquisitions within the sample
         for acq_num, a in enumerate(s["acquisitions"]):
-            if not (group == "all" or a.get("group", "all") == "all" or a.get("group", "all") == group):
-                continue  # if the group filter or the acquisition group is "all" or not specified,
-                # of if the the acquisition group matches the filter pass.  if not, ignore this acquisition
+
+            # Skip this acquisition unless any of these conditions are true
+            if not (
+                str(group).lower() == "all"  # true if user specified all to be evaluated
+                or a.get("group", "").lower() == "all"  # If the acquisition has group "all"
+                or str(a.get("group", "")).lower()
+                == str(group).lower()  # true if group matches user selected group
+            ):
+                continue
+
             if "uid" not in a.keys():
                 a["uid"] = str(uuid.uuid1())
             a["uid"] = str(a["uid"])
+
             if "priority" not in a.keys():
-                a["priority"] = 50
+                a["priority"] = 50  ### TODO why 50?
+
+            # Generate list of lists, where each sub-list is a single acquisition
             list_out.append(  # list everything we might possibly want for each acquisition
+                # TODO - make this a dictionary
                 [
                     sample_id,  # 0  X
                     sample_project,  # 1  X
@@ -147,6 +181,8 @@ def dryrun_bar(
                     a.get("slack_message_end", ""),  # 17
                 ]
             )  # 13 X
+
+    # Prepare for sorting scans
     switcher = {  # all the possible things we might want to sort by
         "sample_id": 0,
         "project": 1,
@@ -155,13 +191,13 @@ def dryrun_bar(
         "edge": 9,
         "proposal": 11,
         "spriority": 12,
-        "apriority": 13,  # can just make this the default??
+        "apriority": 13,
         "sample_num": 7,
     }
     # add anything to the above list, and make a key in the above dictionary,
     # using that element to sort by something else
     try:
-        sort_by.reverse()  # we want to sort from the last to the first element to match peopls expectations
+        sort_by.reverse()  # we want to sort from the last to the first element to match people's expectations
         rev.reverse()
     except AttributeError:
         if isinstance(sort_by, str):  # accept that someone might just put a single string
@@ -173,6 +209,8 @@ def dryrun_bar(
                 "such as project, configuration, sample_id, plan, plan_args, spriority, apriority"
             )
             return
+
+    # Generate list of properly sorted scans in list_out
     try:
         for k, r in zip(sort_by, rev):  # do all of the sorts in order
             list_out = sorted(list_out, key=itemgetter(switcher[k]), reverse=r)
@@ -182,16 +220,20 @@ def dryrun_bar(
             "such as project, configuration, sample_id, plan, plan_args, spriority, apriority"
         )
         return
+
+    # Generate the output acquisition queue
     failcount = 0
-    text = ""
+    text = ""  # Dry run output text for visual inspection
     total_time = 0
     previous_config = ""
-    acq_queue = []
+    acq_queue = []  # output queue
     acqs_with_errors = []
+
+    # Loop through sorted acquisition steps and build output acquisition queue and dryrun text message
     for i, step in enumerate(list_out):
         warnings.resetwarnings()
-        text += f"________________________________________________\nAcquisition # {i} from sample {step[5]['sample_name']}\n\n"
-        text += "Summary: load {} from {}, config {}, run {} priority(sample {} acquisition {}), starts @ {} takes {}\n".format(
+        text += f"________________________________________________\nAcquisition # {i} from sample {step[5]['sample_name']}, group {step[15]}\n\n"
+        text += "Summary: load {} from {}, config {}, run {} priority( sample {} acquisition {}), starts @ {} takes {}\n".format(
             step[5]["sample_name"],
             step[1],
             step[2],
@@ -201,22 +243,31 @@ def dryrun_bar(
             time_sec(total_time),
             time_sec(step[4]),
         )
+
+        # Check for config change
         if step[2] != previous_config:
             total_time += config_change_time
-            text += " (+2 minutes for configuration change)\n"
+            text += f" (+{config_change_time} seconds for configuration change)\n"
         text += "\n"
-        if step[4] > dafault_warning_step_time:
+
+        # Check if acquisition will take too long
+        if step[4] > default_warning_step_time:
             warnings.warn(
-                f"WARNING: acquisition # {i} will take {step[4]/60} minutes, which is more than {dafault_warning_step_time/60} minutes"
+                f"WARNING: acquisition # {i} will take {step[4]/60} minutes, which is more than {default_warning_step_time/60} minutes"
             )
+
+        # Check if configuration is invalid
         if step[2] not in config_list:
             warnings.warn(
                 f"WARNING: acquisition # {i} has an invalid configuration - no configuration will be loaded"
             )
             text += "Warning invalid configuration" + step[2]
         outputs = dryrun_acquisition(step[6], step[5])
+
+        # if this step has a single output entry, we are done with this entry
         if not isinstance(outputs, list):
             outputs = [outputs]
+
         else:
             statements = []
             for j, out in enumerate(outputs):
@@ -230,11 +281,14 @@ def dryrun_bar(
                 out["group"] = step[15]
                 out["slack_message_start"] = step[16]
                 out["slack_message_end"] = step[17]
-                statements.append(out["description"])
+                statements.append(f'>Step {j}:\n {out["description"].lstrip()}')
+
                 if (out["action"]) == "error":
                     warnings.warn(f"WARNING: acquisition # {i} has a step with and error\n{out['description']}")
                     acqs_with_errors.append((i, out["description"]))
+
             text += "".join(statements)
+
         acq_queue.extend(outputs)
         total_time += step[4]
         text += "\n________________________________________________\n"
@@ -246,13 +300,73 @@ def dryrun_bar(
     text += f"\n\nTotal estimated time including config changes {time_sec(total_time)}"
     if print_dry_run:
         print(text)
+    # Warn user about acquisitions that contained errors
     for index, error in acqs_with_errors:
         warnings.resetwarnings()
         warnings.warn(f"WARNING: acquisition # {index} has a step with an error\n{error}\n\n")
     return acq_queue
 
 
+class NumpyEncoder(json.JSONEncoder):
+    def default(self, obj):
+        if isinstance(obj, np.ndarray):
+            return obj.tolist()
+        return json.JSONEncoder.default(self, obj)
+
+
+def get_acq_details(acqIndex, outputs, printOutput=True):
+    """Provides full details of each step within an acquisition as a list of dicts, optionally prints (more human readible output)
+
+    Parameters
+    ----------
+    acqIndex : int
+        acquisition number to provide detailed results for
+    outputs : list of dict
+        full command queue for this acquisition with expanded parameters
+    printOutput : bool, optional
+        whether to provide a (more) readible version to std, by default True
+
+    Returns
+    -------
+    list of dict
+        list containing a dict for each 'queue step' [set of commands within an acquisition]
+    """
+    outList = list(filter(lambda outputs: outputs["acq_index"] == acqIndex, outputs))
+    if printOutput:
+        for step in outList:
+            print("-" * 50)
+            print(f">Step: {step['queue_step']}")
+            print("-" * 50)
+            print(json.dumps(step, indent=4,cls=NumpyEncoder))
+            # for key, value in step.items():
+            #     if isinstance(value, dict):
+            #         print(f"\t{key}", " : ")
+            #         for key2, value2 in value.items():
+            #             if isinstance(value2, dict):
+            #                 print(f"\t\t{key2}", " : ")
+            #                 for key3, value3 in value2.items():
+            #                     print(f"\t\t\t{key3}", " : ", value3)
+            #             else:
+            #                 print(f"\t\t{key2}", " : ", value2)
+            #     else:
+            #         print(f"\t{key}", " : ", value)
+
+    return
+
+
 def est_scan_time(acq):
+    """Estimates scan duration in seconds for a given acquisition.
+
+    Parameters
+    ----------
+    acq : dict
+        dictionary containing acquisition parameters
+
+    Returns
+    -------
+    float
+        estimated scan duration in seconds
+    """
     if "type" in acq:
         if acq["type"] == "rsoxs":
             times, time = construct_exposure_times(
@@ -299,7 +413,24 @@ def est_scan_time(acq):
             return total_time
         elif acq["type"].lower() in ["wait", "sleep", "pause"]:
             return float(acq["edge"])
-        else:
+        else:  # not a matching type that takes time
             return 0
-    else:
+    else:  # acquisition has no type key
         return 0
+
+
+def time_sec(seconds):
+    """Generates a formatted timestamp (hh:mm:ss) from the input number of seconds
+
+    Parameters
+    ----------
+    seconds : float
+        number of seconds
+
+    Returns
+    -------
+    str
+        timestamp formatted as hh:mm:ss
+    """
+    dt = datetime.timedelta(seconds=seconds)
+    return str(dt).split(".")[0]
