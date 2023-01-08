@@ -315,6 +315,45 @@ def dryrun_bar(bar, sort_by=["sample_num"], rev=[False], print_dry_run=True, gro
     return acq_queue
 
 
+def get_acq_details(acqIndex, outputs, printOutput=True):
+    """Provides full details of each step within an acquisition as a list of dicts, optionally prints (more human readible output)
+
+    Parameters
+    ----------
+    acqIndex : int
+        acquisition number to provide detailed results for
+    outputs : list of dict
+        full command queue for this acquisition with expanded parameters
+    printOutput : bool, optional
+        whether to provide a (more) readible version to std, by default True
+
+    Returns
+    -------
+    list of dict
+        list containing a dict for each 'queue step' [set of commands within an acquisition]
+    """
+    outList = list(filter(lambda outputs: outputs["acq_index"] == acqIndex, outputs))
+    if printOutput:
+        for step in outList:
+            print("-" * 50)
+            print(f"Step: {step['queue_step']}")
+            print("-" * 50)
+            for key, value in step.items():
+                if isinstance(value, dict):
+                    print(f"\t{key}", " : ")
+                    for key2, value2 in value.items():
+                        if isinstance(value2, dict):
+                            print(f"\t\t{key2}", " : ")
+                            for key3, value3 in value2.items():
+                                print(f"\t\t\t{key3}", " : ", value3)
+                        else:
+                            print(f"\t\t{key2}", " : ", value2)
+                else:
+                    print(f"\t{key}", " : ", value)
+
+    return
+
+
 def est_scan_time(acq):
     """Estimates scan duration in seconds for a given acquisition.
 
