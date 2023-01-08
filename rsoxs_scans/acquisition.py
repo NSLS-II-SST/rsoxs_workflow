@@ -289,8 +289,7 @@ def dryrun_bar(bar, sort_by=["sample_num"], rev=[False], print_dry_run=True, gro
                 out["group"] = step[15]
                 out["slack_message_start"] = step[16]
                 out["slack_message_end"] = step[17]
-                statements.append(f"\tStep {j}\n")
-                statements.append(f"\t\t".join(s.strip() for s in out["description"].splitlines()))
+                statements.append(f'Step {j}:\n {out["description"]}')
 
                 if (out["action"]) == "error":
                     warnings.warn(f"WARNING: acquisition # {i} has a step with and error\n{out['description']}")
