@@ -337,7 +337,7 @@ def get_acq_details(acqIndex, outputs, printOutput=True):
             print("-" * 50)
             print(f">Step: {step['queue_step']}")
             print("-" * 50)
-            json.dumps(step, indent=4,cls=NumpyEncoder)
+            print(json.dumps(step, indent=4,cls=NumpyEncoder))
             # for key, value in step.items():
             #     if isinstance(value, dict):
             #         print(f"\t{key}", " : ")
