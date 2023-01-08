@@ -33,14 +33,34 @@ config_list = [
     "WAXS_liquid",
 ]
 
-
+### TODO sim_mode is unused, remove and update docstring?
+### TODO sample maybe should be required always - remove default value and update docstring?
 def dryrun_acquisition(acq, sample={}, sim_mode=True):
+    """Generates the output queue elements corresponding to a single acquisition. 
+    
+    Steps include loading configuration, loading sample, assigning detector, and running the appropriate measurement dryrun (e..g, NEXAFS, RSoXS, Spiral). 
+
+    Parameters
+    ----------
+    acq : dict
+        acquisition dictionary entry containing all parameters needed to specify an acquisition (e.g., sample_id, configuration, type, priority, edge, etc.)
+    sample : dict, optional
+        sample dictionary containing sample metadata (from bar sheet) and all relevant acquisitions (from Acquisitions sheet), by default {}
+    sim_mode : bool, optional
+        _description_, by default True
+
+    Returns
+    -------
+    list of dict
+        Output queue entries from a single acquisition as a list of dictionaries
+    """
+
     # runs an acquisition from a sample
     outputs = []
     # load the configuration
     outputs.append(
         {
-            "description": f"load configuration {acq['configuration']}\n",
+            "description": f"load configuration{acq['configuration']}\n",
             "action": "load_configuration",
             "kwargs": {"configuration": acq["configuration"]},
         }
@@ -64,7 +84,7 @@ def dryrun_acquisition(acq, sample={}, sim_mode=True):
     else:  # Invalid configuration string
         outputs.append({"description": f'\n\nError: {acq["configuration"]} is not valid\n\n', "action": "error"})
 
-    # Run the appropriate dryrun function based on acquisition type
+    # Run the appropriate dryrun function based on acquisition type and extend list to include their output queue dicts
     if "type" in acq:
         if acq["type"] == "rsoxs":
             outputs.extend(dryrun_rsoxs_plan(**acq, md=sample))
@@ -90,11 +110,6 @@ def dryrun_acquisition(acq, sample={}, sim_mode=True):
     else:  # No type specified
         outputs.append({"description": "\n\nError: no acquisition type specified\n\n", "action": "error"})
         return outputs
-
-
-def time_sec(seconds):
-    dt = datetime.timedelta(seconds=seconds)
-    return str(dt).split(".")[0]
 
 
 def dryrun_bar(
@@ -304,3 +319,7 @@ def est_scan_time(acq):
             return 0
     else:
         return 0
+
+def time_sec(seconds):
+    dt = datetime.timedelta(seconds=seconds)
+    return str(dt).split(".")[0]
