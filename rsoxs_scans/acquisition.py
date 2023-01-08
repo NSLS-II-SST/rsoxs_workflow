@@ -143,9 +143,9 @@ def dryrun_bar(bar, sort_by=["apriority"], rev=[False], print_dry_run=True, grou
 
             # Skip this acquisition unless any of these conditions are true
             if not (
-                group.lower() == "all"  # true if user specified all to be evaluated
+                str(group).lower() == "all"  # true if user specified all to be evaluated
                 or a.get("group","").lower() == "all" # If the acquisition has group "all"
-                or a.get("group", "").lower() == group.lower()  # true if group matches user selected group
+                or str(a.get("group", "")).lower() == str(group).lower()  # true if group matches user selected group
             ):
                 continue
 
