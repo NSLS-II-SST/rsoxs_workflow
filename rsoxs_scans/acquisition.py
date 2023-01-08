@@ -149,9 +149,9 @@ def dryrun_bar(bar, sort_by=["sample_num"], rev=[False], print_dry_run=True, gro
         # Loop through acquisitions within the sample
         for acq_num, a in enumerate(s["acquisitions"]):
 
-            if not (group == "all" or a.get("group", "all") == "all" or a.get("group", "all") == group):
-                continue  # if the group filter or the acquisition group is "all" or not specified,
-                # or if the the acquisition group matches the filter pass.  if not, ignore this acquisition
+            # Skip this acquisition unless any of these conditions are true
+            if not (group == "all" or a.get("group", "") == group):  # true if user specified all to be evaluated
+                continue
 
             if "uid" not in a.keys():
                 a["uid"] = str(uuid.uuid1())
