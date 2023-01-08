@@ -5,6 +5,7 @@ Also estimates scan time at a high level, relying on constructor module function
 
 # imports
 import datetime, warnings, uuid, json
+import numpy as np
 from copy import deepcopy
 from operator import itemgetter
 import bluesky.plan_stubs as bps
