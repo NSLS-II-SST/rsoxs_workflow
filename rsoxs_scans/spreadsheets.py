@@ -41,6 +41,8 @@ def load_samplesxlsx(filename: str):
         sheet_name="Bar",
         skiprows=skiprows,
         verbose=True,
+        header=None,
+        footer=None,
     )
     print(df)
     df.replace(np.nan, "", regex=True, inplace=True)
