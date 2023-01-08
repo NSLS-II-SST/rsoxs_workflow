@@ -38,6 +38,7 @@ def load_samplesxlsx(filename: str):
         pass
 
     # Load Bar sheet
+    warnings.simplefilter(action='ignore', category=UserWarning)
     df = pd.read_excel(
         filename,
         na_values="",
