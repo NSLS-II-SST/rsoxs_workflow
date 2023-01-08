@@ -26,12 +26,15 @@ def load_samplesxlsx(filename: str):
     list of dicts
         bar (list of sample dicts) which contain all imported data from samples sheet and acquisitions sheet
     """
+    # TODO remove if this is just test COde
     skiprows = [1, 2, 3, 4]
     try:
         dummy = pd.read_excel(filename, sheet_name="Instructions")
     except ValueError:
         skiprows = []
         pass
+
+    print(skiprows)
     df = pd.read_excel(
         filename,
         na_values="",
@@ -42,7 +45,6 @@ def load_samplesxlsx(filename: str):
         skiprows=skiprows,
         verbose=True,
         header=None,
-        footer=None,
     )
     print(df)
     df.replace(np.nan, "", regex=True, inplace=True)
