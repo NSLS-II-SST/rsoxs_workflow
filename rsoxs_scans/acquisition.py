@@ -23,24 +23,15 @@ from .defaults import (
     default_exposure_time,
     default_diameter,
     default_spiral_step,
+    config_list,
 )
 from .rsoxs import dryrun_rsoxs_plan
 from .nexafs import dryrun_nexafs_plan
 from .spirals import dryrun_spiral_plan
 
-# List of Valid Measurement Configurations
-config_list = [
-    "WAXSNEXAFS",
-    "WAXS",
-    "SAXS",
-    "SAXSNEXAFS",
-    "SAXS_liquid",
-    "WAXS_liquid",
-]
 
-### TODO sim_mode is unused, remove and update docstring?
-### TODO sample maybe should be required always - remove default value and update docstring?
-def dryrun_acquisition(acq, sample={}, sim_mode=True):
+
+def dryrun_acquisition(acq, sample):
     """Generates the output queue elements corresponding to a single acquisition. 
     
     Steps include loading configuration, loading sample, assigning detector, and running the appropriate measurement dryrun (e..g, NEXAFS, RSoXS, Spiral). 
@@ -49,10 +40,8 @@ def dryrun_acquisition(acq, sample={}, sim_mode=True):
     ----------
     acq : dict
         acquisition dictionary entry containing all parameters needed to specify an acquisition (e.g., sample_id, configuration, type, priority, edge, etc.)
-    sample : dict, optional
+    sample : dict
         sample dictionary containing sample metadata (from bar sheet) and all relevant acquisitions (from Acquisitions sheet), by default {}
-    sim_mode : bool, optional
-        _description_, by default True
 
     Returns
     -------
@@ -118,7 +107,7 @@ def dryrun_acquisition(acq, sample={}, sim_mode=True):
 
 
 ### TODO sort_by docstring explanation is confusing
-def dryrun_bar(bar, sort_by=["sample_num"], rev=[False], print_dry_run=True, group="all"):
+def dryrun_bar(bar, sort_by=["apriority"], rev=[False], print_dry_run=True, group="all"):
     """Generate output queue entries for all sample dicts in the bar list
 
     Parameters
@@ -169,6 +158,7 @@ def dryrun_bar(bar, sort_by=["sample_num"], rev=[False], print_dry_run=True, gro
 
             # Generate list of lists, where each sub-list is a single acquisition
             list_out.append(  # list everything we might possibly want for each acquisition
+            # TODO - make this a dictionary
                 [
                     sample_id,  # 0  X
                     sample_project,  # 1  X
@@ -200,7 +190,7 @@ def dryrun_bar(bar, sort_by=["sample_num"], rev=[False], print_dry_run=True, gro
         "edge": 9,
         "proposal": 11,
         "spriority": 12,
-        "apriority": 13,  # TODO can just make this the default??
+        "apriority": 13,
         "sample_num": 7,
     }
     # add anything to the above list, and make a key in the above dictionary,

@@ -122,3 +122,13 @@ nexafs_speed_table = {
     "slow": 0.1,
     "very slow": 0.05,
 }
+
+# List of Valid Measurement Configurations
+config_list = [
+    "WAXSNEXAFS",
+    "WAXS",
+    "SAXS",
+    "SAXSNEXAFS",
+    "SAXS_liquid",
+    "WAXS_liquid",
+]
