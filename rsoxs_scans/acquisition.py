@@ -113,9 +113,7 @@ def dryrun_acquisition(acq, sample={}, sim_mode=True):
 
 
 ### TODO sort_by docstring is confusing
-def dryrun_bar(
-    bar, sort_by=["sample_num"], rev=[False], print_dry_run=True, group="all",
-):
+def dryrun_bar(bar, sort_by=["sample_num"], rev=[False], print_dry_run=True, group="all"):
     """Generate output queue entries for all sample dicts in the bar list
 
     _extended_summary_
@@ -236,7 +234,7 @@ def dryrun_bar(
     # Loop through sorted acquisition steps and build output acquisition queue and dryrun text message
     for i, step in enumerate(list_out):
         warnings.resetwarnings()
-        text += f"________________________________________________\nAcquisition # {i} from sample {step[5]['sample_name']} group {step[15]}\n\n"
+        text += f"________________________________________________\nAcquisition # {i} from sample {step[5]['sample_name']}, group {step[15]}\n\n"
         text += "Summary: load {} from {}, config {}, run {} priority( sample {} acquisition {}), starts @ {} takes {}\n".format(
             step[5]["sample_name"],
             step[1],
