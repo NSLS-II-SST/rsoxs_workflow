@@ -11,6 +11,7 @@ default_diameter = 1.8
 default_spiral_step = 0.3
 default_exposure_time = 1
 default_warning_step_time = 1800
+current_version = '2023-1 Version 1.0'
 
 actions = {
     "load_configuration",  # high level load names RSoXS configuration
@@ -42,18 +43,23 @@ rsoxs_scan_core    : {'detnames', 'repeats', 'temperatures', 'temps_with_locatio
 # look up table for aliases of edges
 edge_names = {
     "c": "Carbon",
+    "carbon": "Carbon",
     "carbonk": "Carbon",
     "ck": "Carbon",
     "n": "Nitrogen",
+    "nitrogen": "Nitrogen",
     "nitrogenk": "Nitrogen",
     "nk": "Nitrogen",
     "f": "Fluorine",
+    "fluorine": "Fluorine",
     "fluorinek": "Fluorine",
     "fk": "Fluorine",
     "o": "Oxygen",
+    "oxygen": "Oxygen",
     "oxygenk": "Oxygen",
     "ok": "Oxygen",
     "ca": "Calcium",
+    "calcium": "Calcium",
     "calciumk": "Calcium",
     "cak": "Calcium",
 }
@@ -129,6 +135,13 @@ config_list = [
     "WAXS",
     "SAXS",
     "SAXSNEXAFS",
+    "SAXS_liquid",
+    "WAXS_liquid",
+]
+
+rsoxs_configurations = [
+    "WAXS",
+    "SAXS",
     "SAXS_liquid",
     "WAXS_liquid",
 ]

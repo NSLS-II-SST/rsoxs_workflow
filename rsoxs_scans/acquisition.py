@@ -231,6 +231,7 @@ def dryrun_bar(bar, sort_by=["apriority"], rev=[False], print_dry_run=True, grou
 
     # Loop through sorted acquisition steps and build output acquisition queue and dryrun text message
     for i, step in enumerate(list_out):
+        acquisition = {'acq_index':i,'steps':[]}
         warnings.resetwarnings()
         text += f"________________________________________________\nAcquisition # {i} from sample {step[5]['sample_name']}, group {step[15]}\n\n"
         text += "Summary: load {} from {}, config {}, run {} priority( sample {} acquisition {}), starts @ {} takes {}\n".format(
@@ -262,40 +263,38 @@ def dryrun_bar(bar, sort_by=["apriority"], rev=[False], print_dry_run=True, grou
                 f"WARNING: acquisition # {i} has an invalid configuration - no configuration will be loaded"
             )
             text += "Warning invalid configuration" + step[2]
-        outputs = dryrun_acquisition(step[6], step[5])
-
+        acquisition['steps'] = dryrun_acquisition(step[6], step[5])
+        acquisition["acq_index"] = i
+        acquisition["acq_time"] = step[4]
+        acquisition["total_acq"] = len(list_out)
+        acquisition["time_before"] = total_time
+        acquisition["priority"] = step[13]
+        acquisition["uid"] = step[14]
+        acquisition["group"] = step[15]
+        acquisition["slack_message_start"] = step[16]
+        acquisition["slack_message_end"] = step[17]
         # if this step has a single output entry, we are done with this entry
-        if not isinstance(outputs, list):
-            outputs = [outputs]
+        if not isinstance(acquisition['steps'], list):
+            acquisition['steps'] = [acquisition['steps']]
+        statements = []
+        for j, out in enumerate(acquisition['steps']):
+            out["queue_step"] = j
+            out["acq_index"] = i
+            statements.append(f'>Step {j}: {out["description"].lstrip()}')
 
-        else:
-            statements = []
-            for j, out in enumerate(outputs):
-                out["acq_index"] = i
-                out["queue_step"] = j
-                out["acq_time"] = step[4]
-                out["total_acq"] = len(list_out)
-                out["time_before"] = total_time
-                out["priority"] = step[13]
-                out["uid"] = step[14]
-                out["group"] = step[15]
-                out["slack_message_start"] = step[16]
-                out["slack_message_end"] = step[17]
-                statements.append(f'>Step {j}:\n {out["description"].lstrip()}')
+            if (out["action"]) == "error":
+                warnings.warn(f"WARNING: acquisition # {i} has a step with and error\n{out['description']}")
+                acqs_with_errors.append((i, out["description"]))
 
-                if (out["action"]) == "error":
-                    warnings.warn(f"WARNING: acquisition # {i} has a step with and error\n{out['description']}")
-                    acqs_with_errors.append((i, out["description"]))
+        text += "".join(statements)
 
-            text += "".join(statements)
-
-        acq_queue.extend(outputs)
+        acq_queue.append(acquisition)
         total_time += step[4]
         text += "\n________________________________________________\n"
         previous_config = step[2]
-    for queue_step in acq_queue:
-        queue_step["total_queue_time"] = total_time
-        queue_step["time_after"] = total_time - queue_step["time_before"] - queue_step["acq_time"]
+    for acq in acq_queue:
+        acq["total_queue_time"] = total_time
+        acq["time_after"] = total_time - acq["time_before"] - acq["acq_time"]
 
     text += f"\n\nTotal estimated time including config changes {time_sec(total_time)}"
     if print_dry_run:
@@ -331,7 +330,12 @@ def get_acq_details(acqIndex, outputs, printOutput=True):
     list of dict
         list containing a dict for each 'queue step' [set of commands within an acquisition]
     """
-    outList = list(filter(lambda outputs: outputs["acq_index"] == acqIndex, outputs))
+    #outList = list(filter(lambda outputs: outputs["acq_index"] == acqIndex, outputs))
+    outList = [output['steps'] for output in outputs if output["acq_index"] == acqIndex]
+    if len(outList) == 1:
+        outList = outList[0]
+    elif len(outList) > 1:
+        outList = sum(outList)
     if printOutput:
         for step in outList:
             print("-" * 50)
@@ -432,5 +436,7 @@ def time_sec(seconds):
     str
         timestamp formatted as hh:mm:ss
     """
+    if isinstance(seconds,datetime.timedelta):
+        seconds = seconds.total_seconds()
     dt = datetime.timedelta(seconds=seconds)
     return str(dt).split(".")[0]
