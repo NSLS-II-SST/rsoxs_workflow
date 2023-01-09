@@ -11,10 +11,24 @@ RSoXS_Scans
 
 stand alone package for loading and validating RSoXS scans for NSLS-II SST-1 beamline
 
-* Free software: 3-clause BSD license
-* Documentation: (COMING SOON!) https://EliotGann.github.io/rsoxs_scans.
-
-Features
+Instructions
 --------
+from a jupyterlab or jupyterhub, open a new terminal and move to your home folder
 
-* TODO
+
+``cd ~``
+or any other directory you have control over
+then clone this repository
+
+
+``clone https://github.com/NSLS-II-SST/rsoxs_scans.git``
+
+move to the directory
+
+``cd rsoxs_scans``
+
+and install the package
+
+``pip install -e .``
+
+now you can open up the example notebook in jupyter by browsing to the rsoxs_scans/examples directory.  the notebook will run you through the rest of the capabilities.
