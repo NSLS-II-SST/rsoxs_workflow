@@ -5,13 +5,15 @@ Contains code to parse excel sheet for bar (list of sample dict), export parsed 
 
 # imports
 from copy import deepcopy
+from openpyxl import load_workbook
+from openpyxl.writer import excel
 from pathlib import Path
 from datetime import date
 import json
 import re, warnings, httpx, uuid
 import numpy as np
 import pandas as pd
-from .defaults import rsoxs_configurations,rsoxs_ratios_table,nexafs_ratios_table,nexafs_speed_table,edge_names,config_list
+from .defaults import rsoxs_configurations,rsoxs_ratios_table,nexafs_ratios_table,nexafs_speed_table,edge_names,config_list, current_version
 
 
 def load_samplesxlsx(filename: str):
@@ -36,7 +38,15 @@ def load_samplesxlsx(filename: str):
     except ValueError:
         skiprows = []
         pass
-
+    
+    #load the version number
+    excel_file = load_workbook(filename)
+    print(f'spreadsheet version is {excel_file.properties.title}')
+    if excel_file.properties.title != current_version:
+        excel_file.close()
+        raise ValueError('this excel file is not the current version.  please upgrade your template and try again')
+    excel_file.close()
+    
     # Load Bar sheet
     warnings.simplefilter(action='ignore', category=UserWarning)
     df = pd.read_excel(
@@ -291,6 +301,11 @@ def save_samplesxlsx(bar, filename):
     sampledf.to_excel(writer, index=False, sheet_name="Bar")
     acqdf.to_excel(writer, index=False, sheet_name="Acquisitions")
     writer.close()
+    
+    excel_file = load_workbook(filename)
+    excel_file.properties.title = current_version
+    excel.save_workbook(excel_file,filename)
+    excel_file.close()
 
 
 def convertSampleSheetExcelMediaWiki(
