@@ -161,7 +161,7 @@ def load_samplesxlsx(filename: str):
         new_bar[i]["bar_loc"]["spot"] = sam["bar_spot"]
         new_bar[i]["bar_loc"]["th"] = sam["angle"]
         for key in [
-            key for key, value in sam.items() if "named" in key.lower()
+            key for key, value in sam.items() if "named" in key.lower() or 'Index' in key
         ]:  # get rid of the stupid unnamed columns thrown in by pandas
             del new_bar[i][key]
     return new_bar
