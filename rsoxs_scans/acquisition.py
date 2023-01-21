@@ -137,7 +137,7 @@ def dryrun_bar(bar, sort_by=["apriority"], rev=[False], print_dry_run=True, grou
         group = [group]
     if not isinstance(group,list):
         group = ['all']
-    for gr in group:
+    for group_num, gr in enumerate(group):
         # Loop through sample dicts in the bar
         for samp_num, s in enumerate(bar):
             sample = s
@@ -184,6 +184,7 @@ def dryrun_bar(bar, sort_by=["apriority"], rev=[False], print_dry_run=True, grou
                         a.get("group", "all"),  # 15
                         a.get("slack_message_start", ""),  # 16
                         a.get("slack_message_end", ""),  # 17
+                        group_num,
                     ]
                 )  # 13 X
 
@@ -198,6 +199,8 @@ def dryrun_bar(bar, sort_by=["apriority"], rev=[False], print_dry_run=True, grou
         "spriority": 12,
         "apriority": 13,
         "sample_num": 7,
+        "group":18,
+        "group_name":15
     }
     # add anything to the above list, and make a key in the above dictionary,
     # using that element to sort by something else
