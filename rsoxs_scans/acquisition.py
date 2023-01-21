@@ -286,12 +286,13 @@ def dryrun_bar(bar, sort_by=["apriority"], rev=[False], print_dry_run=True, grou
                 if (out["action"]) == "error":
                     warnings.warn(f"WARNING: acquisition # {i} has a step with and error\n{out['description']}")
                     acqs_with_errors.append((i, out["description"]))
+                    
+            text += "".join(statements)
+
+            acq_queue.append(acquisition)
         except Exception as e:
             warnings.warn(f"WARNING: acquisition # {i} has a step with and error {str(e)}")
             pass
-        text += "".join(statements)
-
-        acq_queue.append(acquisition)
         total_time += step[4]
         text += "\n________________________________________________\n"
         previous_config = step[2]
