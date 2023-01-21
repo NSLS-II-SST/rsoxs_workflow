@@ -133,54 +133,59 @@ def dryrun_bar(bar, sort_by=["apriority"], rev=[False], print_dry_run=True, grou
     config_change_time = 120  # time to change between configurations, in seconds.
     list_out = []
 
-    # Loop through sample dicts in the bar
-    for samp_num, s in enumerate(bar):
-        sample = s
-        sample_id = s["sample_id"]
-        sample_project = s["project_name"]
-        # Loop through acquisitions within the sample
-        for acq_num, a in enumerate(s["acquisitions"]):
+    if isinstance(group,str):
+        group = [group]
+    if not isinstance(group,list):
+        group = ['all']
+    for gr in group:
+        # Loop through sample dicts in the bar
+        for samp_num, s in enumerate(bar):
+            sample = s
+            sample_id = s["sample_id"]
+            sample_project = s["project_name"]
+            # Loop through acquisitions within the sample
+            for acq_num, a in enumerate(s["acquisitions"]):
 
-            # Skip this acquisition unless any of these conditions are true
-            if not (
-                str(group).lower() == "all"  # true if user specified all to be evaluated
-                or a.get("group", "").lower() == "all"  # If the acquisition has group "all"
-                or str(a.get("group", "")).lower()
-                == str(group).lower()  # true if group matches user selected group
-            ):
-                continue
+                # Skip this acquisition unless any of these conditions are true
+                if not (
+                    str(gr).lower() == "all"  # true if user specified all to be evaluated
+                    or a.get("group", "").lower() == "all"  # If the acquisition has group "all"
+                    or str(a.get("group", "")).lower()
+                    == str(gr).lower()  # true if group matches user selected group
+                ):
+                    continue
 
-            if "uid" not in a.keys():
-                a["uid"] = str(uuid.uuid1())
-            a["uid"] = str(a["uid"])
+                if "uid" not in a.keys():
+                    a["uid"] = str(uuid.uuid1())
+                a["uid"] = str(a["uid"])
 
-            if "priority" not in a.keys():
-                a["priority"] = 50  ### TODO why 50?
+                if "priority" not in a.keys():
+                    a["priority"] = 50  ### TODO why 50?
 
-            # Generate list of lists, where each sub-list is a single acquisition
-            list_out.append(  # list everything we might possibly want for each acquisition
-                # TODO - make this a dictionary
-                [
-                    sample_id,  # 0  X
-                    sample_project,  # 1  X
-                    a["configuration"],  # 2  X
-                    a["type"],  # 3
-                    est_scan_time(a),  # 4 calculated plan time
-                    sample,  # 5 full sample dict
-                    a,  # 6 full acquisition dict
-                    samp_num,  # 7 sample index
-                    acq_num,  # 8 acq index
-                    a["edge"],  # 9  X
-                    s["density"],  # 10
-                    s["proposal_id"],  # 11 X
-                    s["sample_priority"],  # 12 X
-                    a["priority"],  # 13
-                    a["uid"],  # 14
-                    a.get("group", "all"),  # 15
-                    a.get("slack_message_start", ""),  # 16
-                    a.get("slack_message_end", ""),  # 17
-                ]
-            )  # 13 X
+                # Generate list of lists, where each sub-list is a single acquisition
+                list_out.append(  # list everything we might possibly want for each acquisition
+                    # TODO - make this a dictionary
+                    [
+                        sample_id,  # 0  X
+                        sample_project,  # 1  X
+                        a["configuration"],  # 2  X
+                        a["type"],  # 3
+                        est_scan_time(a),  # 4 calculated plan time
+                        sample,  # 5 full sample dict
+                        a,  # 6 full acquisition dict
+                        samp_num,  # 7 sample index
+                        acq_num,  # 8 acq index
+                        a["edge"],  # 9  X
+                        s["density"],  # 10
+                        s["proposal_id"],  # 11 X
+                        s["sample_priority"],  # 12 X
+                        a["priority"],  # 13
+                        a["uid"],  # 14
+                        a.get("group", "all"),  # 15
+                        a.get("slack_message_start", ""),  # 16
+                        a.get("slack_message_end", ""),  # 17
+                    ]
+                )  # 13 X
 
     # Prepare for sorting scans
     switcher = {  # all the possible things we might want to sort by
@@ -346,18 +351,6 @@ def get_acq_details(acqIndex, outputs, printOutput=True):
             print(f">Step: {step['queue_step']}")
             print("-" * 50)
             print(json.dumps(step, indent=4,cls=NumpyEncoder))
-            # for key, value in step.items():
-            #     if isinstance(value, dict):
-            #         print(f"\t{key}", " : ")
-            #         for key2, value2 in value.items():
-            #             if isinstance(value2, dict):
-            #                 print(f"\t\t{key2}", " : ")
-            #                 for key3, value3 in value2.items():
-            #                     print(f"\t\t\t{key3}", " : ", value3)
-            #             else:
-            #                 print(f"\t\t{key2}", " : ", value2)
-            #     else:
-            #         print(f"\t{key}", " : ", value)
 
     return
 
