@@ -155,6 +155,9 @@ def get_energies(edge, frames=default_frames, ratios=None, quiet=False, **kwargs
         singleinput = True
     if not isinstance(edge, (tuple, list)):
         raise TypeError(f"invalid edge {edge} - no key of that name was found")
+    if len(edge)==1:
+        edge *=2
+        singleinput = True
     if isinstance(frames, float):
         if np.isnan(frames):
             frames = "full"
