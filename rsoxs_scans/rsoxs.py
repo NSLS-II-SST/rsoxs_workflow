@@ -173,6 +173,8 @@ def rsoxs_scan_enqueue(
     if not 0 < repeats < 100:
         valid = False
         validation += "repeats must be a positive integer between 0 and 100\n"
+    if isinstance(energies,(float,int)):
+        energies = [energies]
     if min(energies) < 70 or max(energies) > 2200:
         valid = False
         validation += "energy input is out of range for SST 1\n"
