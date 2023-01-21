@@ -85,7 +85,6 @@ def dryrun_spiral_plan(
     diameter=default_diameter,
     spiral_step=default_spiral_step,
     exposure_time=default_exposure_time,
-    pol_mode="lab",
     polarizations=[0],
     angles=None,
     grating="rsoxs",
