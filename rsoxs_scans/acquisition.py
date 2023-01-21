@@ -284,14 +284,14 @@ def dryrun_bar(bar, sort_by=["apriority"], rev=[False], print_dry_run=True, grou
                 statements.append(f'>Step {j}: {out["description"].lstrip()}')
 
                 if (out["action"]) == "error":
-                    warnings.warn(f"WARNING: acquisition # {i} has a step with and error\n{out['description']}")
+                    warnings.warn(f"WARNING: acquisition # {i} has a step with an error: \n{out['description']}")
                     acqs_with_errors.append((i, out["description"]))
                     
             text += "".join(statements)
 
             acq_queue.append(acquisition)
         except Exception as e:
-            warnings.warn(f"WARNING: acquisition # {i} has a step with and error {str(e)}")
+            warnings.warn(f"WARNING: acquisition # {i} has a step with an error: {str(e)}")
             pass
         total_time += step[4]
         text += "\n________________________________________________\n"
