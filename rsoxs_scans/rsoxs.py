@@ -200,7 +200,7 @@ def rsoxs_scan_enqueue(
         valid = False
         validation += f"a provided polarization is not valid\n"
     if temperatures is not None:
-        if np.min(temperatures, default=35) < 20 or np.max(temperatures, default=35) > 300:
+        if min(temperatures, default=35) < 20 or max(temperatures, default=35) > 300:
             valid = False
             validation += f"temperature out of range\n"
     motor_positions = []
@@ -215,17 +215,17 @@ def rsoxs_scan_enqueue(
         angles.discard(None)
         xs = {d.get("x", None) for d in motor_positions}
         xs.discard(None)
-        if np.min(xs, default=0) < -13 or np.max(xs, default=0) > 13:
+        if min(xs, default=0) < -13 or max(xs, default=0) > 13:
             valid = False
             validation += f"X motor is out of vaild range\n"
         ys = {d.get("y", None) for d in motor_positions}
         ys.discard(None)
-        if np.min(ys, default=0) < -190 or np.max(ys, default=0) > 355:
+        if min(ys, default=0) < -190 or max(ys, default=0) > 355:
             valid = False
             validation += f"Y motor is out of vaild range\n"
         zs = {d.get("z", None) for d in motor_positions}
         zs.discard(None)
-        if np.min(zs, default=0) < -13 or np.max(zs, default=0) > 13:
+        if min(zs, default=0) < -13 or max(zs, default=0) > 13:
             valid = False
             validation += f"Z motor is out of vaild range\n"
         # temxs = {d.get('temx', None) for d in motor_positions}
@@ -240,10 +240,10 @@ def rsoxs_scan_enqueue(
         #     validation += f"X motor is out of vaild range\n"
         temzs = {d.get("temz", None) for d in motor_positions}
         temzs.discard(None)
-        if np.min(temzs, default=0) < 0 or np.max(temzs, default=0) > 150:
+        if min(temzs, default=0) < 0 or max(temzs, default=0) > 150:
             valid = False
             validation += f"TEMz motor is out of vaild range\n"
-        if np.max(temzs, default=0) > 100 and np.min(ys, default=50) < 20:
+        if max(temzs, default=0) > 100 and min(ys, default=50) < 20:
             valid = False
             validation += f"potential clash between TEY and sample bar\n"
     if temps_with_locations:
