@@ -175,19 +175,19 @@ def rsoxs_scan_enqueue(
         validation += "repeats must be a positive integer between 0 and 100\n"
     if isinstance(energies,(float,int)):
         energies = [energies]
-    if min(energies) < 70 or max(energies) > 2200:
+    if np.min(energies) < 70 or max(energies) > 2200:
         valid = False
         validation += "energy input is out of range for SST 1\n"
     if grating in ["1200", 1200]:
-        if min(energies) < 150:
+        if np.min(energies) < 150:
             valid = False
             validation += "energy is to low for the 1200 l/mm grating\n"
     elif grating in ["250", 250]:
-        if max(energies) > 1000:
+        if np.max(energies) > 1000:
             valid = False
             validation += "energy is too high for 250 l/mm grating\n"
     elif grating == "rsoxs":
-        if max(energies) > 1000:
+        if np.max(energies) > 1000:
             valid = False
             validation += "energy is too high for 250 l/mm grating\n"
     else:
@@ -196,11 +196,11 @@ def rsoxs_scan_enqueue(
     if np.max(times) > 10:
         valid = False
         validation += "exposure times greater than 10 seconds are not valid\n"
-    if min(polarizations) < -1 or max(polarizations) > 180:
+    if np.min(polarizations) < -1 or np.max(polarizations) > 180:
         valid = False
         validation += f"a provided polarization is not valid\n"
     if temperatures is not None:
-        if min(temperatures, default=35) < 20 or max(temperatures, default=35) > 300:
+        if np.min(temperatures, default=35) < 20 or np.max(temperatures, default=35) > 300:
             valid = False
             validation += f"temperature out of range\n"
     motor_positions = []
@@ -215,17 +215,17 @@ def rsoxs_scan_enqueue(
         angles.discard(None)
         xs = {d.get("x", None) for d in motor_positions}
         xs.discard(None)
-        if min(xs, default=0) < -13 or max(xs, default=0) > 13:
+        if np.min(xs, default=0) < -13 or np.max(xs, default=0) > 13:
             valid = False
             validation += f"X motor is out of vaild range\n"
         ys = {d.get("y", None) for d in motor_positions}
         ys.discard(None)
-        if min(ys, default=0) < -190 or max(ys, default=0) > 355:
+        if np.min(ys, default=0) < -190 or np.max(ys, default=0) > 355:
             valid = False
             validation += f"Y motor is out of vaild range\n"
         zs = {d.get("z", None) for d in motor_positions}
         zs.discard(None)
-        if min(zs, default=0) < -13 or max(zs, default=0) > 13:
+        if np.min(zs, default=0) < -13 or np.max(zs, default=0) > 13:
             valid = False
             validation += f"Z motor is out of vaild range\n"
         # temxs = {d.get('temx', None) for d in motor_positions}
@@ -240,10 +240,10 @@ def rsoxs_scan_enqueue(
         #     validation += f"X motor is out of vaild range\n"
         temzs = {d.get("temz", None) for d in motor_positions}
         temzs.discard(None)
-        if min(temzs, default=0) < 0 or max(temzs, default=0) > 150:
+        if np.min(temzs, default=0) < 0 or np.max(temzs, default=0) > 150:
             valid = False
             validation += f"TEMz motor is out of vaild range\n"
-        if max(temzs, default=0) > 100 and min(ys, default=50) < 20:
+        if np.max(temzs, default=0) > 100 and np.min(ys, default=50) < 20:
             valid = False
             validation += f"potential clash between TEY and sample bar\n"
     if temps_with_locations:
