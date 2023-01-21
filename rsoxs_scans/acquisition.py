@@ -263,29 +263,32 @@ def dryrun_bar(bar, sort_by=["apriority"], rev=[False], print_dry_run=True, grou
                 f"WARNING: acquisition # {i} has an invalid configuration - no configuration will be loaded"
             )
             text += "Warning invalid configuration" + step[2]
-        acquisition['steps'] = dryrun_acquisition(step[6], step[5])
-        acquisition["acq_index"] = i
-        acquisition["acq_time"] = step[4]
-        acquisition["total_acq"] = len(list_out)
-        acquisition["time_before"] = total_time
-        acquisition["priority"] = step[13]
-        acquisition["uid"] = step[14]
-        acquisition["group"] = step[15]
-        acquisition["slack_message_start"] = step[16]
-        acquisition["slack_message_end"] = step[17]
-        # if this step has a single output entry, we are done with this entry
-        if not isinstance(acquisition['steps'], list):
-            acquisition['steps'] = [acquisition['steps']]
-        statements = []
-        for j, out in enumerate(acquisition['steps']):
-            out["queue_step"] = j
-            out["acq_index"] = i
-            statements.append(f'>Step {j}: {out["description"].lstrip()}')
+        try:
+            acquisition['steps'] = dryrun_acquisition(step[6], step[5])
+            acquisition["acq_index"] = i
+            acquisition["acq_time"] = step[4]
+            acquisition["total_acq"] = len(list_out)
+            acquisition["time_before"] = total_time
+            acquisition["priority"] = step[13]
+            acquisition["uid"] = step[14]
+            acquisition["group"] = step[15]
+            acquisition["slack_message_start"] = step[16]
+            acquisition["slack_message_end"] = step[17]
+            # if this step has a single output entry, we are done with this entry
+            if not isinstance(acquisition['steps'], list):
+                acquisition['steps'] = [acquisition['steps']]
+            statements = []
+            for j, out in enumerate(acquisition['steps']):
+                out["queue_step"] = j
+                out["acq_index"] = i
+                statements.append(f'>Step {j}: {out["description"].lstrip()}')
 
-            if (out["action"]) == "error":
-                warnings.warn(f"WARNING: acquisition # {i} has a step with and error\n{out['description']}")
-                acqs_with_errors.append((i, out["description"]))
-
+                if (out["action"]) == "error":
+                    warnings.warn(f"WARNING: acquisition # {i} has a step with and error\n{out['description']}")
+                    acqs_with_errors.append((i, out["description"]))
+        except Exception as e:
+            warnings.warn(f"WARNING: acquisition # {i} has a step with and error {str(e)}")
+            pass
         text += "".join(statements)
 
         acq_queue.append(acquisition)
