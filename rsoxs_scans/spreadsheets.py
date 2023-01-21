@@ -142,7 +142,7 @@ def load_samplesxlsx(filename: str):
             acq["group"] = str(acq.get("group", ""))
         samp["acquisitions"].append(acq)  # no checking for validity here?
     for i, sam in enumerate(new_bar):
-        new_bar[i]["location"] = json.loads(sam.get("location", "[]"))
+        new_bar[i]["location"] = json.loads(sam.get("location", "[]").replace("'", '"'))
 
         new_bar[i]["bar_loc"] = json.loads(sam.get("bar_loc", "{}"))
         new_bar[i]["acq_history"] = json.loads(sam.get("acq_history", "[]"))

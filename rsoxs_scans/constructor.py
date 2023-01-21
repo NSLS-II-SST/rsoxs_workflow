@@ -149,6 +149,7 @@ def get_energies(edge, frames=default_frames, ratios=None, quiet=False, **kwargs
             edge_input = edge.lower()
         if edge.lower() in rsoxs_edges.keys():
             edge = rsoxs_edges[edge.lower()]
+        # add json read edge as option here
     if isinstance(edge_input, (float, int)):
         edge = (edge_input, edge_input)
         singleinput = True
