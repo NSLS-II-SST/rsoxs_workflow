@@ -17,6 +17,7 @@ def spiral_scan_enqueue(
     grating="rsoxs",
     md=None,
     dets=None,
+    plan_name='spiral',
     **kwargs,
 ):
 
@@ -70,6 +71,7 @@ def spiral_scan_enqueue(
         kwargs["angle"] = angle
         kwargs["pol"] = pol
         kwargs["exposure"] = exposure
+        kwargs["enscan_type"] = plan_name
         return {"description": retstr, "action": "spiral_scan_core", "kwargs": kwargs}
     else:
         return {
@@ -138,6 +140,7 @@ def dryrun_spiral_plan(
                     angle=angle,
                     exposure=exposure_time,
                     md=md,
+                    plan_name=f"spiral_{edge}",
                 )
             )
     return output

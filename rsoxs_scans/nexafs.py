@@ -14,9 +14,13 @@ def nexafs_scan_enqueue(
     pol=0,
     grating="best",
     angle=None,
+    plan_name='nexafs',
+    md=None,
     **kwargs,  # extraneous settings from higher level plans are ignored
 ):
     # grab locals
+    if md is None:
+        md={}
     if pol is None:
         pol = 0
     # validate inputs
@@ -80,6 +84,8 @@ def nexafs_scan_enqueue(
         kwargs["scan_params"] = scan_params
         kwargs["grating"] = grating
         kwargs["cycles"] = cycles
+        kwargs["enscan_type"] = plan_name
+        kwargs["md"] = md
         return {"description": retstr, "action": "nexafs_scan_core", "kwargs": kwargs}
     else:
         return {
@@ -204,6 +210,8 @@ def dryrun_nexafs_plan(
                             pol=pol,
                             angle=grazing_angle,
                             grating=grating,
+                            plan_name=f'nexafs_{edge}',
+                            md=md,
                         )
                     )
 
