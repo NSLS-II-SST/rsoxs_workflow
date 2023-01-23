@@ -107,7 +107,7 @@ def dryrun_acquisition(acq, sample):
 
 
 ### TODO sort_by docstring explanation is confusing
-def dryrun_bar(bar, sort_by=["apriority"], rev=[False], print_dry_run=True, group="all"):
+def dryrun_bar(bar, sort_by=["apriority"], rev=[False], print_dry_run=True, group="all", repeat_previous_runs=False):
     """Generate output queue entries for all sample dicts in the bar list
 
     Parameters
@@ -153,6 +153,10 @@ def dryrun_bar(bar, sort_by=["apriority"], rev=[False], print_dry_run=True, grou
                     or str(a.get("group", "")).lower()
                     == str(gr).lower()  # true if group matches user selected group
                 ):
+                    continue
+
+                # skip the acquisition if it has a run already in the list (and we're not repeating everything)
+                if len(a.get('runs',[])) and not repeat_previous_runs:
                     continue
 
                 if "uid" not in a.keys():
