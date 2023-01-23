@@ -8,7 +8,7 @@ from copy import deepcopy
 from openpyxl import load_workbook
 from openpyxl.writer import excel
 from pathlib import Path
-from datetime import date
+from datetime import date, today
 import json
 import re, warnings, httpx, uuid
 import numpy as np
@@ -249,15 +249,17 @@ def get_proposal_info(proposal_id, beamline="SST1", path_base="/sst/", cycle="20
     return res["data_session"], valid_path, valid_SAF, proposal_info
 
 
-def save_samplesxlsx(bar, filename):
+def save_samplesxlsx(bar, name='', path='./'):
     """Exports the in-memory bar (list of sample dicts) as an excel sheet with 'Bar', and 'Acquisitions' sheets.
-
+        exports with a fixed pattern to path out_date_name.xlsx
     Parameters
     ----------
     bar : list of dict
         list of sample dicts
-    filename : str
-        export file name, e.g., test.xlsx
+    name : str
+        export file name, e.g., test
+    path : str/path
+        export path
     """
     switch = {
         "RSoXS Sample Outboard-Inboard": "x",
@@ -269,6 +271,9 @@ def save_samplesxlsx(bar, filename):
         "z": "z",
         "th": "th",
     }
+    
+    filename = path + f'out_{today().strftime("%Y-%m-%d %H:%M:%S")}_{name}.xlsx'
+    
     acqlist = []
     for i, sam in enumerate(bar):
         for acq in sam["acquisitions"]:
