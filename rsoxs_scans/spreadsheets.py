@@ -8,7 +8,7 @@ from copy import deepcopy
 from openpyxl import load_workbook
 from openpyxl.writer import excel
 from pathlib import Path
-from datetime import date, today
+from datetime import date, datetime
 import json
 import re, warnings, httpx, uuid
 import numpy as np
@@ -137,9 +137,9 @@ def load_samplesxlsx(filename: str):
         if "temperatures" in acq:
             if isinstance(acq["temperatures"], (int, float)):
                 acq["temperatures"] = [acq["temperatures"]]
-        acq["uid"] = str(uuid.uuid1())
         if not isinstance(acq.get("group", 0), str):
             acq["group"] = str(acq.get("group", ""))
+        acq["uid"] = str(uuid.uuid1())
         samp["acquisitions"].append(acq)  # no checking for validity here?
     for i, sam in enumerate(new_bar):
         new_bar[i]["location"] = json.loads(sam.get("location", "[]").replace("'", '"'))
@@ -272,7 +272,7 @@ def save_samplesxlsx(bar, name='', path='./'):
         "th": "th",
     }
     
-    filename = path + f'out_{today().strftime("%Y-%m-%d %H:%M:%S")}_{name}.xlsx'
+    filename = path + f'out_{datetime.today().strftime("%Y-%m-%d_%H-%M-%S")}_{name}.xlsx'
     
     acqlist = []
     for i, sam in enumerate(bar):
@@ -296,8 +296,6 @@ def save_samplesxlsx(bar, name='', path='./'):
         testdict[i]["bar_loc"] = json.dumps(testdict[i]["bar_loc"])
         testdict[i]["location"] = json.dumps(testdict[i]["location"])
         testdict[i]["proposal"] = json.dumps(testdict[i]["proposal"])
-
-        testdict[i]["acq_history"] = json.dumps(testdict[i]["acq_history"])
 
     sampledf = pd.DataFrame.from_dict(testdict, orient="columns")
     sampledf = sampledf.loc[:, df.columns != "acquisitions"]
