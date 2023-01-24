@@ -13,7 +13,7 @@ import json
 import re, warnings, httpx, uuid
 import numpy as np
 import pandas as pd
-from .defaults import rsoxs_configurations,rsoxs_ratios_table,nexafs_ratios_table,nexafs_speed_table,edge_names,config_list, current_version
+from .defaults import rsoxs_configurations,empty_sample,empty_acq,edge_names,config_list, current_version
 
 
 def load_samplesxlsx(filename: str):
@@ -272,23 +272,28 @@ def save_samplesxlsx(bar, name='', path=''):
         "th": "th",
     }
     
+
     filename = path + f'out_{datetime.today().strftime("%Y-%m-%d_%H-%M-%S")}_{name}.xlsx'
     
     acqlist = []
     for i, sam in enumerate(bar):
         for acq in sam["acquisitions"]:
             acq.update({"sample_id": sam["sample_id"]})
-            cleanacq = {}
+            cleanacq = deepcopy(empty_acq)
             for key in acq:
-                cleanacq[key] = json.dumps(acq[key])
+                if isinstance(acq[key],(str)):
+                    cleanacq[key] = acq[key]
+                else:
+                    cleanacq[key] = json.dumps(acq[key])
             acqlist.append(cleanacq)
     sampledf = pd.DataFrame.from_dict(bar, orient="columns")
     df = deepcopy(sampledf)
     testdict = df.to_dict(orient="records")
+    cleanbar = []
     for i, sam in enumerate(testdict):
         if "acq_history" not in testdict[i].keys():
             testdict[i]["acq_history"] = []
-        elif testdict[i]["acq_history"] == "":
+        elif isinstance(testdict[i]["acq_history"],str):
             testdict[i]["acq_history"] = []
         # json dump the pythonic parts
         # including sample: bar_loc,location, proposal,acq_history
@@ -296,9 +301,12 @@ def save_samplesxlsx(bar, name='', path=''):
         testdict[i]["bar_loc"] = json.dumps(testdict[i]["bar_loc"])
         testdict[i]["location"] = json.dumps(testdict[i]["location"])
         testdict[i]["proposal"] = json.dumps(testdict[i]["proposal"])
+        del testdict[i]['acquisitions']
+        cleansam = deepcopy(empty_sample)
+        cleansam.update(testdict[i])
+        cleanbar.append(cleansam)
 
-    sampledf = pd.DataFrame.from_dict(testdict, orient="columns")
-    sampledf = sampledf.loc[:, df.columns != "acquisitions"]
+    sampledf = pd.DataFrame.from_dict(cleanbar, orient="columns")
     acqdf = pd.DataFrame.from_dict(acqlist, orient="columns")
     writer = pd.ExcelWriter(filename)
     sampledf.to_excel(writer, index=False, sheet_name="Bar")
