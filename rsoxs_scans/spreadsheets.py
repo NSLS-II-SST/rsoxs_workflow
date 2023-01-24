@@ -249,7 +249,7 @@ def get_proposal_info(proposal_id, beamline="SST1", path_base="/sst/", cycle="20
     return res["data_session"], valid_path, valid_SAF, proposal_info
 
 
-def save_samplesxlsx(bar, name='', path='./'):
+def save_samplesxlsx(bar, name='', path=''):
     """Exports the in-memory bar (list of sample dicts) as an excel sheet with 'Bar', and 'Acquisitions' sheets.
         exports with a fixed pattern to path out_date_name.xlsx
     Parameters
