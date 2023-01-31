@@ -144,8 +144,8 @@ def load_samplesxlsx(filename: str):
     for i, sam in enumerate(new_bar):
         new_bar[i]["location"] = json.loads(sam.get("location", "[]").replace("'", '"'))
 
-        new_bar[i]["bar_loc"] = json.loads(sam.get("bar_loc", "{}"))
-        new_bar[i]["acq_history"] = json.loads(sam.get("acq_history", "[]"))
+        new_bar[i]["bar_loc"] = json.loads(sam.get("bar_loc", "{}").replace("'", '"'))
+        new_bar[i]["acq_history"] = json.loads(sam.get("acq_history", "[]").replace("'", '"').rstrip('\\"').lstrip('\\"'))
 
         if "proposal_id" in sam:
             proposal = sam["proposal_id"]
