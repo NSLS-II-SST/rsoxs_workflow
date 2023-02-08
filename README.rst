@@ -21,7 +21,7 @@ or any other directory you have control over
 then clone this repository
 
 
-``clone https://github.com/NSLS-II-SST/rsoxs_scans.git``
+``git clone https://github.com/NSLS-II-SST/rsoxs_scans.git``
 
 move to the directory
 
