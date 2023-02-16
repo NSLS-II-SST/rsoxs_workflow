@@ -56,7 +56,7 @@ def spiral_scan_enqueue(
     if len(dets) < 1:
         valid = False
         validation += "No detectors are given\n"
-    if angle is not None:
+    if angle != None and angle != "":
         if -155 > angle or angle > 195:
             valid = False
             validation += f"angle of {angle} is out of range\n"
