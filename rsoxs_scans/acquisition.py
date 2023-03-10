@@ -318,7 +318,7 @@ def dryrun_bar(
         # Add this acquisitions time to the running total
         total_time += step[4]
         
-        text += "_" * 67  # Print Footer bar
+        text += "_" * 67 + "\n" # Print Footer bar
         # Keep track of the previous config, for calc. config change time.
         previous_config = step[2]
     
