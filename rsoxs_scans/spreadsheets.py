@@ -67,6 +67,10 @@ def load_samplesxlsx(filename: str):
     for samp in new_bar:
         samp["acquisitions"] = ([])  # blank out any acquisitions elements which might be there (they shouldn't be there unless someone added a column for some reason
 
+
+
+
+
     # Load Acquisitions Sheet
     acqsdf = pd.read_excel(
         filename,
@@ -138,11 +142,20 @@ def load_samplesxlsx(filename: str):
             acq["group"] = str(acq.get("group", ""))
         acq["uid"] = str(uuid.uuid1())
         samp["acquisitions"].append(acq)  
+        
     for i, sam in enumerate(new_bar):
-        new_bar[i]["location"] = json.loads(sam.get("location", "[]").replace("'", '"'))
-
-        new_bar[i]["bar_loc"] = json.loads(sam.get("bar_loc", "{}").replace("'", '"'))
-        new_bar[i]["acq_history"] = json.loads(sam.get("acq_history", "[]").replace("'", '"').rstrip('\\"').lstrip('\\"'))
+        if sam["location"]=="":
+            new_bar[i]["location"] = "[]"
+        else:
+            new_bar[i]["location"] = json.loads(sam.get("location", "[]").replace("'", '"'))
+        if sam["bar_loc"]=="":
+            new_bar[i]["bar_loc"] = {}
+        else:
+            new_bar[i]["bar_loc"] = json.loads(sam.get("bar_loc", "{}").replace("'", '"'))
+        if sam["acq_history"]=="":
+            new_bar[i]["acq_history"] = "[]"
+        else:
+            new_bar[i]["acq_history"] = json.loads(sam.get("acq_history", "[]").replace("'", '"').rstrip('\\"').lstrip('\\"'))
 
         if "proposal_id" in sam:
             proposal = sam["proposal_id"]
