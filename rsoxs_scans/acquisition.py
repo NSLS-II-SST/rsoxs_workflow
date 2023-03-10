@@ -305,7 +305,7 @@ def dryrun_bar(
             acq_queue.append(acquisition)
         except Exception as e:
             warnings.warn(f"WARNING: acquisition # {i} has a step with an error: {str(e)}")
-            raise e
+            # raise e
             pass
         total_time += step[4]
         text += "\n________________________________________________\n"
