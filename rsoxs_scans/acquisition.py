@@ -258,7 +258,7 @@ def dryrun_bar(
         text += (  # Append brief run summary
             f"Summary: load {step[5]['sample_id']} with config {step[2]}, "
             f"run {step[3]} with priority(Sample: {step[12]}, Acquisition: {step[13]})"
-            f"\n\tStarts @ {time_sec(total_time)} takes {time_sec(step[4])}\n"
+            f"\n\tStarts @ {time_sec(total_time)} takes {time_sec(step[4])}"
         )
 
         # Append config change time, if needed
@@ -270,16 +270,18 @@ def dryrun_bar(
         # Check if acquisition will take longer than the default warning time
         if step[4] > default_warning_step_time:
             warnings.warn(
-                f"WARNING: acquisition # {i} will take {step[4]/60} minutes, which is more than {default_warning_step_time/60} minutes"
+                f"\nWARNING: acquisition # {i} will take {step[4]/60} minutes, which is more than {default_warning_step_time/60} minutes"
             )
 
         # Check if configuration is invalid
         if step[2] not in config_list:
             warnings.warn(
-                f"WARNING: acquisition # {i} has an invalid configuration - no configuration will be loaded"
+                f"\nWARNING: acquisition # {i} has an invalid configuration - no configuration will be loaded"
             )
             text += "Warning invalid configuration" + step[2]
-        try:
+        
+        #dryrun acquisition and output steps
+        try: 
             acquisition["steps"] = dryrun_acquisition(step[6], step[5])
             acquisition["acq_index"] = i
             acquisition["acq_time"] = step[4]
@@ -290,17 +292,20 @@ def dryrun_bar(
             acquisition["group"] = step[15]
             acquisition["slack_message_start"] = step[16]
             acquisition["slack_message_end"] = step[17]
+            
             # if this step has a single output entry, we are done with this entry
             if not isinstance(acquisition["steps"], list):
                 acquisition["steps"] = [acquisition["steps"]]
+            
+            # Generate the display text for each step
             statements = []
             for j, out in enumerate(acquisition["steps"]):
                 out["queue_step"] = j
                 out["acq_index"] = i
-                statements.append(f'>Step {j}: {out["description"].lstrip()}')
+                statements.append(f'> Step {j}: {out["description"].lstrip()}')
 
                 if (out["action"]) == "error":
-                    warnings.warn(f"WARNING: acquisition # {i} has a step with an error: \n{out['description']}")
+                    warnings.warn(f"WARNING: Acquisition # {i} has a step with an error: \n{out['description']}")
                     acqs_with_errors.append((i, out["description"]))
 
             text += "".join(statements)
@@ -310,16 +315,23 @@ def dryrun_bar(
             warnings.warn(f"WARNING: acquisition # {i} has a step with an error: {str(e)}")
             # raise e
             pass
+        # Add this acquisitions time to the running total
         total_time += step[4]
-        text += "\n________________________________________________\n"
+        
+        text += "_" * 67  # Print Footer bar
+        # Keep track of the previous config, for calc. config change time.
         previous_config = step[2]
+    
+    # Store total_time estimate in each acquisition
     for acq in acq_queue:
         acq["total_queue_time"] = total_time
         acq["time_after"] = total_time - acq["time_before"] - acq["acq_time"]
 
     text += f"\n\nTotal estimated time including config changes {time_sec(total_time)}"
+    
     if print_dry_run:
         print(text)
+    
     # Warn user about acquisitions that contained errors
     for index, error in acqs_with_errors:
         warnings.resetwarnings()
