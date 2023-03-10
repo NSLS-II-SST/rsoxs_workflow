@@ -246,30 +246,28 @@ def dryrun_bar(
     for i, step in enumerate(list_out):
         acquisition = {"acq_index": i, "steps": []}
         warnings.resetwarnings()
-        text += "_" * 67
-        text += (
-            f"\nAcquisition # {i} from Sample: {step[5]['sample_name']}"
+        text += "_" * 67 # Print header bar
+         
+        text += ( # Append Acquisition/Sample Biographical Info
+            f"\nAcquisition # {i} from Group: {step[15]}"
+            f"\n\tSample Name: {step[5]['sample_name']}"
             f"\n\tSample id: {step[5]['sample_id']}"
-            f"\n\tGroup {step[15]}\n\n"
+            f"\n\tProject: {step[1]}\n\n"
         )
-        text += "Summary: load {} from {}, config {}, run {} priority( sample {} acquisition {}), starts @ {} takes {}\n".format(
-            step[5]["sample_id"],
-            step[1],
-            step[2],
-            step[3],
-            step[12],
-            step[13],
-            time_sec(total_time),
-            time_sec(step[4]),
+        
+        text += ( # Append brief run summary
+            f"Summary: load {step[5]["sample_id"]} with config {step[2]}, "
+            f"run {step[3]} with priority(Sample: {step[12]}, Acquisition: {step[13]})"
+            f"\n\tStarts @ {time_sec(total_time)} takes {time_sec(step[4])}\n"
         )
 
-        # Check for config change
+        # Append config change time, if needed
         if step[2] != previous_config:
             total_time += config_change_time
             text += f" (+{config_change_time} seconds for configuration change)\n"
         text += "\n"
 
-        # Check if acquisition will take too long
+        # Check if acquisition will take longer than the default warning time
         if step[4] > default_warning_step_time:
             warnings.warn(
                 f"WARNING: acquisition # {i} will take {step[4]/60} minutes, which is more than {default_warning_step_time/60} minutes"
