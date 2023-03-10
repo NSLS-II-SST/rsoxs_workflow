@@ -44,7 +44,8 @@ def load_samplesxlsx(filename: str, verbose=False):
     # If so, we can do some extra validation, but need to skip them when loading data
     # If not, we proceed with a bit less validation and don't skip them
     barHeaderRows = []
-
+    barParamsRequired = [] # if reading the header fails, this stays empty and we don't check for them
+    
     try:
         # Import just where the header rows from the bar sheet would be
         warnings.simplefilter(action="ignore", category=UserWarning)
@@ -103,7 +104,8 @@ def load_samplesxlsx(filename: str, verbose=False):
     # If so, we can do some extra validation, but need to skip them when loading data
     # If not, we proceed with a bit less validation and don't skip them
     acqHeaderRows = []
-
+    acqParamsRequired = [] # if reading the header fails, this stays empty and we don't check for them
+    
     try:
         # Import just where the header rows from the Acquisitions sheet would be
         warnings.simplefilter(action="ignore", category=UserWarning)
