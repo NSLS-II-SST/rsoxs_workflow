@@ -246,9 +246,14 @@ def dryrun_bar(
     for i, step in enumerate(list_out):
         acquisition = {"acq_index": i, "steps": []}
         warnings.resetwarnings()
-        text += f"________________________________________________\nAcquisition # {i} from sample {step[5]['sample_name']}, group {step[15]}\n\n"
+        text += "_" * 67
+        text += (
+            f"\nAcquisition # {i} from Sample: {step[5]['sample_name']}"
+            f"\n\tSample id: {step[5]['sample_id']}"
+            f"\n\tGroup {step[15]}\n\n"
+        )
         text += "Summary: load {} from {}, config {}, run {} priority( sample {} acquisition {}), starts @ {} takes {}\n".format(
-            step[5]["sample_name"],
+            step[5]["sample_id"],
             step[1],
             step[2],
             step[3],
