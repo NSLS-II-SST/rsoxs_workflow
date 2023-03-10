@@ -246,17 +246,17 @@ def dryrun_bar(
     for i, step in enumerate(list_out):
         acquisition = {"acq_index": i, "steps": []}
         warnings.resetwarnings()
-        text += "_" * 67 # Print header bar
-         
-        text += ( # Append Acquisition/Sample Biographical Info
+        text += "_" * 67  # Print header bar
+
+        text += (  # Append Acquisition/Sample Biographical Info
             f"\nAcquisition # {i} from Group: {step[15]}"
             f"\n\tSample Name: {step[5]['sample_name']}"
             f"\n\tSample id: {step[5]['sample_id']}"
             f"\n\tProject: {step[1]}\n\n"
         )
-        
-        text += ( # Append brief run summary
-            f"Summary: load {step[5]["sample_id"]} with config {step[2]}, "
+
+        text += (  # Append brief run summary
+            f"Summary: load {step[5]['sample_id']} with config {step[2]}, "
             f"run {step[3]} with priority(Sample: {step[12]}, Acquisition: {step[13]})"
             f"\n\tStarts @ {time_sec(total_time)} takes {time_sec(step[4])}\n"
         )
