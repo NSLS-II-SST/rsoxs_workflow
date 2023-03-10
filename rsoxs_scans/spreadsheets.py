@@ -16,30 +16,23 @@ import pandas as pd
 from .defaults import rsoxs_configurations, empty_sample, empty_acq, edge_names, config_list, current_version
 
 
-def load_samplesxlsx(filename: str):
-    """Imports data from excel sheet and online sources to generate bar (list of sample dicts)
+def load_samplesxlsx(filename: str, verbose=False):
+    """Imports data from sample excel spreadsheet and online sources to generate bar (list of sample dicts)
 
     Parameters
     ----------
     filename : str
         String or Pathlike object that references the excel sheet to load
+    verbose : bool
+        Whether or not to print messages to stdout
 
     Returns
     -------
     list of dicts
         bar (list of sample dicts) which contain all imported data from the Bar sheet and Acquisitions sheet
     """
-    # Header rows with user instructions, to skip. Need the top row (0) for parameter names
-    skiprows = [1, 2, 3, 4]
 
-    ### TODO remove if this is just test code
-    try:
-        dummy = pd.read_excel(filename, sheet_name="Instructions")
-    except ValueError:
-        skiprows = []
-        pass
-
-    # load the version number
+    # Validate Spreadsheet Version Number
     excel_file = load_workbook(filename)
     print(f"spreadsheet version is {excel_file.properties.title}")
     if excel_file.properties.title != current_version:
@@ -47,52 +40,182 @@ def load_samplesxlsx(filename: str):
         raise ValueError("this excel file is not the current version.  please upgrade your template and try again")
     excel_file.close()
 
-    # Load Bar sheet
+    # First, check the bar sheet for whether header rows with user instructions are present, and identity them if so
+    # If so, we can do some extra validation, but need to skip them when loading data
+    # If not, we proceed with a bit less validation and don't skip them
+    barHeaderRows = []
+
+    try:
+        # Import just where the header rows from the bar sheet would be
+        warnings.simplefilter(action="ignore", category=UserWarning)
+        df_barHeader = pd.read_excel(
+            filename,
+            na_values="",
+            engine="openpyxl",
+            keep_default_na=True,
+            converters={"sample_date": str},
+            sheet_name="Bar",
+            nrows=4,
+            verbose=True,
+        )
+
+        # Check if the first cell has the Parameters'Index
+        if "Parameter/ Index" in df_barHeader.keys():
+            doImportBarHeaders = True
+        else:  # Dont attempt to import header and warn user that we will skip some cell validation
+            doImportBarHeaders = False
+            warnings.warn(
+                "\nDidn't find Parameter/ Index column in bar sheet, skipping some validation that needs header cells"
+            )
+
+        # Load the header data
+        if doImportBarHeaders:
+            # Check where we actually have the header rows. Mark them to be skipped when loading data.
+            if df_barHeader["Parameter/ Index"][0] != "Description":
+                raise ValueError("Couldn't find parameter Descriptions")
+            else:
+                barHeaderRows.append(1)
+            if len(df_barHeader["Parameter/ Index"]) > 1 and df_barHeader["Parameter/ Index"][1] == "Rules":
+                barHeaderRows.append(2)
+            if len(df_barHeader["Parameter/ Index"]) > 2 and df_barHeader["Parameter/ Index"][2] == "Example":
+                barHeaderRows.append(3)
+            if len(df_barHeader["Parameter/ Index"]) > 3 and df_barHeader["Parameter/ Index"][3] == "Notes":
+                barHeaderRows.append(4)
+
+            # Cast as a nested dict, where:
+            dict_barHeader = df_barHeader.to_dict(orient="index")
+
+            # Make a list of bar parameters that are marked 'REQUIRED'
+            barParamsRequired = []
+            for param in dict_barHeader[0]:
+                if "REQUIRED" in dict_barHeader[0][param]:
+                    barParamsRequired.append(param)
+
+    except ValueError as e:
+        warnings.warn(
+            f"\nError parsing bar sheet headers, skipping some validation that needs header cells: {str(e)}"
+        )
+        pass
+
+    # Then, check the Acquisitions sheet for whether header rows with user instructions are present, and identity them if so
+    # If so, we can do some extra validation, but need to skip them when loading data
+    # If not, we proceed with a bit less validation and don't skip them
+    acqHeaderRows = []
+
+    try:
+        # Import just where the header rows from the Acquisitions sheet would be
+        warnings.simplefilter(action="ignore", category=UserWarning)
+        df_acqHeader = pd.read_excel(
+            filename,
+            na_values="",
+            engine="openpyxl",
+            keep_default_na=True,
+            converters={"sample_date": str},
+            sheet_name="Acquisitions",
+            nrows=4,
+            verbose=True,
+        )
+
+        # Check if the first cell has the Parameters'Index
+        if "Parameter/ Index" in df_acqHeader.keys():
+            doImportAcqHeaders = True
+        else:  # Dont attempt to import header and warn user that we will skip some cell validation
+            doImportAcqHeaders = False
+            warnings.warn(
+                "\nDidn't find Parameter/ Index column in acq sheet, skipping some validation that needs header cells"
+            )
+
+        # Load the header data
+        if doImportBarHeaders:
+            # Check where we actually have the header rows. Mark them to be skipped when loading data.
+            if df_acqHeader["Parameter/ Index"][0] != "Description":
+                raise ValueError("Couldn't find parameter Descriptions")
+            else:
+                acqHeaderRows.append(1)
+            if len(df_acqHeader["Parameter/ Index"]) > 1 and df_acqHeader["Parameter/ Index"][1] == "Rules":
+                acqHeaderRows.append(2)
+            if len(df_acqHeader["Parameter/ Index"]) > 2 and df_acqHeader["Parameter/ Index"][2] == "Example":
+                acqHeaderRows.append(3)
+            if len(df_acqHeader["Parameter/ Index"]) > 3 and df_acqHeader["Parameter/ Index"][3] == "Notes":
+                acqHeaderRows.append(4)
+
+            # Cast as a nested dict, where:
+            dict_acqHeader = df_acqHeader.to_dict(orient="index")
+
+            # Make a list of acq parameters that are marked 'REQUIRED'
+            acqParamsRequired = []
+            for param in dict_acqHeader[0]:
+                if "REQUIRED" in dict_acqHeader[0][param]:
+                    acqParamsRequired.append(param)
+
+    except ValueError as e:
+        warnings.warn(
+            f"\nError parsing Acquisitions sheet headers, skipping some validation that needs header cells: {str(e)}"
+        )
+        pass
+
+    # Import Bar sheet data cells as a dataframe
     warnings.simplefilter(action="ignore", category=UserWarning)
-    df = pd.read_excel(
+    df_bar = pd.read_excel(
         filename,
         na_values="",
         engine="openpyxl",
         keep_default_na=True,
         converters={"sample_date": str},
         sheet_name="Bar",
-        skiprows=skiprows,
+        skiprows=barHeaderRows,
         verbose=True,
     )
 
-    df.replace(np.nan, "", regex=True, inplace=True)
-    new_bar = df.to_dict(orient="records")
-    if not isinstance(new_bar, list):  # if the bar has one element, it's not a list
-        new_bar = [new_bar]
-    for samp in new_bar:
-        samp[
-            "acquisitions"
-        ] = (
-            []
-        )  # blank out any acquisitions elements which might be there (they shouldn't be there unless someone added a column for some reason
+    # Replace NaNs with empty string
+    df_bar.replace(np.nan, "", regex=True, inplace=True)
 
-    # Load Acquisitions Sheet
-    acqsdf = pd.read_excel(
+    # Convert dataframe to a list of dictionaries, each row is a list element and each column is a key->value pair
+    new_bar = df_bar.to_dict(orient="records")
+
+    # if the bar has one element, force to a list
+    if not isinstance(new_bar, list):
+        new_bar = [new_bar]
+
+    # blank out any acquisitions elements which might be there (they shouldn't be there unless someone added a column for some reason
+    for samp in new_bar:
+        samp["acquisitions"] = []
+
+    # Import Acquisitions sheet data cells as a dataframe
+    df_acqs = pd.read_excel(
         filename,
         na_values="",
         engine="openpyxl",
         keep_default_na=True,
         sheet_name="Acquisitions",
-        skiprows=skiprows,
+        skiprows=acqHeaderRows,
         verbose=True,
     )
+
     # acqsdf.replace(np.nan, "", regex=True, inplace=True)
-    acqs = acqsdf.to_dict(orient="records")
-    if not isinstance(acqs, list):  # is there only one acquistion?
+
+    # Convert dataframe to a list of dictionaries, each row is a list element and each column is a key->value pair
+    acqs = df_acqs.to_dict(orient="records")
+
+    # if the acqs has one element, force to a list
+    if not isinstance(acqs, list):
         acqs = [acqs]
+
+    if verbose:
+        print("Started Parsing Acquisition Data")
+
+    # Loop through acquisitions and sanitize / validate user input
     for i, acq in enumerate(acqs):
+        # Loop through columns in the acquisition sheet and sanitize strings
         for key in acq:
+            # If cell holds a string, for to square brackets and single quotes
             if isinstance(acq[key], str):
                 acq[key] = acq[key].replace("(", "[").replace(")", "]").replace("'", '"')
+                # Try to parse values
                 try:
                     acq[key] = json.loads(acq[key])
                 except:
-                    pass
+                    pass  ### TODO handle this?
             if isinstance(acq[key], str):
                 if "," in acq[key]:  # if the string looks like a list
                     try:
@@ -101,13 +224,28 @@ def load_samplesxlsx(filename: str):
                         ]  # cast it as a list of floating point numbers instead
                     except:
                         pass
-        if np.isnan(acq["priority"]):
-            # Todo add warning here
-            break  # force priority in every row, if missing, stop
+
+        # Begin Acquisition Validation
+
+        # Check if values were provided for all 'REQUIRED' acquisition cells for this acq
+        missedVal = False
+        missingValText = f"Acquisition #{i}, sample_id:{acq['sample_id']} is missing REQUIRED Parameters: "
+        for key in acq:  # Loop through all columns for this acquisition
+            # first check if required cell, then whether it is empty
+            # Empty cells are cells are stored as np.nan. isnan cant evaluate on all datatypes though
+            if key in acqParamsRequired and isinstance(acq[key], float) and np.isnan(acq[key]):
+                missingValText += f"{key}, "
+                missedVal = True
+        if missedVal:
+            raise ValueError(missingValText)
+
+        # get the sample that corresponds to the sample_id for this acq... the first one that matches it takes
         samp = next(
             dict for dict in new_bar if dict["sample_id"] == acq["sample_id"]
-        )  # get the sample that corresponds to the sample_id... the first one that matches it takes
+        )  
         acq = {key: val for key, val in acq.items() if val == val and val != ""}
+
+        # Parse edge 
         try:
             acq["edge"] = json.loads(acq["edge"])
         except:  # if edge isn't json parsable, it's probably just a string, and that's fine
@@ -117,37 +255,61 @@ def load_samplesxlsx(filename: str):
                 acq["edge"] = [
                     float(num) for num in acq["edge"].split(",")
                 ]  # cast it as a list of floating point numbers instead
+        
+        # Validate based on scan type
+        # Validate RSoXS
         if acq["type"].lower() == "rsoxs":
+            # Validate rsoxs configuration
             if acq["configuration"] not in rsoxs_configurations:
                 raise TypeError(
                     f'{acq["configuration"]} on line {i} is not a valid configuration for an rsoxs scan'
                 )
+            # Validate rsoxs edge
             if not isinstance(acq.get("edge", "c"), (tuple, list, int, float)):
                 if not str(acq.get("edge", "c")).lower() in edge_names:
                     raise ValueError(f'{acq["edge"]} on line {i} is not a valid edge for an rsoxs scan')
+        # Validate NEXAFS
         elif acq["type"].lower() == "nexafs":
+            # Validate nexafs configuration
             if acq["configuration"] not in config_list:
                 raise TypeError(
                     f'{acq["configuration"]} on line {i} is not a valid configuration for a nexafs scan'
                 )
+            # Validate nexafs edge
             if not isinstance(acq.get("edge", "c"), (tuple, list)):
                 if not str(acq.get("edge", "c")).lower() in edge_names.keys():
                     raise ValueError(f'{acq["edge"]} on line {i} is not a valid edge for a nexafs scan')
+        # Parse polarization        
         if "polarizations" in acq:
             if isinstance(acq["polarizations"], (int, float)):
                 acq["polarizations"] = [acq["polarizations"]]
+        
+        # Parse Angle
         if "angles" in acq:
             if isinstance(acq["angles"], (int, float)):
                 acq["angles"] = [acq["angles"]]
+                
+        # Validate Acquisition Angles
+        
+                
+        # Parse Temperature
         if "temperatures" in acq:
             if isinstance(acq["temperatures"], (int, float)):
                 acq["temperatures"] = [acq["temperatures"]]
+                
+        # Parse Group
         if not isinstance(acq.get("group", 0), str):
             acq["group"] = str(acq.get("group", ""))
         acq["uid"] = str(uuid.uuid1())
         samp["acquisitions"].append(acq)
 
+    # Begin Bar validation
+    if verbose:
+        print("Started Parsing Bar Data")
+
+    # Loop through samples in Bar and sanitize / validate user input
     for i, sam in enumerate(new_bar):
+        # Handle the autogenerated columns,
         if sam["location"] == "":
             new_bar[i]["location"] = "[]"
         new_bar[i]["location"] = json.loads(sam.get("location", "[]").replace("'", '"'))
@@ -160,6 +322,21 @@ def load_samplesxlsx(filename: str):
             sam.get("acq_history", "[]").replace("'", '"').rstrip('\\"').lstrip('\\"')
         )
 
+        # Check if values were provided for all 'REQUIRED' bar cells for this sample_id
+        missedVal = False
+        missingValText = f"Bar Entry #{i}, sample_id: {sam['sample_id']} is missing REQUIRED Parameters: "
+        for key in sam:  # Loop through all columns for this acquisition
+            # first check if required cell, then whether it is empty
+            # Empty cells are stored as empty strings
+            if key in barParamsRequired and sam[key] == "":
+                missingValText += f"{key}, "
+                missedVal = True
+        if missedVal:
+            raise ValueError(missingValText)
+
+        # Pull data from PASS Database
+
+        # Try to find proposal ID to
         if "proposal_id" in sam:
             proposal = sam["proposal_id"]
         elif "data_session" in sam:
@@ -167,16 +344,22 @@ def load_samplesxlsx(filename: str):
         else:
             warnings.warn("no valid proposal was located - please add that and try again")
             proposal = 0
+
+        # Query the PASS database for values
         sam["data_session"], sam["analysis_dir"], sam["SAF"], sam["proposal"] = get_proposal_info(proposal)
         if sam["SAF"] == None:
             print(f'line {i}, sample {sam["sample_name"]} - data will not be accessible')
 
+        # Populate the "bar_loc" field
         new_bar[i]["bar_loc"]["spot"] = sam["bar_spot"]
         new_bar[i]["bar_loc"]["th"] = sam["angle"]
-        for key in [
-            key for key, value in sam.items() if "named" in key.lower() or "Index" in key
-        ]:  # get rid of the stupid unnamed columns thrown in by pandas
+
+        # Get rid of the stupid unnamed columns thrown in by pandas
+        for key in [key for key, value in sam.items() if "named" in key.lower() or "Index" in key]:
             del new_bar[i][key]
+
+    if verbose:
+        print("Bar and Acquisitions Sheets Loaded")
     return new_bar
 
 
@@ -299,8 +482,8 @@ def save_samplesxlsx(bar, name="", path=""):
                     cleanacq[key] = json.dumps(acq[key])
             acqlist.append(cleanacq)
     sampledf = pd.DataFrame.from_dict(bar, orient="columns")
-    df = deepcopy(sampledf)
-    testdict = df.to_dict(orient="records")
+    df_bar = deepcopy(sampledf)
+    testdict = df_bar.to_dict(orient="records")
     cleanbar = []
     for i, sam in enumerate(testdict):
         if "acq_history" not in testdict[i].keys():
