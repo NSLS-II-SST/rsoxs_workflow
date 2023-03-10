@@ -48,6 +48,8 @@ def load_samplesxlsx(filename: str, verbose=False):
     try:
         # Import just where the header rows from the bar sheet would be
         warnings.simplefilter(action="ignore", category=UserWarning)
+        if verbose:
+            print("Loading 'Bar' Sheet Headers")
         df_barHeader = pd.read_excel(
             filename,
             na_values="",
@@ -56,7 +58,7 @@ def load_samplesxlsx(filename: str, verbose=False):
             converters={"sample_date": str},
             sheet_name="Bar",
             nrows=4,
-            verbose=True,
+            verbose=verbose,
         )
 
         # Check if the first cell has the Parameters'Index
@@ -105,6 +107,8 @@ def load_samplesxlsx(filename: str, verbose=False):
     try:
         # Import just where the header rows from the Acquisitions sheet would be
         warnings.simplefilter(action="ignore", category=UserWarning)
+        if verbose:
+            print("Loading 'Acquisitions' Sheet Headers")
         df_acqHeader = pd.read_excel(
             filename,
             na_values="",
@@ -113,7 +117,7 @@ def load_samplesxlsx(filename: str, verbose=False):
             converters={"sample_date": str},
             sheet_name="Acquisitions",
             nrows=4,
-            verbose=True,
+            verbose=verbose,
         )
 
         # Check if the first cell has the Parameters'Index
@@ -155,6 +159,8 @@ def load_samplesxlsx(filename: str, verbose=False):
         pass
 
     # Import Bar sheet data cells as a dataframe
+    if verbose:
+        print("Loading 'Bar' Sheet Data")
     warnings.simplefilter(action="ignore", category=UserWarning)
     df_bar = pd.read_excel(
         filename,
@@ -164,7 +170,7 @@ def load_samplesxlsx(filename: str, verbose=False):
         converters={"sample_date": str},
         sheet_name="Bar",
         skiprows=barHeaderRows,
-        verbose=True,
+        verbose=verbose,
     )
 
     # Replace NaNs with empty string
@@ -182,6 +188,8 @@ def load_samplesxlsx(filename: str, verbose=False):
         samp["acquisitions"] = []
 
     # Import Acquisitions sheet data cells as a dataframe
+    if verbose:
+        print("Loading 'Acquisitions' Sheet Data")
     df_acqs = pd.read_excel(
         filename,
         na_values="",
@@ -225,8 +233,6 @@ def load_samplesxlsx(filename: str, verbose=False):
                     except:
                         pass
 
-        # Begin Acquisition Validation
-
         # Check if values were provided for all 'REQUIRED' acquisition cells for this acq
         missedVal = False
         missingValText = f"Acquisition #{i}, sample_id:{acq['sample_id']} is missing REQUIRED Parameters: "
@@ -240,12 +246,10 @@ def load_samplesxlsx(filename: str, verbose=False):
             raise ValueError(missingValText)
 
         # get the sample that corresponds to the sample_id for this acq... the first one that matches it takes
-        samp = next(
-            dict for dict in new_bar if dict["sample_id"] == acq["sample_id"]
-        )  
+        samp = next(dict for dict in new_bar if dict["sample_id"] == acq["sample_id"])
         acq = {key: val for key, val in acq.items() if val == val and val != ""}
 
-        # Parse edge 
+        # Parse edge
         try:
             acq["edge"] = json.loads(acq["edge"])
         except:  # if edge isn't json parsable, it's probably just a string, and that's fine
@@ -255,7 +259,7 @@ def load_samplesxlsx(filename: str, verbose=False):
                 acq["edge"] = [
                     float(num) for num in acq["edge"].split(",")
                 ]  # cast it as a list of floating point numbers instead
-        
+
         # Validate based on scan type
         # Validate RSoXS
         if acq["type"].lower() == "rsoxs":
@@ -279,29 +283,69 @@ def load_samplesxlsx(filename: str, verbose=False):
             if not isinstance(acq.get("edge", "c"), (tuple, list)):
                 if not str(acq.get("edge", "c")).lower() in edge_names.keys():
                     raise ValueError(f'{acq["edge"]} on line {i} is not a valid edge for a nexafs scan')
-        # Parse polarization        
+
+        # Encapsulate single-element values into lists
         if "polarizations" in acq:
             if isinstance(acq["polarizations"], (int, float)):
                 acq["polarizations"] = [acq["polarizations"]]
-        
-        # Parse Angle
         if "angles" in acq:
             if isinstance(acq["angles"], (int, float)):
                 acq["angles"] = [acq["angles"]]
-                
-        # Validate Acquisition Angles
-        
-                
-        # Parse Temperature
         if "temperatures" in acq:
             if isinstance(acq["temperatures"], (int, float)):
                 acq["temperatures"] = [acq["temperatures"]]
-                
-        # Parse Group
+
+        # Sanitize Group
         if not isinstance(acq.get("group", 0), str):
             acq["group"] = str(acq.get("group", ""))
         acq["uid"] = str(uuid.uuid1())
         samp["acquisitions"].append(acq)
+
+        # Validate Acquisition Parameters by Value and issue warnings if out of bounds
+        invalidAcqParam = False  # False means none invalid
+        invalidAcqParamText = f"Acquisition #{i}, sample_id:{acq['sample_id']} has invalid parameters: \n"
+
+        # Check each angle listed, if any
+        if "angles" in acq:
+            for testAng in acq["angles"]:
+                # print(f"grazing: {samp['grazing']}, testAng: {testAng}"
+                angInvalid = False
+                # No need to test if its empty (nan)
+                if isinstance(testAng, float) and np.isnan(testAng):
+                    pass
+                else:
+                    # if grazing is true, valid angles are 20 to 90 degrees
+                    if samp["grazing"] == True:
+                        gAngLow, gAngHigh = 20, 90  # Eventually these should move to defaults page
+                        try:
+                            angInvalid = not isParamValid(
+                                testAng, matchType="numeric", validValues=[gAngLow, gAngHigh]
+                            )
+                        except ValueError:  # hacky check for param type validation
+                            angInvalid = True
+                        if angInvalid:
+                            invalidAcqParamText += f"\tInvalid Angle: {testAng} . For grazing samples, angle must be between {gAngLow} and {gAngHigh}\n"
+
+                    elif samp["grazing"] == False:
+                        tAngLow, tAngHigh = -14, 90  # Eventually these should move to defaults page
+                        try:
+                            angInvalid = not isParamValid(
+                                testAng, matchType="numeric", validValues=[tAngLow, tAngHigh]
+                            )
+                        except ValueError:  # hacky check for param type validation
+                            angInvalid = True
+                        if angInvalid:
+                            invalidAcqParamText += f"\tInvalid Angle: {testAng} . For transmission samples, angle must be between {tAngLow} and {tAngHigh}\n"
+                    else:
+                        angInvalid = True
+                        raise ValueError("Unable to determine angle geometry, check grazing field")
+
+                # if any invalid, need to report out
+                invalidAcqParam = invalidAcqParam or angInvalid  # we already had invalids, or we found one now
+
+        if invalidAcqParam:
+            warnings.resetwarnings()
+            warnings.warn(invalidAcqParamText)
 
     # Begin Bar validation
     if verbose:
@@ -333,6 +377,52 @@ def load_samplesxlsx(filename: str, verbose=False):
                 missedVal = True
         if missedVal:
             raise ValueError(missingValText)
+
+        # Validate Bar Parameters by Value and issue warnings if out of bounds
+        invalidAcqParam = False  # False means none invalid
+        invalidAcqParamText = f"Bar Sheet Entry #{i}, sample_id:{acq['sample_id']} has invalid parameters: \n"
+
+        # Check angle listed, if any
+        if sam["angle"] != "":
+            testAng = sam["angle"]
+            print(f"grazing: {sam['grazing']}, testAng: {testAng}")
+            angInvalid = False
+            # No need to test if its empty (nan)
+            if isinstance(testAng, float) and np.isnan(testAng):
+                pass
+            else:
+                # if grazing is true, valid angles are 20 to 90 degrees
+                if sam["grazing"] == True:
+                    gAngLow, gAngHigh = 20, 90  # Eventually these should move to defaults page
+                    try:
+                        angInvalid = not isParamValid(
+                            testAng, matchType="numeric", validValues=[gAngLow, gAngHigh]
+                        )
+                    except ValueError:  # hacky check for param type validation
+                        angInvalid = True
+                    if angInvalid:
+                        invalidAcqParamText += f"\tInvalid Angle: {testAng} . For grazing samples, angle must be between {gAngLow} and {gAngHigh}\n"
+
+                elif sam["grazing"] == False:
+                    tAngLow, tAngHigh = -14, 90  # Eventually these should move to defaults page
+                    try:
+                        angInvalid = not isParamValid(
+                            testAng, matchType="numeric", validValues=[tAngLow, tAngHigh]
+                        )
+                    except ValueError:  # hacky check for param type validation
+                        angInvalid = True
+                    if angInvalid:
+                        invalidAcqParamText += f"\tInvalid Angle: {testAng} . For transmission samples, angle must be between {tAngLow} and {tAngHigh}\n"
+                else:
+                    angInvalid = True
+                    raise ValueError("Unable to determine angle geometry, check grazing field")
+
+                # if any invalid, need to report out
+                invalidAcqParam = invalidAcqParam or angInvalid  # we already had invalids, or we found one now
+
+        if invalidAcqParam:
+            warnings.resetwarnings()
+            warnings.warn(invalidAcqParamText)
 
         # Pull data from PASS Database
 
@@ -669,3 +759,73 @@ def convertSampleSheetExcelMediaWiki(
         print("-" * 5 + " End Log. Copy text below this line into the wiki" + "-" * 5)
 
     return outStr
+
+
+def isParamValid(testVal, matchType: str = "exact", validValues: list = None, invalidValues: list = None):
+    """Tests whether the testVal is valid based on matchType and both the validValues list and invalidValues list (if provided)
+
+    Test against validValues is made first, then against invalidValues. You can use this to define complex numerical ranges.
+
+    Parameters
+    ----------
+    testVal : any
+        A single value to validate. Lists should be expanded outside of this function.
+    matchType : str, optional
+        Match method, by default 'exact'
+        'exact' casts input as string returns True if input is in validValues and not in invalidValues
+        'interval' attempts to cast input as float and returns True if value is within the validValues range and not in the invalidValues range
+    validValues : list, optional
+        A list of valid match values or a two-element list specifying a numeric interval to return True, by default None
+    invalidValues : list, optional
+        A list of invalid match values or a two-element list specifying a numeric interval to return False for, by default None
+    """
+
+    # Make sure parameter to validate is not a list
+    # This rule is so that useful output is forced in the calling function
+    if isinstance(testVal, list):
+        raise ValueError("This function only validates single values, not lists")
+
+    isValid = True
+
+    # Check exact match
+    if matchType.lower() == "exact":
+        # Compare against validValues
+        if validValues is not None:
+            # cast validValues as str inside lists
+            if not isinstance(validValues, list):
+                validValues = [validValues]
+            validValues = [str(i) for i in validValues]
+            isValid = str(testVal) in validValues
+        if invalidValues is not None:
+            # cast validValues as str inside lists
+            if not isinstance(invalidValues, list):
+                invalidValues = [invalidValues]
+            invalidValues = [str(i) for i in invalidValues]
+            isValid = isValid and (str(testVal) not in invalidValues)
+
+        return isValid
+    elif matchType.lower() == "numeric":
+        testVal = float(testVal)
+        # Compare against validValues
+        if validValues is not None:
+            # Check that it is a two element list
+            if not isinstance(validValues, list) or len(validValues) != 2:
+                raise ValueError(
+                    "If 'numeric' match is requested, validValues must be a 2-element list specifying a numeric range"
+                )
+            # Cast validValues as float inside lists
+            validValues = [float(i) for i in validValues]
+            isValid = validValues[0] <= testVal and testVal <= validValues[1]
+        # Compare against invalidValues
+        if invalidValues is not None:
+            # Check that it is a two element list
+            if not isinstance(invalidValues, list) or len(invalidValues) != 2:
+                raise ValueError(
+                    "If 'numeric' match is requested, invalidValues must be a 2-element list specifying a numeric range"
+                )
+            # Cast invalidValues as float inside lists
+            invalidValues = [float(i) for i in invalidValues]
+            isValid = isValid and not (invalidValues[0] <= testVal and testVal <= invalidValues[1])
+    else:
+        raise ValueError("Invalid matchType provided")
+    return isValid
