@@ -44,8 +44,8 @@ def load_samplesxlsx(filename: str, verbose=False):
     # If so, we can do some extra validation, but need to skip them when loading data
     # If not, we proceed with a bit less validation and don't skip them
     barHeaderRows = []
-    barParamsRequired = [] # if reading the header fails, this stays empty and we don't check for them
-    
+    barParamsRequired = []  # if reading the header fails, this stays empty and we don't check for them
+
     try:
         # Import just where the header rows from the bar sheet would be
         warnings.simplefilter(action="ignore", category=UserWarning)
@@ -67,6 +67,7 @@ def load_samplesxlsx(filename: str, verbose=False):
             doImportBarHeaders = True
         else:  # Dont attempt to import header and warn user that we will skip some cell validation
             doImportBarHeaders = False
+            warnings.resetwarnings()
             warnings.warn(
                 "\nDidn't find Parameter/ Index column in bar sheet, skipping some validation that needs header cells"
             )
@@ -95,6 +96,7 @@ def load_samplesxlsx(filename: str, verbose=False):
                     barParamsRequired.append(param)
 
     except ValueError as e:
+        warnings.resetwarnings()
         warnings.warn(
             f"\nError parsing bar sheet headers, skipping some validation that needs header cells: {str(e)}"
         )
@@ -104,8 +106,8 @@ def load_samplesxlsx(filename: str, verbose=False):
     # If so, we can do some extra validation, but need to skip them when loading data
     # If not, we proceed with a bit less validation and don't skip them
     acqHeaderRows = []
-    acqParamsRequired = [] # if reading the header fails, this stays empty and we don't check for them
-    
+    acqParamsRequired = []  # if reading the header fails, this stays empty and we don't check for them
+
     try:
         # Import just where the header rows from the Acquisitions sheet would be
         warnings.simplefilter(action="ignore", category=UserWarning)
@@ -127,6 +129,7 @@ def load_samplesxlsx(filename: str, verbose=False):
             doImportAcqHeaders = True
         else:  # Dont attempt to import header and warn user that we will skip some cell validation
             doImportAcqHeaders = False
+            warnings.resetwarnings()
             warnings.warn(
                 "\nDidn't find Parameter/ Index column in acq sheet, skipping some validation that needs header cells"
             )
@@ -155,6 +158,7 @@ def load_samplesxlsx(filename: str, verbose=False):
                     acqParamsRequired.append(param)
 
     except ValueError as e:
+        warnings.resetwarnings()
         warnings.warn(
             f"\nError parsing Acquisitions sheet headers, skipping some validation that needs header cells: {str(e)}"
         )
