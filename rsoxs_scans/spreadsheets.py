@@ -65,11 +65,7 @@ def load_samplesxlsx(filename: str):
     if not isinstance(new_bar, list):  # if the bar has one element, it's not a list
         new_bar = [new_bar]
     for samp in new_bar:
-        samp[
-            "acquisitions"
-        ] = (
-            []
-        )  # blank out any acquisitions elements which might be there (they shouldn't be there unless someone added a column for some reason
+        samp["acquisitions"] = ([])  # blank out any acquisitions elements which might be there (they shouldn't be there unless someone added a column for some reason
 
     # Load Acquisitions Sheet
     acqsdf = pd.read_excel(
@@ -102,6 +98,7 @@ def load_samplesxlsx(filename: str):
                     except:
                         pass
         if np.isnan(acq["priority"]):
+            #Todo add warning here
             break  # force priority in every row, if missing, stop
         samp = next(
             dict for dict in new_bar if dict["sample_id"] == acq["sample_id"]
@@ -140,7 +137,7 @@ def load_samplesxlsx(filename: str):
         if not isinstance(acq.get("group", 0), str):
             acq["group"] = str(acq.get("group", ""))
         acq["uid"] = str(uuid.uuid1())
-        samp["acquisitions"].append(acq)  # no checking for validity here?
+        samp["acquisitions"].append(acq)  
     for i, sam in enumerate(new_bar):
         new_bar[i]["location"] = json.loads(sam.get("location", "[]").replace("'", '"'))
 
