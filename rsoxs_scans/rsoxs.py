@@ -371,6 +371,7 @@ def dryrun_rsoxs_plan(
             temp_wait=temp_wait,
             md=md,
             plan_name=f"rsoxs_{edge}",
+            **kwargs
         )
     )
     return outputs
