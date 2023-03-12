@@ -564,6 +564,13 @@ def save_samplesxlsx(bar, name="", path=""):
         "th": "th",
     }
 
+
+    for samp in bar:
+        for acq in samp['acq_history']:
+            for arg in acq['arguments']:
+                if isinstance(acq['arguments'][arg],np.ndarray):
+                    acq['arguments'][arg] = list(acq['arguments'][arg])
+
     filename = path + f'out_{datetime.today().strftime("%Y-%m-%d_%H-%M-%S")}_{name}.xlsx'
 
     acqlist = []
