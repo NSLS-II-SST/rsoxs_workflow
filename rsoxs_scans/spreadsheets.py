@@ -391,7 +391,7 @@ def load_samplesxlsx(filename: str, verbose=False):
         # Check angle listed, if any
         if sam["angle"] != "":
             testAng = sam["angle"]
-            print(f"grazing: {sam['grazing']}, testAng: {testAng}")
+            #print(f"grazing: {sam['grazing']}, testAng: {testAng}")
             angInvalid = False
             # No need to test if its empty (nan)
             if isinstance(testAng, float) and np.isnan(testAng):
