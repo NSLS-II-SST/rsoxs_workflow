@@ -140,6 +140,7 @@ def dryrun_spiral_plan(
                     exposure=exposure_time,
                     md=md,
                     plan_name=f"spiral_{edge}",
+                    **kwargs
                 )
             )
     return output
