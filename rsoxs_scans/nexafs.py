@@ -212,6 +212,7 @@ def dryrun_nexafs_plan(
                             grating=grating,
                             plan_name=f'nexafs_{edge}',
                             md=md,
+                            **kwargs
                         )
                     )
 
