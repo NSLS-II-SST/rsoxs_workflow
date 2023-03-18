@@ -67,10 +67,10 @@ def load_samplesxlsx(filename: str, verbose=False):
             doImportBarHeaders = True
         else:  # Dont attempt to import header and warn user that we will skip some cell validation
             doImportBarHeaders = False
-            warnings.resetwarnings()
-            warnings.warn(
-                "\nDidn't find Parameter/ Index column in bar sheet, skipping some validation that needs header cells"
-            )
+            #warnings.resetwarnings()
+            #warnings.warn(
+            #    "\nDidn't find Parameter/ Index column in bar sheet, skipping some validation that needs header cells"
+            #)
 
         # Load the header data
         if doImportBarHeaders:
@@ -129,10 +129,10 @@ def load_samplesxlsx(filename: str, verbose=False):
             doImportAcqHeaders = True
         else:  # Dont attempt to import header and warn user that we will skip some cell validation
             doImportAcqHeaders = False
-            warnings.resetwarnings()
-            warnings.warn(
-                "\nDidn't find Parameter/ Index column in acq sheet, skipping some validation that needs header cells"
-            )
+            #warnings.resetwarnings()
+            #warnings.warn(
+            #    "\nDidn't find Parameter/ Index column in acq sheet, skipping some validation that needs header cells"
+            #)
 
         # Load the header data
         if doImportBarHeaders:
