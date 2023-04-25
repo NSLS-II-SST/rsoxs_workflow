@@ -72,6 +72,7 @@ def spiral_scan_enqueue(
         kwargs["pol"] = pol
         kwargs["exposure"] = exposure
         kwargs["enscan_type"] = plan_name
+        kwargs['md'] = md
         return {"description": retstr, "action": "spiral_scan_core", "kwargs": kwargs}
     else:
         return {
@@ -138,7 +139,7 @@ def dryrun_spiral_plan(
                     pol=pol,
                     angle=angle,
                     exposure=exposure_time,
-                    md=md,
+                    md=md, # we need it to connect to the Run engine MD, which only happens if we DONT pass md down
                     plan_name=f"spiral_{edge}",
                     **kwargs
                 )
