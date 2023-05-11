@@ -318,8 +318,8 @@ def nexafs_step_scan_enqueue(
     valid = True
     validation = ""
     for det in dets:
-        if isinstance(det,string):
-            if det not in ['Beamstop_SAXS_int','Beamstop_WAXS_int', 'Izero_Mesh_int','Sample_TEY_int']
+        if isinstance(det,str):
+            if det not in ['Beamstop_SAXS_int','Beamstop_WAXS_int', 'Izero_Mesh_int','Sample_TEY_int']:
                 validation +=f"Warning, unknown detector {det} given"
         else:
             valid= False
@@ -451,9 +451,6 @@ def nexafs_step_scan_enqueue(
         kwargs["grating"] = grating
         kwargs["md"] = md
         kwargs["enscan_type"] = plan_name
-        if repeats > 1:
-            retstr += f"    repeating each exposure {repeats} times\n"
-            kwargs["repeats"] = repeats
         return {"description": retstr, "action": "nexafs_step_scan_core", "kwargs": kwargs}
     else:
         return {

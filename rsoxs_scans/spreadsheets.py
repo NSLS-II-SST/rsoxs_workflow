@@ -37,7 +37,7 @@ def load_samplesxlsx(filename: str, verbose=False):
     print(f"spreadsheet version is {excel_file.properties.title}")
     if excel_file.properties.title != current_version:
         excel_file.close()
-        raise ValueError("this excel file is not the current version.  please upgrade your template and try again")
+        raise ValueError("this excel file is not the current version, we read{.  please upgrade your template and try again")
     excel_file.close()
 
     # First, check the bar sheet for whether header rows with user instructions are present, and identity them if so
