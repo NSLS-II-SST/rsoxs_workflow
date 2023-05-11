@@ -9,7 +9,7 @@ import numpy as np
 from copy import deepcopy
 from operator import itemgetter
 import bluesky.plan_stubs as bps
-from .constructor import construct_exposure_times, get_energies, get_nexafs_scan_params
+from .constructor import construct_exposure_times, get_energies, get_nexafs_scan_params, construct_exposure_times_nexafs
 from .defaults import (
     default_speed,
     default_frames,
@@ -27,7 +27,7 @@ from .defaults import (
     config_list,
 )
 from .rsoxs import dryrun_rsoxs_plan
-from .nexafs import dryrun_nexafs_plan
+from .nexafs import dryrun_nexafs_plan, dryrun_nexafs_step_plan
 from .spirals import dryrun_spiral_plan
 
 
@@ -85,6 +85,9 @@ def dryrun_acquisition(acq, sample):
             return outputs
         elif acq["type"] == "nexafs":
             outputs.extend(dryrun_nexafs_plan(**acq, md=sample))
+            return outputs
+        elif acq["type"] == "nexafs_step":
+            outputs.extend(dryrun_nexafs_step_plan(**acq, md=sample))
             return outputs
         elif acq["type"] == "spiral":
             outputs.extend(dryrun_spiral_plan(**acq, md=sample))
@@ -398,6 +401,20 @@ def est_scan_time(acq):
                 get_energies(**acq, quiet=True),
                 acq.get("exposure_time", default_exposure_time),
                 acq.get("repeats", 1),
+                quiet=True,
+            )
+            total_time = time * len(acq.get("polarizations", [0]))  # time is the estimate for a single energy scan
+            total_time += 30 * len(acq.get("polarizations", [0]))  # 30 seconds for each polarization change
+            if isinstance(acq.get("angles", None), list):
+                total_time *= len(acq["angles"])
+                total_time += 30 * len(acq["angles"])  # 30 seconds for each angle change
+            if isinstance(acq.get("temperatures", None), list):
+                total_time *= len(acq["temperatures"])
+            return total_time
+        elif acq["type"] == "nexafs_step":
+            times, time = construct_exposure_times_nexafs(
+                get_energies(**acq, quiet=True),
+                acq.get("exposure_time", default_exposure_time),
                 quiet=True,
             )
             total_time = time * len(acq.get("polarizations", [0]))  # time is the estimate for a single energy scan

@@ -290,6 +290,18 @@ def load_samplesxlsx(filename: str, verbose=False):
                 if not str(acq.get("edge", "c")).lower() in edge_names.keys():
                     raise ValueError(f'{acq["edge"]} on line {i} is not a valid edge for a nexafs scan')
 
+        # Validate step NEXAFS
+        elif acq["type"].lower() == "nexafs":
+            # Validate nexafs configuration
+            if acq["configuration"] not in config_list:
+                raise TypeError(
+                    f'{acq["configuration"]} on line {i} is not a valid configuration for a nexafs step scan'
+                )
+            # Validate nexafs edge
+            if not isinstance(acq.get("edge", "c"), (tuple, list)):
+                if not str(acq.get("edge", "c")).lower() in edge_names.keys():
+                    raise ValueError(f'{acq["edge"]} on line {i} is not a valid edge for a nexafs scan')
+
         # Encapsulate single-element values into lists
         if "polarizations" in acq:
             if isinstance(acq["polarizations"], (int, float)):

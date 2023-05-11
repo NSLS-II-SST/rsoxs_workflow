@@ -24,6 +24,7 @@ actions = {
     "diode_low",  # set diodes range setting to low
     "diode_high",  # set diode range setting to high
     "nexafs_scan_core",  # high level run a single NEXAFS scan
+    "nexafs_step_scan_core",  # high level run a single step-based NEXAFS scan
     "error",  # raise an error - should never get here.
 }
 """
@@ -65,7 +66,7 @@ edge_names = {
 }
 
 
-# these define the default edges of the intervals for rsoxs scans
+# these define the default edges of the intervals for rsoxs and NEXAFS step scans
 rsoxs_edges = {
     "carbon": (250, 270, 282, 287, 292, 305, 350),
     "oxygen": (510, 525, 540, 560),
@@ -77,7 +78,7 @@ rsoxs_edges = {
     "calcium": (320, 340, 345, 349, 349.5, 352.5, 353, 355, 360, 380),
 }
 
-# these are the default interval ratios for each section for rsoxs scans
+# these are the default interval ratios for each section for rsoxs and NEXAFS step scans
 rsoxs_ratios_table = {
     "carbon": (5, 1, 0.1, 0.2, 1, 5),
     "carbon nonaromatic": (5, 1, 0.2, 0.1, 1, 5),
@@ -89,7 +90,7 @@ rsoxs_ratios_table = {
     "calcium": (5, 1, 0.5, 0.1, 0.25, 0.1, 0.5, 1, 5),
 }
 
-# aliases for default numbers of frames in rsoxs scans
+# aliases for default numbers of frames in rsoxs and NEXAFS step scans
 frames_table = {
     "full": 112,
     "": 112,
