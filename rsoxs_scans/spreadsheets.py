@@ -454,7 +454,12 @@ def load_samplesxlsx(filename: str, verbose=False):
             proposal = 0
 
         # Query the PASS database for values
-        sam["data_session"], sam["analysis_dir"], sam["SAF"], sam["proposal"] = get_proposal_info(proposal)
+        try:
+            sam["data_session"], sam["analysis_dir"], sam["SAF"], sam["proposal"] = get_proposal_info(proposal)
+        except:
+            warnings.warn("PASS lookup failed - trusting values")
+            pass
+        
         if sam["SAF"] == None:
             print(f'line {i}, sample {sam["sample_name"]} - data will not be accessible')
 
