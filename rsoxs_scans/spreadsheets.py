@@ -13,7 +13,15 @@ import json
 import re, warnings, httpx, uuid
 import numpy as np
 import pandas as pd
-from .defaults import rsoxs_configurations, empty_sample, empty_acq, edge_names, config_list, current_version
+from .defaults import (rsoxs_configurations, 
+                        empty_sample, 
+                        empty_acq, 
+                        edge_names, 
+                        config_list, 
+                        current_version,
+                        rsoxs_edges,
+                        nexafs_edges
+)
 
 
 def load_samplesxlsx(filename: str, verbose=False):
@@ -276,8 +284,9 @@ def load_samplesxlsx(filename: str, verbose=False):
                 )
             # Validate rsoxs edge
             if not isinstance(acq.get("edge", "c"), (tuple, list, int, float)):
-                if not str(acq.get("edge", "c")).lower() in edge_names:
-                    raise ValueError(f'{acq["edge"]} on line {i} is not a valid edge for an rsoxs scan')
+                if not str(acq.get("edge", "c")).lower() in nexafs_edges.keys():
+                    if not edge_names[str(acq.get("edge", "c")).lower()] in rsoxs_edges.keys():
+                        raise ValueError(f'{acq["edge"]} on line {i} is not a valid edge for an rsoxs scan')
         # Validate NEXAFS
         elif acq["type"].lower() == "nexafs":
             # Validate nexafs configuration
@@ -287,8 +296,9 @@ def load_samplesxlsx(filename: str, verbose=False):
                 )
             # Validate nexafs edge
             if not isinstance(acq.get("edge", "c"), (tuple, list)):
-                if not str(acq.get("edge", "c")).lower() in edge_names.keys():
-                    raise ValueError(f'{acq["edge"]} on line {i} is not a valid edge for a nexafs scan')
+                if not str(acq.get("edge", "c")).lower() in nexafs_edges.keys():
+                    if not edge_names[str(acq.get("edge", "c")).lower()] in nexafs_edges.keys():
+                        raise ValueError(f'{acq["edge"]} on line {i} is not a valid edge for a nexafs scan')
 
         # Validate step NEXAFS
         elif acq["type"].lower() == "nexafs":

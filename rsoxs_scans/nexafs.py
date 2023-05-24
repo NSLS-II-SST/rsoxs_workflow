@@ -49,11 +49,11 @@ def nexafs_scan_enqueue(
             valid = False
             validation += "energy is to low for the 1200 l/mm grating\n"
     elif grating in ["250", 250]:
-        if max(energies) > 1000:
+        if max(energies) > 1300:
             valid = False
             validation += "energy is too high for 250 l/mm grating\n"
     elif grating == "rsoxs":
-        if max(energies) > 1000:
+        if max(energies) > 1300:
             valid = False
             validation += "energy is too high for 250 l/mm grating\n"
     else:
@@ -338,11 +338,11 @@ def nexafs_step_scan_enqueue(
             valid = False
             validation += "energy is to low for the 1200 l/mm grating\n"
     elif grating in ["250", 250]:
-        if np.max(energies) > 1000:
+        if np.max(energies) > 1300:
             valid = False
             validation += "energy is too high for 250 l/mm grating\n"
     elif grating == "rsoxs":
-        if np.max(energies) > 1000:
+        if np.max(energies) > 1300:
             valid = False
             validation += "energy is too high for 250 l/mm grating\n"
     else:

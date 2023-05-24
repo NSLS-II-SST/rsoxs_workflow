@@ -30,11 +30,11 @@ def spiral_scan_enqueue(
             valid = False
             validation += "energy is to low for the 1200 l/mm grating\n"
     elif grating in ["250", 250]:
-        if energy > 1000:
+        if energy > 1300:
             valid = False
             validation += "energy is too high for 250 l/mm grating\n"
     elif grating == "rsoxs":
-        if energy > 1000:
+        if energy > 1300:
             valid = False
             validation += "energy is too high for 250 l/mm grating\n"
     else:
