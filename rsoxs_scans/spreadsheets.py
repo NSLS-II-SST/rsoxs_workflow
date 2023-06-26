@@ -456,7 +456,7 @@ def load_samplesxlsx(filename: str, verbose=False):
 
         # Try to find proposal ID to
         if "proposal_id" in sam:
-            proposal = sam["proposal_id"]
+            proposal = str(sam["proposal_id"])
         elif "data_session" in sam:
             proposal = sam["data_session"]
         else:
@@ -505,6 +505,7 @@ def get_proposal_info(proposal_id, beamline="SST1", path_base="/sst/", cycle="20
     tuple (res["data_session"], valid_path, valid_SAF, proposal_info)
          data_session ID which should be put into the run engine metadata of every scan, the path to write analyzed data to, the SAF, and all of the proposal information for the metadata if needed
     """
+    
     warn_text = "\n WARNING!!! no data taken with this proposal will be retrievable \n  it is HIGHLY suggested that you fix this \n if you are running this outside of the NSLS-II network, this is expected"
     proposal_re = re.compile(r"^[GUCPpass]*-?(?P<proposal_number>\d+)$")
     if isinstance(proposal_id, str):
@@ -593,7 +594,7 @@ def save_samplesxlsx(bar, name="", path=""):
 
 
     for samp in bar:
-        for acq in samp['acq_history']:
+        for acq in samp.get('acq_history',[]):
             for arg in acq['arguments']:
                 if isinstance(acq['arguments'][arg],np.ndarray):
                     acq['arguments'][arg] = list(acq['arguments'][arg])
@@ -601,7 +602,7 @@ def save_samplesxlsx(bar, name="", path=""):
     filename = path + f'out_{datetime.today().strftime("%Y-%m-%d_%H-%M-%S")}_{name}.xlsx'
 
     for samp in bar:
-        for acq in samp['acq_history']:
+        for acq in samp.get('acq_history',[]):
             for arg in acq['arguments']:
                 if isinstance(acq['arguments'][arg],np.ndarray):
                     acq['arguments'][arg] = list(acq['arguments'][arg])
