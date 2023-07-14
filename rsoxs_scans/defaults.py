@@ -63,6 +63,8 @@ edge_names = {
     "calcium": "calcium",
     "calciumk": "calcium",
     "cak": "calcium",
+    'al': 'aluminium',
+    'aluminum': 'aluminium',
 }
 
 
@@ -76,6 +78,10 @@ rsoxs_edges = {
     "zincl": (1000, 1015, 1035, 1085),
     "sulfurl": (150, 160, 170, 200),
     "calcium": (320, 340, 345, 349, 349.5, 352.5, 353, 355, 360, 380),
+    "ironl": (680,700,730,780),
+    "siliconk" : (1820,1840,1860,1910),
+    "magnesium" : (1250,1300,1330,1430),
+
 }
 
 # these are the default interval ratios for each section for rsoxs and NEXAFS step scans
@@ -108,6 +114,9 @@ nexafs_edges = {
     "zincl": (1000, 1015, 1035, 1085),
     "sulfurl": (150, 160, 170, 200),
     "calcium": (320, 345, 355, 380),
+    "ironl": (680,700,730,780),
+    "siliconk" : (1820,1840,1860,1910),
+    "magnesium" : (1250,1300,1330,1430),
 }
 
 # these are the default speed ratios for each section in nexafs scans

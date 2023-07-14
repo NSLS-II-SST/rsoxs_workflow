@@ -329,6 +329,11 @@ def load_samplesxlsx(filename: str, verbose=False):
         acq["uid"] = str(uuid.uuid1())
         samp["acquisitions"].append(acq)
 
+        # sanatize grating
+        if 'grating' in acq:
+            if isinstance(acq['grating'],(float)):
+                acq['grating'] = int(acq['grating'])
+
         # Validate Acquisition Parameters by Value and issue warnings if out of bounds
         invalidAcqParam = False  # False means none invalid
         invalidAcqParamText = f"Acquisition #{i}, sample_id:{acq['sample_id']} has invalid parameters: \n"
@@ -456,7 +461,8 @@ def load_samplesxlsx(filename: str, verbose=False):
 
         # Try to find proposal ID to
         if "proposal_id" in sam:
-            proposal = str(sam["proposal_id"])
+            sam["proposal_id"] = str(sam["proposal_id"]) # convert proposal id to a string
+            proposal = sam["proposal_id"]
         elif "data_session" in sam:
             proposal = sam["data_session"]
         else:
