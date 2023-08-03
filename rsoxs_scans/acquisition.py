@@ -274,13 +274,13 @@ def dryrun_bar(
         if step[4] > default_warning_step_time:
             warnings.warn(
                 f"\nWARNING: Acquisition # {i}, sample_id: {step[5]['sample_id']} will take {step[4]/60} minutes, which is more than {default_warning_step_time/60} minutes"
-            )
+            ,stacklevel=2)
 
         # Check if configuration is invalid
         if step[2] not in config_list:
             warnings.warn(
                 f"\nWARNING: Acquisition #{i}, sample_id: {step[5]['sample_id']} has an invalid configuration - no configuration will be loaded"
-            )
+            ,stacklevel=2)
             text += "Warning invalid configuration" + step[2]
         
         #dryrun acquisition and output steps
@@ -308,14 +308,14 @@ def dryrun_bar(
                 statements.append(f'> Step {j}: {out["description"].lstrip()}')
 
                 if (out["action"]) == "error":
-                    warnings.warn(f"WARNING: Acquisition #{i}, sample_id: {step[5]['sample_id']} has a step with an error: \n{out['description']}")
+                    warnings.warn(f"WARNING: Acquisition #{i}, sample_id: {step[5]['sample_id']} has a step with an error: \n{out['description']}",stacklevel=2)
                     acqs_with_errors.append((i, out["description"]))
 
             text += "".join(statements)
 
             acq_queue.append(acquisition)
         except Exception as e:
-            warnings.warn(f"WARNING: Acquisition #{i}, sample_id: {step[5]['sample_id']} has a step with an error: {str(e)}")
+            warnings.warn(f"WARNING: Acquisition #{i}, sample_id: {step[5]['sample_id']} has a step with an error: {str(e)}",stacklevel=2)
             # raise e
             pass
         # Add this acquisitions time to the running total
@@ -338,7 +338,7 @@ def dryrun_bar(
     # Warn user about acquisitions that contained errors
     for index, error in acqs_with_errors:
         warnings.resetwarnings()
-        warnings.warn(f"WARNING: acquisition #{index} has a step with an error\n{error}\n\n")
+        warnings.warn(f"WARNING: acquisition #{index} has a step with an error\n{error}\n\n",stacklevel=2)
     return acq_queue
 
 
