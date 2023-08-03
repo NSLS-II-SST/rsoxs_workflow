@@ -30,11 +30,11 @@ def spiral_scan_enqueue(
             valid = False
             validation += "energy is to low for the 1200 l/mm grating\n"
     elif grating in ["250", 250]:
-        if energy > 1000:
+        if energy > 1300:
             valid = False
             validation += "energy is too high for 250 l/mm grating\n"
     elif grating == "rsoxs":
-        if energy > 1000:
+        if energy > 1300:
             valid = False
             validation += "energy is too high for 250 l/mm grating\n"
     else:
@@ -63,6 +63,7 @@ def spiral_scan_enqueue(
     if valid:
         retstr = f"\nspiral scanning {dets} at {energy} eV \n"
         retstr += f"    with a diameter of {diameter} mm  and stepsize of {stepsize} mm\n"
+        retstr += f'    at grating {grating}\n'
         kwargs["dets"] = dets
         kwargs["energy"] = energy
         kwargs["diameter"] = diameter
@@ -138,6 +139,7 @@ def dryrun_spiral_plan(
                     energy=edge,
                     pol=pol,
                     angle=angle,
+                    grating=grating,
                     exposure=exposure_time,
                     md=md, # we need it to connect to the Run engine MD, which only happens if we DONT pass md down
                     plan_name=f"spiral_{edge}",

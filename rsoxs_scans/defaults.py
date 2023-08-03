@@ -11,7 +11,7 @@ default_diameter = 1.8
 default_spiral_step = 0.3
 default_exposure_time = 1
 default_warning_step_time = 1800
-current_version = "2023-1 Version 1.0"
+current_version = "2023-2 Version 1.0"
 
 actions = {
     "load_configuration",  # high level load names RSoXS configuration
@@ -24,6 +24,7 @@ actions = {
     "diode_low",  # set diodes range setting to low
     "diode_high",  # set diode range setting to high
     "nexafs_scan_core",  # high level run a single NEXAFS scan
+    "nexafs_step_scan_core",  # high level run a single step-based NEXAFS scan
     "error",  # raise an error - should never get here.
 }
 """
@@ -42,30 +43,32 @@ rsoxs_scan_core    : {'detnames', 'repeats', 'temperatures', 'temps_with_locatio
 
 # look up table for aliases of edges
 edge_names = {
-    "c": "Carbon",
-    "carbon": "Carbon",
-    "carbonk": "Carbon",
-    "ck": "Carbon",
-    "n": "Nitrogen",
-    "nitrogen": "Nitrogen",
-    "nitrogenk": "Nitrogen",
-    "nk": "Nitrogen",
-    "f": "Fluorine",
-    "fluorine": "Fluorine",
-    "fluorinek": "Fluorine",
-    "fk": "Fluorine",
-    "o": "Oxygen",
-    "oxygen": "Oxygen",
-    "oxygenk": "Oxygen",
-    "ok": "Oxygen",
-    "ca": "Calcium",
-    "calcium": "Calcium",
-    "calciumk": "Calcium",
-    "cak": "Calcium",
+    "c": "carbon",
+    "carbon": "carbon",
+    "carbonk": "carbon",
+    "ck": "carbon",
+    "n": "nitrogen",
+    "nitrogen": "nitrogen",
+    "nitrogenk": "nitrogen",
+    "nk": "nitrogen",
+    "f": "fluorine",
+    "fluorine": "fluorine",
+    "fluorinek": "fluorine",
+    "fk": "fluorine",
+    "o": "oxygen",
+    "oxygen": "oxygen",
+    "oxygenk": "oxygen",
+    "ok": "oxygen",
+    "ca": "calcium",
+    "calcium": "calcium",
+    "calciumk": "calcium",
+    "cak": "calcium",
+    'al': 'aluminium',
+    'aluminum': 'aluminium',
 }
 
 
-# these define the default edges of the intervals for rsoxs scans
+# these define the default edges of the intervals for rsoxs and NEXAFS step scans
 rsoxs_edges = {
     "carbon": (250, 270, 282, 287, 292, 305, 350),
     "oxygen": (510, 525, 540, 560),
@@ -75,9 +78,13 @@ rsoxs_edges = {
     "zincl": (1000, 1015, 1035, 1085),
     "sulfurl": (150, 160, 170, 200),
     "calcium": (320, 340, 345, 349, 349.5, 352.5, 353, 355, 360, 380),
+    "ironl": (680,700,730,780),
+    "siliconk" : (1820,1840,1860,1910),
+    "magnesium" : (1250,1300,1330,1430),
+
 }
 
-# these are the default interval ratios for each section for rsoxs scans
+# these are the default interval ratios for each section for rsoxs and NEXAFS step scans
 rsoxs_ratios_table = {
     "carbon": (5, 1, 0.1, 0.2, 1, 5),
     "carbon nonaromatic": (5, 1, 0.2, 0.1, 1, 5),
@@ -89,7 +96,7 @@ rsoxs_ratios_table = {
     "calcium": (5, 1, 0.5, 0.1, 0.25, 0.1, 0.5, 1, 5),
 }
 
-# aliases for default numbers of frames in rsoxs scans
+# aliases for default numbers of frames in rsoxs and NEXAFS step scans
 frames_table = {
     "full": 112,
     "": 112,
@@ -107,6 +114,9 @@ nexafs_edges = {
     "zincl": (1000, 1015, 1035, 1085),
     "sulfurl": (150, 160, 170, 200),
     "calcium": (320, 345, 355, 380),
+    "ironl": (680,700,730,780),
+    "siliconk" : (1820,1840,1860,1910),
+    "magnesium" : (1250,1300,1330,1430),
 }
 
 # these are the default speed ratios for each section in nexafs scans

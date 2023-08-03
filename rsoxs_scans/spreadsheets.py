@@ -13,7 +13,15 @@ import json
 import re, warnings, httpx, uuid
 import numpy as np
 import pandas as pd
-from .defaults import rsoxs_configurations, empty_sample, empty_acq, edge_names, config_list, current_version
+from .defaults import (rsoxs_configurations, 
+                        empty_sample, 
+                        empty_acq, 
+                        edge_names, 
+                        config_list, 
+                        current_version,
+                        rsoxs_edges,
+                        nexafs_edges
+)
 
 
 def load_samplesxlsx(filename: str, verbose=False):
@@ -37,7 +45,7 @@ def load_samplesxlsx(filename: str, verbose=False):
     print(f"spreadsheet version is {excel_file.properties.title}")
     if excel_file.properties.title != current_version:
         excel_file.close()
-        raise ValueError("this excel file is not the current version.  please upgrade your template and try again")
+        raise ValueError("this excel file is not the current version, we read{.  please upgrade your template and try again")
     excel_file.close()
 
     # First, check the bar sheet for whether header rows with user instructions are present, and identity them if so
@@ -99,7 +107,7 @@ def load_samplesxlsx(filename: str, verbose=False):
         warnings.resetwarnings()
         warnings.warn(
             f"\nError parsing bar sheet headers, skipping some validation that needs header cells: {str(e)}"
-        )
+        ,stacklevel=2)
         pass
 
     # Then, check the Acquisitions sheet for whether header rows with user instructions are present, and identity them if so
@@ -161,7 +169,7 @@ def load_samplesxlsx(filename: str, verbose=False):
         warnings.resetwarnings()
         warnings.warn(
             f"\nError parsing Acquisitions sheet headers, skipping some validation that needs header cells: {str(e)}"
-        )
+        ,stacklevel=2)
         pass
 
     # Import Bar sheet data cells as a dataframe
@@ -252,7 +260,13 @@ def load_samplesxlsx(filename: str, verbose=False):
             raise ValueError(missingValText)
 
         # get the sample that corresponds to the sample_id for this acq... the first one that matches it takes
-        samp = next(dict for dict in new_bar if dict["sample_id"] == acq["sample_id"])
+        try:    
+            samp = next(dict for dict in new_bar if dict["sample_id"] == acq["sample_id"])
+        except StopIteration:
+            pass
+            missingSampText = f'ERROR acquisition #{i} needs a sample_id "{acq["sample_id"]}" which was not found - please check your sample_ids'
+            raise ValueError(missingSampText)
+            
         acq = {key: val for key, val in acq.items() if val == val and val != ""}
 
         # Parse edge
@@ -276,14 +290,28 @@ def load_samplesxlsx(filename: str, verbose=False):
                 )
             # Validate rsoxs edge
             if not isinstance(acq.get("edge", "c"), (tuple, list, int, float)):
-                if not str(acq.get("edge", "c")).lower() in edge_names:
-                    raise ValueError(f'{acq["edge"]} on line {i} is not a valid edge for an rsoxs scan')
+                if not str(acq.get("edge", "c")).lower() in nexafs_edges.keys():
+                    if not edge_names[str(acq.get("edge", "c")).lower()] in rsoxs_edges.keys():
+                        raise ValueError(f'{acq["edge"]} on line {i} is not a valid edge for an rsoxs scan')
         # Validate NEXAFS
         elif acq["type"].lower() == "nexafs":
             # Validate nexafs configuration
             if acq["configuration"] not in config_list:
                 raise TypeError(
                     f'{acq["configuration"]} on line {i} is not a valid configuration for a nexafs scan'
+                )
+            # Validate nexafs edge
+            if not isinstance(acq.get("edge", "c"), (tuple, list)):
+                if not str(acq.get("edge", "c")).lower() in nexafs_edges.keys():
+                    if not edge_names[str(acq.get("edge", "c")).lower()] in nexafs_edges.keys():
+                        raise ValueError(f'{acq["edge"]} on line {i} is not a valid edge for a nexafs scan')
+
+        # Validate step NEXAFS
+        elif acq["type"].lower() == "nexafs":
+            # Validate nexafs configuration
+            if acq["configuration"] not in config_list:
+                raise TypeError(
+                    f'{acq["configuration"]} on line {i} is not a valid configuration for a nexafs step scan'
                 )
             # Validate nexafs edge
             if not isinstance(acq.get("edge", "c"), (tuple, list)):
@@ -306,6 +334,11 @@ def load_samplesxlsx(filename: str, verbose=False):
             acq["group"] = str(acq.get("group", ""))
         acq["uid"] = str(uuid.uuid1())
         samp["acquisitions"].append(acq)
+
+        # sanatize grating
+        if 'grating' in acq:
+            if isinstance(acq['grating'],(float)):
+                acq['grating'] = int(acq['grating'])
 
         # Validate Acquisition Parameters by Value and issue warnings if out of bounds
         invalidAcqParam = False  # False means none invalid
@@ -351,7 +384,7 @@ def load_samplesxlsx(filename: str, verbose=False):
 
         if invalidAcqParam:
             warnings.resetwarnings()
-            warnings.warn(invalidAcqParamText)
+            warnings.warn(invalidAcqParamText,stacklevel=2)
 
     # Begin Bar validation
     if verbose:
@@ -428,21 +461,27 @@ def load_samplesxlsx(filename: str, verbose=False):
 
         if invalidAcqParam:
             warnings.resetwarnings()
-            warnings.warn(invalidAcqParamText)
+            warnings.warn(invalidAcqParamText,stacklevel=2)
 
         # Pull data from PASS Database
 
         # Try to find proposal ID to
         if "proposal_id" in sam:
+            sam["proposal_id"] = str(sam["proposal_id"]) # convert proposal id to a string
             proposal = sam["proposal_id"]
         elif "data_session" in sam:
             proposal = sam["data_session"]
         else:
-            warnings.warn("no valid proposal was located - please add that and try again")
+            warnings.warn("no valid proposal was located - please add that and try again",stacklevel=2)
             proposal = 0
 
         # Query the PASS database for values
-        sam["data_session"], sam["analysis_dir"], sam["SAF"], sam["proposal"] = get_proposal_info(proposal)
+        try:
+            sam["data_session"], sam["analysis_dir"], sam["SAF"], sam["proposal"] = get_proposal_info(proposal)
+        except:
+            warnings.warn("PASS lookup failed - trusting values",stacklevel=2)
+            pass
+        
         if sam["SAF"] == None:
             print(f'line {i}, sample {sam["sample_name"]} - data will not be accessible')
 
@@ -478,6 +517,7 @@ def get_proposal_info(proposal_id, beamline="SST1", path_base="/sst/", cycle="20
     tuple (res["data_session"], valid_path, valid_SAF, proposal_info)
          data_session ID which should be put into the run engine metadata of every scan, the path to write analyzed data to, the SAF, and all of the proposal information for the metadata if needed
     """
+    
     warn_text = "\n WARNING!!! no data taken with this proposal will be retrievable \n  it is HIGHLY suggested that you fix this \n if you are running this outside of the NSLS-II network, this is expected"
     proposal_re = re.compile(r"^[GUCPpass]*-?(?P<proposal_number>\d+)$")
     if isinstance(proposal_id, str):
@@ -488,25 +528,25 @@ def get_proposal_info(proposal_id, beamline="SST1", path_base="/sst/", cycle="20
     responce = pass_client.get(f"/proposal/{proposal}")
     res = responce.json()
     if "safs" not in res:
-        warnings.warn(f"proposal {proposal} does not appear to have any safs" + warn_text)
+        warnings.warn(f"proposal {proposal} does not appear to have any safs" + warn_text,stacklevel=2)
         pass_client.close()
         return None, None, None, None
     comissioning = 1
     if "cycles" in res:
         comissioning = 0
         if cycle not in res["cycles"]:
-            warnings.warn(f"proposal {proposal} is not valid for the {cycle} cycle" + warn_text)
+            warnings.warn(f"proposal {proposal} is not valid for the {cycle} cycle" + warn_text,stacklevel=2)
             pass_client.close()
             return None, None, None, None
     elif "Commissioning" not in res["type"]:
         warnings.warn(
             f"proposal {proposal} does not have a valid cycle, and does not appear to be a commissioning proposal"
-            + warn_text
+            + warn_text,stacklevel=2
         )
         pass_client.close()
         return -1
     if len(res["safs"]) < 0:
-        warnings.warn(f"proposal {proposal} does not have a valid SAF in the system" + warn_text)
+        warnings.warn(f"proposal {proposal} does not have a valid SAF in the system" + warn_text,stacklevel=2)
         pass_client.close()
         return None, None, None, None
     valid_SAF = ""
@@ -514,14 +554,14 @@ def get_proposal_info(proposal_id, beamline="SST1", path_base="/sst/", cycle="20
         if saf["status"] == "APPROVED" and beamline in saf["instruments"]:
             valid_SAF = saf["saf_id"]
     if len(valid_SAF) == 0:
-        warnings.warn(f"proposal {proposal} does not have a SAF for {beamline} active in the system" + warn_text)
+        warnings.warn(f"proposal {proposal} does not have a SAF for {beamline} active in the system" + warn_text,stacklevel=2)
         pass_client.close()
         return None, None, None, None
     proposal_info = res
     dir_responce = pass_client.get(f"/proposal/{proposal}/directories")
     dir_res = dir_responce.json()
     if len(dir_res) < 1:
-        warnings.warn(f"proposal{proposal} have any directories" + warn_text)
+        warnings.warn(f"proposal{proposal} have any directories" + warn_text,stacklevel=2)
         pass_client.close()
         return None, None, None, None
     valid_path = ""
@@ -533,7 +573,7 @@ def get_proposal_info(proposal_id, beamline="SST1", path_base="/sst/", cycle="20
     if len(valid_path) == 0:
         warnings.warn(
             f"no valid paths (containing {path_base} and {cycle} were found for proposal {proposal}" + warn_text
-        )
+        ,stacklevel=2)
         pass_client.close()
         return None, None, None, None
 
@@ -566,7 +606,7 @@ def save_samplesxlsx(bar, name="", path=""):
 
 
     for samp in bar:
-        for acq in samp['acq_history']:
+        for acq in samp.get('acq_history',[]):
             for arg in acq['arguments']:
                 if isinstance(acq['arguments'][arg],np.ndarray):
                     acq['arguments'][arg] = list(acq['arguments'][arg])
@@ -574,7 +614,7 @@ def save_samplesxlsx(bar, name="", path=""):
     filename = path + f'out_{datetime.today().strftime("%Y-%m-%d_%H-%M-%S")}_{name}.xlsx'
 
     for samp in bar:
-        for acq in samp['acq_history']:
+        for acq in samp.get('acq_history',[]):
             for arg in acq['arguments']:
                 if isinstance(acq['arguments'][arg],np.ndarray):
                     acq['arguments'][arg] = list(acq['arguments'][arg])

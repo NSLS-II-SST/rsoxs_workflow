@@ -288,3 +288,50 @@ def construct_exposure_times(energies, exposure_time=1, repeats=1, quiet=False):
     calc_times += 1 * (repeats - 1)  # one second overhead between repeated exposures\
     time = sum(calc_times) + 4 * len(times)
     return times, time
+
+
+def construct_exposure_times_nexafs(energies, exposure_time=1, quiet=False):
+    """
+    construct an array of exposure times to go with the array of energies input
+    also estimate the total time for the scan, using a fixed
+
+    inputs:
+        energies: an array or list of energies (floats or ints)
+        exposure:
+            (number) set all exposure times to this default value
+            (list) assume this is a default value and a list of logical tests followed by their respective exposure times
+                example [1,('less_than',270),10,('between',285,288),0.1]  the only logical operators allowed are "less_than", "between", "equals", and "greater_than"
+
+    outputs:
+        times : an array the same length of energies with exposure times
+        time : the seconds estimated for the scan
+    """
+    if not isinstance(energies, np.ndarray):
+        raise ValueError("Invalid list of energies")
+    times = energies.copy()
+    if exposure_time == "":
+        exposure_time = 1
+    if isinstance(exposure_time, (float, int)):
+        times[:] = float(exposure_time)
+    elif isinstance(exposure_time, list):
+        times[:] = float(exposure_time[0])
+        for test, value in zip(exposure_time[1::2], exposure_time[2::2]):
+            if test[0] in ["less_than", "less than"]:
+                times[energies < test[1]] = value
+                # print(f"testing if energies are less than {test[1]} and setting them to {value}")
+            elif test[0] in ["greater_than", "greater than"]:
+                times[energies > test[1]] = value
+                # print(f"testing if energies are greater than {test[1]} and setting them to {value}")
+            elif test[0] == "between":
+                times[(test[1] < energies) * (energies < test[2])] = value
+                # print(f"testing if energies are between {test[1]} and {test[2]} and setting them to {value}")
+            elif test[0] == "equals":
+                times[test[1] == energies] = value
+                # print(f"testing if energies are equal to {test[1]} and setting them to {value}")
+            else:
+                raise ValueError(
+                    f"Invalid test, only less_than, greater_than, and between are accepted, got {test}"
+                )
+    calc_times = times
+    time = sum(calc_times) + .5 * len(times) # .5 seconds overhead for motor movement?  needs to be tuned
+    return times, time
