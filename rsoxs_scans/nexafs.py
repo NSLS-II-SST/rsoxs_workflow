@@ -41,7 +41,7 @@ def nexafs_scan_enqueue(
     if not isinstance(cycles, (int, float)):
         valid = False
         validation += f"invalid cycles input {cycles}\n"
-    elif cycles < 0 or cycles > 100:
+    elif cycles < 0 or cycles > 1000:
         valid = False
         validation += f"invalid cycles number {cycles}\n"
     if grating in ["1200", 1200]:
