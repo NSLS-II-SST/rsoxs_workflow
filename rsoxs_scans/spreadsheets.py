@@ -812,7 +812,7 @@ def convertSampleSheetExcelMediaWiki(
     ]
 
     ## Extract Version Code as a string
-    versionStr = openpyxl.load_workbook(excelSheet).properties.title
+    versionStr = load_workbook(excelSheet).properties.title
     # print(versionStr)
 
     ## Get Current Date
