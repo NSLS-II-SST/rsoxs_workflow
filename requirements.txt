@@ -4,3 +4,4 @@ bluesky
 matplotlib
 pandas
 httpx
+openpyxl

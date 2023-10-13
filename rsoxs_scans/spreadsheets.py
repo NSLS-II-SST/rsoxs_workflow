@@ -13,14 +13,15 @@ import json
 import re, warnings, httpx, uuid
 import numpy as np
 import pandas as pd
-from .defaults import (rsoxs_configurations, 
-                        empty_sample, 
-                        empty_acq, 
-                        edge_names, 
-                        config_list, 
-                        current_version,
-                        rsoxs_edges,
-                        nexafs_edges
+from .defaults import (
+    rsoxs_configurations,
+    empty_sample,
+    empty_acq,
+    edge_names,
+    config_list,
+    current_version,
+    rsoxs_edges,
+    nexafs_edges,
 )
 
 
@@ -45,14 +46,19 @@ def load_samplesxlsx(filename: str, verbose=False):
     print(f"spreadsheet version is {excel_file.properties.title}")
     if excel_file.properties.title != current_version:
         excel_file.close()
-        raise ValueError("this excel file is not the current version, we read{.  please upgrade your template and try again")
+        raise ValueError(
+            "this excel file is not the current version, we read{.  please upgrade your template"
+            " and try again"
+        )
     excel_file.close()
 
     # First, check the bar sheet for whether header rows with user instructions are present, and identity them if so
     # If so, we can do some extra validation, but need to skip them when loading data
     # If not, we proceed with a bit less validation and don't skip them
     barHeaderRows = []
-    barParamsRequired = []  # if reading the header fails, this stays empty and we don't check for them
+    barParamsRequired = (
+        []
+    )  # if reading the header fails, this stays empty and we don't check for them
 
     try:
         # Import just where the header rows from the bar sheet would be
@@ -75,10 +81,10 @@ def load_samplesxlsx(filename: str, verbose=False):
             doImportBarHeaders = True
         else:  # Dont attempt to import header and warn user that we will skip some cell validation
             doImportBarHeaders = False
-            #warnings.resetwarnings()
-            #warnings.warn(
+            # warnings.resetwarnings()
+            # warnings.warn(
             #    "\nDidn't find Parameter/ Index column in bar sheet, skipping some validation that needs header cells"
-            #)
+            # )
 
         # Load the header data
         if doImportBarHeaders:
@@ -87,11 +93,20 @@ def load_samplesxlsx(filename: str, verbose=False):
                 raise ValueError("Couldn't find parameter Descriptions")
             else:
                 barHeaderRows.append(1)
-            if len(df_barHeader["Parameter/ Index"]) > 1 and df_barHeader["Parameter/ Index"][1] == "Rules":
+            if (
+                len(df_barHeader["Parameter/ Index"]) > 1
+                and df_barHeader["Parameter/ Index"][1] == "Rules"
+            ):
                 barHeaderRows.append(2)
-            if len(df_barHeader["Parameter/ Index"]) > 2 and df_barHeader["Parameter/ Index"][2] == "Example":
+            if (
+                len(df_barHeader["Parameter/ Index"]) > 2
+                and df_barHeader["Parameter/ Index"][2] == "Example"
+            ):
                 barHeaderRows.append(3)
-            if len(df_barHeader["Parameter/ Index"]) > 3 and df_barHeader["Parameter/ Index"][3] == "Notes":
+            if (
+                len(df_barHeader["Parameter/ Index"]) > 3
+                and df_barHeader["Parameter/ Index"][3] == "Notes"
+            ):
                 barHeaderRows.append(4)
 
             # Cast as a nested dict, where:
@@ -106,15 +121,21 @@ def load_samplesxlsx(filename: str, verbose=False):
     except ValueError as e:
         warnings.resetwarnings()
         warnings.warn(
-            f"\nError parsing bar sheet headers, skipping some validation that needs header cells: {str(e)}"
-        ,stacklevel=2)
+            (
+                "\nError parsing bar sheet headers, skipping some validation that needs header"
+                f" cells: {str(e)}"
+            ),
+            stacklevel=2,
+        )
         pass
 
     # Then, check the Acquisitions sheet for whether header rows with user instructions are present, and identity them if so
     # If so, we can do some extra validation, but need to skip them when loading data
     # If not, we proceed with a bit less validation and don't skip them
     acqHeaderRows = []
-    acqParamsRequired = []  # if reading the header fails, this stays empty and we don't check for them
+    acqParamsRequired = (
+        []
+    )  # if reading the header fails, this stays empty and we don't check for them
 
     try:
         # Import just where the header rows from the Acquisitions sheet would be
@@ -137,10 +158,10 @@ def load_samplesxlsx(filename: str, verbose=False):
             doImportAcqHeaders = True
         else:  # Dont attempt to import header and warn user that we will skip some cell validation
             doImportAcqHeaders = False
-            #warnings.resetwarnings()
-            #warnings.warn(
+            # warnings.resetwarnings()
+            # warnings.warn(
             #    "\nDidn't find Parameter/ Index column in acq sheet, skipping some validation that needs header cells"
-            #)
+            # )
 
         # Load the header data
         if doImportBarHeaders:
@@ -149,11 +170,20 @@ def load_samplesxlsx(filename: str, verbose=False):
                 raise ValueError("Couldn't find parameter Descriptions")
             else:
                 acqHeaderRows.append(1)
-            if len(df_acqHeader["Parameter/ Index"]) > 1 and df_acqHeader["Parameter/ Index"][1] == "Rules":
+            if (
+                len(df_acqHeader["Parameter/ Index"]) > 1
+                and df_acqHeader["Parameter/ Index"][1] == "Rules"
+            ):
                 acqHeaderRows.append(2)
-            if len(df_acqHeader["Parameter/ Index"]) > 2 and df_acqHeader["Parameter/ Index"][2] == "Example":
+            if (
+                len(df_acqHeader["Parameter/ Index"]) > 2
+                and df_acqHeader["Parameter/ Index"][2] == "Example"
+            ):
                 acqHeaderRows.append(3)
-            if len(df_acqHeader["Parameter/ Index"]) > 3 and df_acqHeader["Parameter/ Index"][3] == "Notes":
+            if (
+                len(df_acqHeader["Parameter/ Index"]) > 3
+                and df_acqHeader["Parameter/ Index"][3] == "Notes"
+            ):
                 acqHeaderRows.append(4)
 
             # Cast as a nested dict, where:
@@ -168,8 +198,12 @@ def load_samplesxlsx(filename: str, verbose=False):
     except ValueError as e:
         warnings.resetwarnings()
         warnings.warn(
-            f"\nError parsing Acquisitions sheet headers, skipping some validation that needs header cells: {str(e)}"
-        ,stacklevel=2)
+            (
+                "\nError parsing Acquisitions sheet headers, skipping some validation that needs"
+                f" header cells: {str(e)}"
+            ),
+            stacklevel=2,
+        )
         pass
 
     # Import Bar sheet data cells as a dataframe
@@ -249,7 +283,9 @@ def load_samplesxlsx(filename: str, verbose=False):
 
         # Check if values were provided for all 'REQUIRED' acquisition cells for this acq
         missedVal = False
-        missingValText = f"Acquisition #{i}, sample_id:{acq['sample_id']} is missing REQUIRED Parameters: "
+        missingValText = (
+            f"Acquisition #{i}, sample_id:{acq['sample_id']} is missing REQUIRED Parameters: "
+        )
         for key in acq:  # Loop through all columns for this acquisition
             # first check if required cell, then whether it is empty
             # Empty cells are cells are stored as np.nan. isnan cant evaluate on all datatypes though
@@ -260,13 +296,16 @@ def load_samplesxlsx(filename: str, verbose=False):
             raise ValueError(missingValText)
 
         # get the sample that corresponds to the sample_id for this acq... the first one that matches it takes
-        try:    
+        try:
             samp = next(dict for dict in new_bar if dict["sample_id"] == acq["sample_id"])
         except StopIteration:
             pass
-            missingSampText = f'ERROR acquisition #{i} needs a sample_id "{acq["sample_id"]}" which was not found - please check your sample_ids'
+            missingSampText = (
+                f'ERROR acquisition #{i} needs a sample_id "{acq["sample_id"]}" which was not'
+                " found - please check your sample_ids"
+            )
             raise ValueError(missingSampText)
-            
+
         acq = {key: val for key, val in acq.items() if val == val and val != ""}
 
         # Parse edge
@@ -286,37 +325,46 @@ def load_samplesxlsx(filename: str, verbose=False):
             # Validate rsoxs configuration
             if acq["configuration"] not in rsoxs_configurations:
                 raise TypeError(
-                    f'{acq["configuration"]} on line {i} is not a valid configuration for an rsoxs scan'
+                    f'{acq["configuration"]} on line {i} is not a valid configuration for an rsoxs'
+                    " scan"
                 )
             # Validate rsoxs edge
             if not isinstance(acq.get("edge", "c"), (tuple, list, int, float)):
                 if not str(acq.get("edge", "c")).lower() in nexafs_edges.keys():
                     if not edge_names[str(acq.get("edge", "c")).lower()] in rsoxs_edges.keys():
-                        raise ValueError(f'{acq["edge"]} on line {i} is not a valid edge for an rsoxs scan')
+                        raise ValueError(
+                            f'{acq["edge"]} on line {i} is not a valid edge for an rsoxs scan'
+                        )
         # Validate NEXAFS
         elif acq["type"].lower() == "nexafs":
             # Validate nexafs configuration
             if acq["configuration"] not in config_list:
                 raise TypeError(
-                    f'{acq["configuration"]} on line {i} is not a valid configuration for a nexafs scan'
+                    f'{acq["configuration"]} on line {i} is not a valid configuration for a nexafs'
+                    " scan"
                 )
             # Validate nexafs edge
             if not isinstance(acq.get("edge", "c"), (tuple, list)):
                 if not str(acq.get("edge", "c")).lower() in nexafs_edges.keys():
                     if not edge_names[str(acq.get("edge", "c")).lower()] in nexafs_edges.keys():
-                        raise ValueError(f'{acq["edge"]} on line {i} is not a valid edge for a nexafs scan')
+                        raise ValueError(
+                            f'{acq["edge"]} on line {i} is not a valid edge for a nexafs scan'
+                        )
 
         # Validate step NEXAFS
         elif acq["type"].lower() == "nexafs":
             # Validate nexafs configuration
             if acq["configuration"] not in config_list:
                 raise TypeError(
-                    f'{acq["configuration"]} on line {i} is not a valid configuration for a nexafs step scan'
+                    f'{acq["configuration"]} on line {i} is not a valid configuration for a nexafs'
+                    " step scan"
                 )
             # Validate nexafs edge
             if not isinstance(acq.get("edge", "c"), (tuple, list)):
                 if not str(acq.get("edge", "c")).lower() in edge_names.keys():
-                    raise ValueError(f'{acq["edge"]} on line {i} is not a valid edge for a nexafs scan')
+                    raise ValueError(
+                        f'{acq["edge"]} on line {i} is not a valid edge for a nexafs scan'
+                    )
 
         # Encapsulate single-element values into lists
         if "polarizations" in acq:
@@ -336,13 +384,15 @@ def load_samplesxlsx(filename: str, verbose=False):
         samp["acquisitions"].append(acq)
 
         # sanatize grating
-        if 'grating' in acq:
-            if isinstance(acq['grating'],(float)):
-                acq['grating'] = int(acq['grating'])
+        if "grating" in acq:
+            if isinstance(acq["grating"], (float)):
+                acq["grating"] = int(acq["grating"])
 
         # Validate Acquisition Parameters by Value and issue warnings if out of bounds
         invalidAcqParam = False  # False means none invalid
-        invalidAcqParamText = f"Acquisition #{i}, sample_id:{acq['sample_id']} has invalid parameters: \n"
+        invalidAcqParamText = (
+            f"Acquisition #{i}, sample_id:{acq['sample_id']} has invalid parameters: \n"
+        )
 
         # Check each angle listed, if any
         if "angles" in acq:
@@ -363,10 +413,16 @@ def load_samplesxlsx(filename: str, verbose=False):
                         except ValueError:  # hacky check for param type validation
                             angInvalid = True
                         if angInvalid:
-                            invalidAcqParamText += f"\tInvalid Angle: {testAng} . For grazing samples, angle must be between {gAngLow} and {gAngHigh}\n"
+                            invalidAcqParamText += (
+                                f"\tInvalid Angle: {testAng} . For grazing samples, angle must be"
+                                f" between {gAngLow} and {gAngHigh}\n"
+                            )
 
                     elif samp["grazing"] == False:
-                        tAngLow, tAngHigh = -14, 90  # Eventually these should move to defaults page
+                        tAngLow, tAngHigh = (
+                            -14,
+                            90,
+                        )  # Eventually these should move to defaults page
                         try:
                             angInvalid = not isParamValid(
                                 testAng, matchType="numeric", validValues=[tAngLow, tAngHigh]
@@ -374,17 +430,22 @@ def load_samplesxlsx(filename: str, verbose=False):
                         except ValueError:  # hacky check for param type validation
                             angInvalid = True
                         if angInvalid:
-                            invalidAcqParamText += f"\tInvalid Angle: {testAng} . For transmission samples, angle must be between {tAngLow} and {tAngHigh}\n"
+                            invalidAcqParamText += (
+                                f"\tInvalid Angle: {testAng} . For transmission samples, angle"
+                                f" must be between {tAngLow} and {tAngHigh}\n"
+                            )
                     else:
                         angInvalid = True
                         raise ValueError("Unable to determine angle geometry, check grazing field")
 
                 # if any invalid, need to report out
-                invalidAcqParam = invalidAcqParam or angInvalid  # we already had invalids, or we found one now
+                invalidAcqParam = (
+                    invalidAcqParam or angInvalid
+                )  # we already had invalids, or we found one now
 
         if invalidAcqParam:
             warnings.resetwarnings()
-            warnings.warn(invalidAcqParamText,stacklevel=2)
+            warnings.warn(invalidAcqParamText, stacklevel=2)
 
     # Begin Bar validation
     if verbose:
@@ -393,13 +454,13 @@ def load_samplesxlsx(filename: str, verbose=False):
     # Loop through samples in Bar and sanitize / validate user input
     for i, sam in enumerate(new_bar):
         # Handle the autogenerated columns,
-        if sam.get("location",'') == "":
+        if sam.get("location", "") == "":
             new_bar[i]["location"] = "[]"
         new_bar[i]["location"] = json.loads(sam.get("location", "[]").replace("'", '"'))
-        if sam.get("bar_loc",'') == "":
+        if sam.get("bar_loc", "") == "":
             new_bar[i]["bar_loc"] = "{}"
         new_bar[i]["bar_loc"] = json.loads(sam.get("bar_loc", "{}").replace("'", '"'))
-        if sam.get('acq_history','') == "":
+        if sam.get("acq_history", "") == "":
             new_bar[i]["acq_history"] = "[]"
         new_bar[i]["acq_history"] = json.loads(
             sam.get("acq_history", "[]").replace("'", '"').rstrip('\\"').lstrip('\\"')
@@ -407,7 +468,9 @@ def load_samplesxlsx(filename: str, verbose=False):
 
         # Check if values were provided for all 'REQUIRED' bar cells for this sample_id
         missedVal = False
-        missingValText = f"Bar Entry #{i}, sample_id: {sam['sample_id']} is missing REQUIRED Parameters: "
+        missingValText = (
+            f"Bar Entry #{i}, sample_id: {sam['sample_id']} is missing REQUIRED Parameters: "
+        )
         for key in sam:  # Loop through all columns for this acquisition
             # first check if required cell, then whether it is empty
             # Empty cells are stored as empty strings
@@ -419,12 +482,14 @@ def load_samplesxlsx(filename: str, verbose=False):
 
         # Validate Bar Parameters by Value and issue warnings if out of bounds
         invalidAcqParam = False  # False means none invalid
-        invalidAcqParamText = f"Bar Sheet Entry #{i}, sample_id:{acq['sample_id']} has invalid parameters: \n"
+        invalidAcqParamText = (
+            f"Bar Sheet Entry #{i}, sample_id:{acq['sample_id']} has invalid parameters: \n"
+        )
 
         # Check angle listed, if any
         if sam["angle"] != "":
             testAng = sam["angle"]
-            #print(f"grazing: {sam['grazing']}, testAng: {testAng}")
+            # print(f"grazing: {sam['grazing']}, testAng: {testAng}")
             angInvalid = False
             # No need to test if its empty (nan)
             if isinstance(testAng, float) and np.isnan(testAng):
@@ -440,7 +505,10 @@ def load_samplesxlsx(filename: str, verbose=False):
                     except ValueError:  # hacky check for param type validation
                         angInvalid = True
                     if angInvalid:
-                        invalidAcqParamText += f"\tInvalid Angle: {testAng} . For grazing samples, angle must be between {gAngLow} and {gAngHigh}\n"
+                        invalidAcqParamText += (
+                            f"\tInvalid Angle: {testAng} . For grazing samples, angle must be"
+                            f" between {gAngLow} and {gAngHigh}\n"
+                        )
 
                 elif sam["grazing"] == False:
                     tAngLow, tAngHigh = -14, 90  # Eventually these should move to defaults page
@@ -451,37 +519,46 @@ def load_samplesxlsx(filename: str, verbose=False):
                     except ValueError:  # hacky check for param type validation
                         angInvalid = True
                     if angInvalid:
-                        invalidAcqParamText += f"\tInvalid Angle: {testAng} . For transmission samples, angle must be between {tAngLow} and {tAngHigh}\n"
+                        invalidAcqParamText += (
+                            f"\tInvalid Angle: {testAng} . For transmission samples, angle must be"
+                            f" between {tAngLow} and {tAngHigh}\n"
+                        )
                 else:
                     angInvalid = True
                     raise ValueError("Unable to determine angle geometry, check grazing field")
 
                 # if any invalid, need to report out
-                invalidAcqParam = invalidAcqParam or angInvalid  # we already had invalids, or we found one now
+                invalidAcqParam = (
+                    invalidAcqParam or angInvalid
+                )  # we already had invalids, or we found one now
 
         if invalidAcqParam:
             warnings.resetwarnings()
-            warnings.warn(invalidAcqParamText,stacklevel=2)
+            warnings.warn(invalidAcqParamText, stacklevel=2)
 
         # Pull data from PASS Database
 
         # Try to find proposal ID to
         if "proposal_id" in sam:
-            sam["proposal_id"] = str(sam["proposal_id"]) # convert proposal id to a string
+            sam["proposal_id"] = str(sam["proposal_id"])  # convert proposal id to a string
             proposal = sam["proposal_id"]
         elif "data_session" in sam:
             proposal = sam["data_session"]
         else:
-            warnings.warn("no valid proposal was located - please add that and try again",stacklevel=2)
+            warnings.warn(
+                "no valid proposal was located - please add that and try again", stacklevel=2
+            )
             proposal = 0
 
         # Query the PASS database for values
         try:
-            sam["data_session"], sam["analysis_dir"], sam["SAF"], sam["proposal"] = get_proposal_info(proposal)
+            sam["data_session"], sam["analysis_dir"], sam["SAF"], sam["proposal"] = (
+                get_proposal_info(proposal)
+            )
         except:
-            warnings.warn("PASS lookup failed - trusting values",stacklevel=2)
+            warnings.warn("PASS lookup failed - trusting values", stacklevel=2)
             pass
-        
+
         if sam["SAF"] == None:
             print(f'line {i}, sample {sam["sample_name"]} - data will not be accessible')
 
@@ -517,8 +594,12 @@ def get_proposal_info(proposal_id, beamline="SST1", path_base="/sst/", cycle="20
     tuple (res["data_session"], valid_path, valid_SAF, proposal_info)
          data_session ID which should be put into the run engine metadata of every scan, the path to write analyzed data to, the SAF, and all of the proposal information for the metadata if needed
     """
-    
-    warn_text = "\n WARNING!!! no data taken with this proposal will be retrievable \n  it is HIGHLY suggested that you fix this \n if you are running this outside of the NSLS-II network, this is expected"
+
+    warn_text = (
+        "\n WARNING!!! no data taken with this proposal will be retrievable \n  it is HIGHLY"
+        " suggested that you fix this \n if you are running this outside of the NSLS-II network,"
+        " this is expected"
+    )
     proposal_re = re.compile(r"^[GUCPpass]*-?(?P<proposal_number>\d+)$")
     if isinstance(proposal_id, str):
         proposal = proposal_re.match(proposal_id).group("proposal_number")
@@ -528,25 +609,34 @@ def get_proposal_info(proposal_id, beamline="SST1", path_base="/sst/", cycle="20
     responce = pass_client.get(f"/proposal/{proposal}")
     res = responce.json()
     if "safs" not in res:
-        warnings.warn(f"proposal {proposal} does not appear to have any safs" + warn_text,stacklevel=2)
+        warnings.warn(
+            f"proposal {proposal} does not appear to have any safs" + warn_text, stacklevel=2
+        )
         pass_client.close()
         return None, None, None, None
     comissioning = 1
     if "cycles" in res:
         comissioning = 0
         if cycle not in res["cycles"]:
-            warnings.warn(f"proposal {proposal} is not valid for the {cycle} cycle" + warn_text,stacklevel=2)
+            warnings.warn(
+                f"proposal {proposal} is not valid for the {cycle} cycle" + warn_text, stacklevel=2
+            )
             pass_client.close()
             return None, None, None, None
     elif "Commissioning" not in res["type"]:
         warnings.warn(
-            f"proposal {proposal} does not have a valid cycle, and does not appear to be a commissioning proposal"
-            + warn_text,stacklevel=2
+            f"proposal {proposal} does not have a valid cycle, and does not appear to be a"
+            " commissioning proposal"
+            + warn_text,
+            stacklevel=2,
         )
         pass_client.close()
         return -1
     if len(res["safs"]) < 0:
-        warnings.warn(f"proposal {proposal} does not have a valid SAF in the system" + warn_text,stacklevel=2)
+        warnings.warn(
+            f"proposal {proposal} does not have a valid SAF in the system" + warn_text,
+            stacklevel=2,
+        )
         pass_client.close()
         return None, None, None, None
     valid_SAF = ""
@@ -554,14 +644,18 @@ def get_proposal_info(proposal_id, beamline="SST1", path_base="/sst/", cycle="20
         if saf["status"] == "APPROVED" and beamline in saf["instruments"]:
             valid_SAF = saf["saf_id"]
     if len(valid_SAF) == 0:
-        warnings.warn(f"proposal {proposal} does not have a SAF for {beamline} active in the system" + warn_text,stacklevel=2)
+        warnings.warn(
+            f"proposal {proposal} does not have a SAF for {beamline} active in the system"
+            + warn_text,
+            stacklevel=2,
+        )
         pass_client.close()
         return None, None, None, None
     proposal_info = res
     dir_responce = pass_client.get(f"/proposal/{proposal}/directories")
     dir_res = dir_responce.json()
     if len(dir_res) < 1:
-        warnings.warn(f"proposal{proposal} have any directories" + warn_text,stacklevel=2)
+        warnings.warn(f"proposal{proposal} have any directories" + warn_text, stacklevel=2)
         pass_client.close()
         return None, None, None, None
     valid_path = ""
@@ -572,8 +666,11 @@ def get_proposal_info(proposal_id, beamline="SST1", path_base="/sst/", cycle="20
             valid_path = dir["path"]
     if len(valid_path) == 0:
         warnings.warn(
-            f"no valid paths (containing {path_base} and {cycle} were found for proposal {proposal}" + warn_text
-        ,stacklevel=2)
+            f"no valid paths (containing {path_base} and {cycle} were found for proposal"
+            f" {proposal}"
+            + warn_text,
+            stacklevel=2,
+        )
         pass_client.close()
         return None, None, None, None
 
@@ -604,21 +701,19 @@ def save_samplesxlsx(bar, name="", path=""):
         "th": "th",
     }
 
-
     for samp in bar:
-        for acq in samp.get('acq_history',[]):
-            for arg in acq['arguments']:
-                if isinstance(acq['arguments'][arg],np.ndarray):
-                    acq['arguments'][arg] = list(acq['arguments'][arg])
+        for acq in samp.get("acq_history", []):
+            for arg in acq["arguments"]:
+                if isinstance(acq["arguments"][arg], np.ndarray):
+                    acq["arguments"][arg] = list(acq["arguments"][arg])
 
     filename = path + f'out_{datetime.today().strftime("%Y-%m-%d_%H-%M-%S")}_{name}.xlsx'
 
     for samp in bar:
-        for acq in samp.get('acq_history',[]):
-            for arg in acq['arguments']:
-                if isinstance(acq['arguments'][arg],np.ndarray):
-                    acq['arguments'][arg] = list(acq['arguments'][arg])
-
+        for acq in samp.get("acq_history", []):
+            for arg in acq["arguments"]:
+                if isinstance(acq["arguments"][arg], np.ndarray):
+                    acq["arguments"][arg] = list(acq["arguments"][arg])
 
     acqlist = []
     for i, sam in enumerate(bar):
@@ -675,28 +770,29 @@ def convertSampleSheetExcelMediaWiki(
     endColumn_Params: str = "F",
     verbose: bool = "TRUE",
 ) -> str:
-    """Converts Sample Sheet Parameter Metadata into a MediaWiki-compatible formatted string.
+    """Converts Sample Sheet Parameter Metadata into a MediaWiki-compatible format string.
 
     Parameters
     ----------
-    excelSheet : Path, optional
+    excelSheet: Path
         Path (or string) to the excel sheet to be loaded.
-    paramsSheetToOutput : str, optional
+    rulesSheetName: str
         Name of the excel sheet which should be parsed for metadata
-    rulesSheetName : str, optional
-        Which set of params should be output (e.g., 'bar', 'acquisitions'). 'all' will sequentially output tables for the same wiki page, by default "SheetRulesAndMetaData"
-    versionCell : str, optional
-        Location (e.g., 'B4') of the cell that contains the sheet version number, by default "B4"
-    startRow_Params : int, optional
-        Excel row number which contains the header for the metadata table (excel starts at row 1), by default 7
-    endRow_Params : int, optional
-        Excel row number which contains the last row of metadata (leave as -1 if scanning to end of file), by default None
-    startColumn_Params : str, optional
-        First excel column (by letter) that contains the metadata table, by default "A"
-    endColumn_Params : str, optional
-        Last excel column (by letter) that contains the metadata table, by default "F"
-    verbose : bool, optional
-        Whether to print progress text to stdout, by default "TRUE"
+    paramsSheetToOutput: str
+        Which set of params should be output (e.g., 'bar', 'acquisitions'). 'all' will sequentially output tables for the same wiki page
+    versionCell: str
+        Location (e.g., 'B4') of the cell that contains the sheet version number
+    startRow_Params: int
+        Excel row number which contains the header for the metadata table (excel starts at row 1)
+    endRow_Params: int
+        Excel row number which contains the last row of metadata (leave as -1 if scanning to end of file)
+    startColumn_Params: str
+        First excel column (by letter) that contains the metadata table
+    endColumn_Params:str
+        Last excel column (by letter) that contains the metadata table
+    verbose: bool
+        Whether to print progress text to stdout
+
 
     Returns
     -------
@@ -716,18 +812,16 @@ def convertSampleSheetExcelMediaWiki(
     ]
 
     ## Extract Version Code as a string
-    versionStr = pd.read_excel(
-        excelSheet, sheet_name=rulesSheetName, index_col=None, usecols=versColumn, nrows=0, header=versRow - 1
-    )
-    versionStr = versionStr.columns.values[0]
-    ###print(versionStr)
+    versionStr = load_workbook(excelSheet).properties.title
+    # print(versionStr)
 
     ## Get Current Date
     date.today()
 
     ## Add Wiki Page Header to Output string
-    outStr = f"== SST-1 Sample Sheet Syntax Version: {versionStr} Last Updated: {date.today()} ==\n"
-
+    outStr = (
+        f"== SST-1 Sample Sheet Syntax Version: {versionStr} Last Updated: {date.today()} ==\n"
+    )
     if verbose:
         print(f"Pass!\n\t\tVersion Number is -> {versionStr}")
 
@@ -745,7 +839,11 @@ def convertSampleSheetExcelMediaWiki(
     colString = startColumn_Params + ":" + endColumn_Params
 
     excelMetadataIn = pd.read_excel(
-        excelSheet, sheet_name=rulesSheetName, header=startRow_Params - 1, nrows=numRows, usecols=colString
+        excelSheet,
+        sheet_name=rulesSheetName,
+        header=startRow_Params - 1,
+        nrows=numRows,
+        usecols=colString,
     )
 
     ## Drop empty rows (where 'Sheet' is NaN)
@@ -821,7 +919,9 @@ def convertSampleSheetExcelMediaWiki(
     return outStr
 
 
-def isParamValid(testVal, matchType: str = "exact", validValues: list = None, invalidValues: list = None):
+def isParamValid(
+    testVal, matchType: str = "exact", validValues: list = None, invalidValues: list = None
+):
     """Tests whether the testVal is valid based on matchType and both the validValues list and invalidValues list (if provided)
 
     Test against validValues is made first, then against invalidValues. You can use this to define complex numerical ranges.
@@ -871,7 +971,8 @@ def isParamValid(testVal, matchType: str = "exact", validValues: list = None, in
             # Check that it is a two element list
             if not isinstance(validValues, list) or len(validValues) != 2:
                 raise ValueError(
-                    "If 'numeric' match is requested, validValues must be a 2-element list specifying a numeric range"
+                    "If 'numeric' match is requested, validValues must be a 2-element list"
+                    " specifying a numeric range"
                 )
             # Cast validValues as float inside lists
             validValues = [float(i) for i in validValues]
@@ -881,7 +982,8 @@ def isParamValid(testVal, matchType: str = "exact", validValues: list = None, in
             # Check that it is a two element list
             if not isinstance(invalidValues, list) or len(invalidValues) != 2:
                 raise ValueError(
-                    "If 'numeric' match is requested, invalidValues must be a 2-element list specifying a numeric range"
+                    "If 'numeric' match is requested, invalidValues must be a 2-element list"
+                    " specifying a numeric range"
                 )
             # Cast invalidValues as float inside lists
             invalidValues = [float(i) for i in invalidValues]
