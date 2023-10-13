@@ -498,7 +498,7 @@ def load_samplesxlsx(filename: str, verbose=False):
     return new_bar
 
 
-def get_proposal_info(proposal_id, beamline="SST1", path_base="/sst/", cycle="2023-2"):
+def get_proposal_info(proposal_id, beamline="SST1", path_base="/sst/", cycle="2023-3"):
     """Query the api PASS database, and get the info corresponding to a proposal ID
 
     Parameters
