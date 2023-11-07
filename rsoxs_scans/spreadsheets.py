@@ -259,7 +259,7 @@ def load_samplesxlsx(filename: str, verbose=False):
 
     if verbose:
         print("Started Parsing Acquisition Data")
-
+    acq = {}
     # Loop through acquisitions and sanitize / validate user input
     for i, acq in enumerate(acqs):
         # Loop through columns in the acquisition sheet and sanitize strings
@@ -483,7 +483,7 @@ def load_samplesxlsx(filename: str, verbose=False):
         # Validate Bar Parameters by Value and issue warnings if out of bounds
         invalidAcqParam = False  # False means none invalid
         invalidAcqParamText = (
-            f"Bar Sheet Entry #{i}, sample_id:{acq['sample_id']} has invalid parameters: \n"
+            f"Bar Sheet Entry #{i}, sample_id:{sam['sample_id']} has invalid parameters: \n"
         )
 
         # Check angle listed, if any
