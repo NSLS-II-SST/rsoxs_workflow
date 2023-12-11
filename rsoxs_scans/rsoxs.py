@@ -139,7 +139,7 @@ def rsoxs_scan_enqueue(
     if md is None:
         md = {}
     if dets is None:
-        if md["RSoXS_Main_DET"] == "waxs_det":
+        if md["RSoXS_Main_DET"] in["waxs_det",'WAXS']:
             dets = ["waxs_det"]
         else:
             dets = ["saxs_det"]
@@ -158,7 +158,7 @@ def rsoxs_scan_enqueue(
     for det in dets:
         if det == None:
             if "RSoXS_Main_DET" in md:
-                if md["RSoXS_Main_DET"] == "waxs_det":
+                if md["RSoXS_Main_DET"] in["waxs_det",'WAXS']:
                     dets = ["waxs_det"]
                 else:
                     dets = ["saxs_det"]

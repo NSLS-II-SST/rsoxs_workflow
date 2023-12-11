@@ -153,6 +153,8 @@ def get_energies(edge, frames=default_frames, ratios=None, quiet=False, **kwargs
     if isinstance(edge_input, (float, int)):
         edge = (edge_input, edge_input)
         singleinput = True
+    if isinstance(edge,np.ndarray):
+        edge = list(edge)
     if not isinstance(edge, (tuple, list)):
         raise TypeError(f"invalid edge {edge} - no key of that name was found")
     if len(edge)==1:
