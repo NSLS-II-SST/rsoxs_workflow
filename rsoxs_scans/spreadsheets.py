@@ -575,7 +575,7 @@ def load_samplesxlsx(filename: str, verbose=False):
     return new_bar
 
 
-def get_proposal_info(proposal_id, beamline="SST1", path_base="/sst/", cycle="2023-3"):
+def get_proposal_info(proposal_id, beamline="SST1", path_base="/sst/", cycle="2024-1"):
     """Query the api PASS database, and get the info corresponding to a proposal ID
 
     Parameters
@@ -660,9 +660,7 @@ def get_proposal_info(proposal_id, beamline="SST1", path_base="/sst/", cycle="20
         return None, None, None, None
     valid_path = ""
     for dir in dir_res:
-        if comissioning and (path_base in dir["path"]):
-            valid_path = dir["path"]
-        elif (path_base in dir["path"]) and (cycle in dir["path"]):
+        if (path_base in dir["path"]) and (('commissioning' in dir["path"]) or (cycle in dir["path"])):
             valid_path = dir["path"]
     if len(valid_path) == 0:
         warnings.warn(
