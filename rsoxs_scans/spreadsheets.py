@@ -22,6 +22,7 @@ from .defaults import (
     current_version,
     rsoxs_edges,
     nexafs_edges,
+    CURRENT_CYCLE,
 )
 
 
@@ -560,7 +561,7 @@ def load_samplesxlsx(filename: str, verbose=False):
             pass
 
         if sam["SAF"] == None:
-            print(f'line {i}, sample {sam["sample_name"]} - data will not be accessible')
+            raise(ValueError(f'line {i}, sample {sam["sample_name"]} - Loading this sample will kill bluesky!!!!!! '))
 
         # Populate the "bar_loc" field
         new_bar[i]["bar_loc"]["spot"] = sam["bar_spot"]
@@ -575,11 +576,11 @@ def load_samplesxlsx(filename: str, verbose=False):
     return new_bar
 
 
-def get_proposal_info(proposal_id, beamline="SST1", path_base="/sst/", cycle="2024-1"):
+def get_proposal_info(proposal_id, beamline="SST1", path_base="/sst/", cycle=CURRENT_CYCLE):
     """Query the api PASS database, and get the info corresponding to a proposal ID
 
     Parameters
-    ----------
+    ----------2
     proposal_id : str or int
         string of a number, a string including a "GU-", "PU-", "pass-", or  "C-" prefix and a number, or a number
     beamline : str, optional
@@ -605,9 +606,12 @@ def get_proposal_info(proposal_id, beamline="SST1", path_base="/sst/", cycle="20
         proposal = proposal_re.match(proposal_id).group("proposal_number")
     else:
         proposal = proposal_id
-    pass_client = httpx.Client(base_url="https://api-staging.nsls2.bnl.gov")
-    responce = pass_client.get(f"/proposal/{proposal}")
-    res = responce.json()
+    #pass_client = httpx.Client(base_url="https://api-staging.nsls2.bnl.gov")
+    pass_client = httpx.Client(base_url="https://api.nsls2.bnl.gov")
+    responce = pass_client.get(f"/v1/proposal/{proposal}")
+    #print(responce.json())
+    res = responce.json()['proposal']
+    #return res
     if "safs" not in res:
         warnings.warn(
             f"proposal {proposal} does not appear to have any safs" + warn_text, stacklevel=2
@@ -652,8 +656,8 @@ def get_proposal_info(proposal_id, beamline="SST1", path_base="/sst/", cycle="20
         pass_client.close()
         return None, None, None, None
     proposal_info = res
-    dir_responce = pass_client.get(f"/proposal/{proposal}/directories")
-    dir_res = dir_responce.json()
+    dir_responce = pass_client.get(f"/v1/proposal/{proposal}/directories")
+    dir_res = dir_responce.json()['directories']
     if len(dir_res) < 1:
         warnings.warn(f"proposal{proposal} have any directories" + warn_text, stacklevel=2)
         pass_client.close()
