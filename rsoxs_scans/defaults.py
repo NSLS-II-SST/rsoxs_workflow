@@ -2,6 +2,9 @@
 
 """
 
+
+CURRENT_CYCLE = '2024-2'
+
 # set the defaults one place
 default_frames = "full"
 default_repeats = 1
@@ -145,6 +148,7 @@ config_list = [
     "WAXS",
     "SAXS",
     "SAXSNEXAFS",
+    "DM7NEXAFS", ## PK added
     "SAXS_liquid",
     "WAXS_liquid",
 ]

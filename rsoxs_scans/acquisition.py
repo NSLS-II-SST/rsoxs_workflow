@@ -71,12 +71,12 @@ def dryrun_acquisition(acq, sample):
     )
 
     # Assign the RSoXS Detector based on configuration specified
-    if acq["configuration"] in ["WAXS", "WAXS_liquid", "WAXSNEXAFS"]:
+    if acq["configuration"] in ["WAXS", "WAXS_liquid"]:
         sample.update({"RSoXS_Main_DET": "waxs_det"})
-    elif acq["configuration"] in ["SAXS", "SAXS_liquid", "SAXSNEXAFS"]:
+    elif acq["configuration"] in ["SAXS", "SAXS_liquid"]:
         sample.update({"RSoXS_Main_DET": "saxs_det"})
-    else:  # Invalid configuration string
-        outputs.append({"description": f'\n\nError: {acq["configuration"]} is not valid\n\n', "action": "error"})
+    else:
+        sample.update({"RSoXS_Main_DET": None})
 
     # Run the appropriate dryrun function based on acquisition type and extend list to include their output queue dicts
     if "type" in acq:
