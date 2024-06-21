@@ -490,6 +490,9 @@ def load_samplesxlsx(filename: str, verbose=False):
         # Check angle listed, if any
         if sam["angle"] != "":
             testAng = sam["angle"]
+            if testAng == 180:
+                sam["angle"] = 0 # 180 is the old convention, which is just 0 now, let's not error out on it.
+                testAng = sam["angle"]
             # print(f"grazing: {sam['grazing']}, testAng: {testAng}")
             angInvalid = False
             # No need to test if its empty (nan)
