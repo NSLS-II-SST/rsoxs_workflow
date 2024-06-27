@@ -564,7 +564,7 @@ def load_samplesxlsx(filename: str, verbose=False):
             pass
 
         if sam["SAF"] == None:
-            raise(ValueError(f'line {i}, sample {sam["sample_name"]} - Loading this sample will kill bluesky!!!!!! '))
+           warnings.warn(f'line {i}, sample {sam["sample_name"]} - invalid SAF - ok for testing but loading this in Bluesky will kill it ', stacklevel=2)
 
         # Populate the "bar_loc" field
         new_bar[i]["bar_loc"]["spot"] = sam["bar_spot"]
