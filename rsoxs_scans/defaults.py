@@ -14,7 +14,7 @@ default_diameter = 1.8
 default_spiral_step = 0.3
 default_exposure_time = 1
 default_warning_step_time = 1800
-current_version = "2023-2 Version 1.0"
+current_version = "2023-2 Version 1.0" ## This version should match the version of the Excel spreadsheet document.
 
 actions = {
     "load_configuration",  # high level load names RSoXS configuration
