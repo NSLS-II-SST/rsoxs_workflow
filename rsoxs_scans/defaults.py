@@ -3,7 +3,7 @@
 """
 
 
-CURRENT_CYCLE = '2024-2'
+CURRENT_CYCLE = '2024-2' ## Currently, this needs to be changed manually at the beginning of each cycle.
 
 # set the defaults one place
 default_frames = "full"
@@ -108,6 +108,7 @@ frames_table = {
 }
 
 # these define the default edges of the intervals for nexafs scans
+## The NEXAFS edges and ratios are different from those used for RSoXS due to the pseudo-flyscanning that is used for NEXAFS.  Each energy subrange has its own speed, and changing the speed at each energy threshold slows down the scan.  Thus, fewer energy subranges are used for NEXAFS scans.
 nexafs_edges = {
     "carbon": (250, 282, 297, 350),
     "oxygen": (500, 525, 540, 560),
