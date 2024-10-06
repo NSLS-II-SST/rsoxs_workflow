@@ -729,7 +729,7 @@ def save_samplesxlsx(bar, name="", path=""):
                 if isinstance(acq[key], (str)):
                     cleanacq[key] = acq[key]
                 else:
-                    cleanacq[key] = json.dumps(str(acq[key]))
+                    cleanacq[key] = json.dumps(dict(acq[key]))
             acqlist.append(cleanacq)
     sampledf = pd.DataFrame.from_dict(bar, orient="columns")
     df_bar = deepcopy(sampledf)
@@ -742,10 +742,10 @@ def save_samplesxlsx(bar, name="", path=""):
             testdict[i]["acq_history"] = []
         # json dump the pythonic parts
         # including sample: bar_loc,location, proposal,acq_history
-        testdict[i]["acq_history"] = json.dumps(str(testdict[i]["acq_history"]))
-        testdict[i]["bar_loc"] = json.dumps(str(testdict[i]["bar_loc"]))
-        testdict[i]["location"] = json.dumps(str(testdict[i]["location"]))
-        testdict[i]["proposal"] = json.dumps(str(testdict[i]["proposal"]))
+        testdict[i]["acq_history"] = json.dumps(dict(testdict[i]["acq_history"]))
+        testdict[i]["bar_loc"] = json.dumps(dict(testdict[i]["bar_loc"]))
+        testdict[i]["location"] = json.dumps(dict(testdict[i]["location"]))
+        testdict[i]["proposal"] = json.dumps(dict(testdict[i]["proposal"]))
         del testdict[i]["acquisitions"]
         cleansam = deepcopy(empty_sample)
         cleansam.update(testdict[i])
