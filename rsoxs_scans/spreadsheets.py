@@ -742,7 +742,7 @@ def save_samplesxlsx(bar, name="", path=""):
             testdict[i]["acq_history"] = []
         # json dump the pythonic parts
         # including sample: bar_loc,location, proposal,acq_history
-        testdict[i]["acq_history"] = json.dumps(testdict[i]["acq_history"])
+        #testdict[i]["acq_history"] = json.dumps(testdict[i]["acq_history"])
         testdict[i]["bar_loc"] = json.dumps(dict(testdict[i]["bar_loc"]))
         testdict[i]["location"] = json.dumps([dict(testdict[i]["location"][0]), dict(testdict[i]["location"][1]), dict(testdict[i]["location"][2]), dict(testdict[i]["location"][3])])
         #testdict[i]["proposal"] = json.dumps(dict(testdict[i]["proposal"])) ## Not saving this information for now while dealing with the TypeError
