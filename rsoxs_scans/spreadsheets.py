@@ -744,7 +744,7 @@ def save_samplesxlsx(bar, name="", path=""):
         # including sample: bar_loc,location, proposal,acq_history
         testdict[i]["acq_history"] = json.dumps(testdict[i]["acq_history"])
         testdict[i]["bar_loc"] = json.dumps(dict(testdict[i]["bar_loc"]))
-        testdict[i]["location"] = json.dumps(testdict[i]["location"])
+        testdict[i]["location"] = json.dumps(dict(testdict[i]["location"]))
         testdict[i]["proposal"] = json.dumps(testdict[i]["proposal"])
         del testdict[i]["acquisitions"]
         cleansam = deepcopy(empty_sample)
