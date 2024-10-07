@@ -742,20 +742,22 @@ def save_samplesxlsx(bar, name="", path=""):
             testdict[i]["acq_history"] = []
         # json dump the pythonic parts
         # including sample: bar_loc,location, proposal,acq_history
-        testdict[i]["acq_history"] = orjson.dumps(testdict[i]["acq_history"])
-        testdict[i]["bar_loc"] = orjson.dumps(testdict[i]["bar_loc"])
-        testdict[i]["location"] = orjson.dumps(testdict[i]["location"])
-        testdict[i]["proposal"] = orjson.dumps(testdict[i]["proposal"])
-        ## Below might not be the most efficient way to do the above code
-        """
+        ## Below code worked, but probably not a good long-term solution
         #testdict[i]["acq_history"] = json.dumps(testdict[i]["acq_history"])
         testdict[i]["bar_loc"] = json.dumps(dict(testdict[i]["bar_loc"]))
         Location = []
         for MotorDict in testdict[i]["location"]:
             Location.append(dict(MotorDict))
         testdict[i]["location"] = json.dumps(Location)
-        #testdict[i]["location"] = json.dumps([dict(testdict[i]["location"][0]), dict(testdict[i]["location"][1]), dict(testdict[i]["location"][2]), dict(testdict[i]["location"][3])])
-        #testdict[i]["proposal"] = json.dumps(dict(testdict[i]["proposal"])) ## Not saving this information for now while dealing with the TypeError
+        #testdict[i]["location"] = json.dumps([dict(testdict[i]["location"][0]), dict(testdict[i]["location"][1]), dict(testdict[i]["location"][2]), dict(testdict[i]["location"][3])]) ## This ran into error of index being out of bounds
+        #testdict[i]["proposal"] = json.dumps(dict(testdict[i]["proposal"])) ## Not saving this information for now while dealing with the TypeError of float type not being iterable
+        """
+        """
+        ## This did not work
+        testdict[i]["acq_history"] = orjson.dumps(testdict[i]["acq_history"])
+        testdict[i]["bar_loc"] = orjson.dumps(testdict[i]["bar_loc"])
+        testdict[i]["location"] = orjson.dumps(testdict[i]["location"])
+        testdict[i]["proposal"] = orjson.dumps(testdict[i]["proposal"])
         """
         del testdict[i]["acquisitions"]
         cleansam = deepcopy(empty_sample)
