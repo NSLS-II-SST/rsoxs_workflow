@@ -752,7 +752,6 @@ def save_samplesxlsx(bar, name="", path=""):
         #testdict[i]["location"] = json.dumps([dict(testdict[i]["location"][0]), dict(testdict[i]["location"][1]), dict(testdict[i]["location"][2]), dict(testdict[i]["location"][3])]) ## This ran into error of index being out of bounds
         #testdict[i]["proposal"] = json.dumps(dict(testdict[i]["proposal"])) ## Not saving this information for now while dealing with the TypeError of float type not being iterable
         """
-        """
         ## This did not work
         testdict[i]["acq_history"] = orjson.dumps(testdict[i]["acq_history"])
         testdict[i]["bar_loc"] = orjson.dumps(testdict[i]["bar_loc"])
