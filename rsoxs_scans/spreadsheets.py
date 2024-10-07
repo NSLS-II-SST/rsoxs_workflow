@@ -9,7 +9,7 @@ from openpyxl import load_workbook
 from openpyxl.writer import excel
 from pathlib import Path
 from datetime import date, datetime
-import json
+import json, orjson
 import re, warnings, httpx, uuid
 import numpy as np
 import pandas as pd
