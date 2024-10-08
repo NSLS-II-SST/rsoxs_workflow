@@ -724,13 +724,16 @@ def save_samplesxlsx(bar, name="", path=""):
     for i, sam in enumerate(bar):
         for acq in sam["acquisitions"]:
             acq.update({"sample_id": sam["sample_id"]})
+            """
+            ## PK: Not sure what is the purpose of this
             cleanacq = deepcopy(empty_acq)
             for key in acq:
                 if isinstance(acq[key], (str)):
                     cleanacq[key] = acq[key]
                 else:
                     cleanacq[key] = orjson.dumps(dict(acq[key])) #cleanacq[key] = json.dumps(acq[key])
-            acqlist.append(cleanacq)
+            """
+            acqlist.append(acq) #acqlist.append(cleanacq)
     sampledf = pd.DataFrame.from_dict(bar, orient="columns")
     df_bar = deepcopy(sampledf)
     testdict = df_bar.to_dict(orient="records")
