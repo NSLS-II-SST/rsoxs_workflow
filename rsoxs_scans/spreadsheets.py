@@ -729,7 +729,7 @@ def save_samplesxlsx(bar, name="", path=""):
                 if isinstance(acq[key], (str)):
                     cleanacq[key] = acq[key]
                 else:
-                    cleanacq[key] = orjson.dumps(acq[key]) #cleanacq[key] = json.dumps(acq[key])
+                    cleanacq[key] = orjson.dumps(dict(acq[key])) #cleanacq[key] = json.dumps(acq[key])
             acqlist.append(cleanacq)
     sampledf = pd.DataFrame.from_dict(bar, orient="columns")
     df_bar = deepcopy(sampledf)
