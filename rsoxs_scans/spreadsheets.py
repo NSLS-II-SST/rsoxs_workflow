@@ -724,16 +724,16 @@ def save_samplesxlsx(bar, name="", path=""):
     for i, sam in enumerate(bar):
         for acq in sam["acquisitions"]:
             acq.update({"sample_id": sam["sample_id"]})
-            """
-            ## PK: Not sure what is the purpose of this
-            cleanacq = deepcopy(empty_acq)
+            cleanacq = deepcopy(empty_acq) ## Sorting the acquisition parameters into a format that can be entered into the spreadsheet
             for key in acq:
+                cleanacq[key] = acq[key]
+                """
                 if isinstance(acq[key], (str)):
                     cleanacq[key] = acq[key]
                 else:
-                    cleanacq[key] = orjson.dumps(dict(acq[key])) #cleanacq[key] = json.dumps(acq[key])
-            """
-            acqlist.append(acq) #acqlist.append(cleanacq)
+                    cleanacq[key] = orjson.dumps(dict(acq[key])) #cleanacq[key] = json.dumps(acq[key]) ## This is causing JSON serialization issues
+                """
+            acqlist.append(cleanacq)
     sampledf = pd.DataFrame.from_dict(bar, orient="columns")
     df_bar = deepcopy(sampledf)
     testdict = df_bar.to_dict(orient="records")
