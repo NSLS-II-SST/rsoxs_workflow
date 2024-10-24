@@ -9,7 +9,7 @@ from openpyxl import load_workbook
 from openpyxl.writer import excel
 from pathlib import Path
 from datetime import date, datetime
-import json
+import json, orjson
 import re, warnings, httpx, uuid
 import numpy as np
 import pandas as pd
@@ -724,12 +724,15 @@ def save_samplesxlsx(bar, name="", path=""):
     for i, sam in enumerate(bar):
         for acq in sam["acquisitions"]:
             acq.update({"sample_id": sam["sample_id"]})
-            cleanacq = deepcopy(empty_acq)
+            cleanacq = deepcopy(empty_acq) ## Sorting the acquisition parameters into a format that can be entered into the spreadsheet
             for key in acq:
+                cleanacq[key] = acq[key]
+                """
                 if isinstance(acq[key], (str)):
                     cleanacq[key] = acq[key]
                 else:
-                    cleanacq[key] = json.dumps(acq[key])
+                    cleanacq[key] = orjson.dumps(dict(acq[key])) #cleanacq[key] = json.dumps(acq[key]) ## This is causing JSON serialization issues
+                """
             acqlist.append(cleanacq)
     sampledf = pd.DataFrame.from_dict(bar, orient="columns")
     df_bar = deepcopy(sampledf)
@@ -742,10 +745,22 @@ def save_samplesxlsx(bar, name="", path=""):
             testdict[i]["acq_history"] = []
         # json dump the pythonic parts
         # including sample: bar_loc,location, proposal,acq_history
-        testdict[i]["acq_history"] = json.dumps(testdict[i]["acq_history"])
-        testdict[i]["bar_loc"] = json.dumps(testdict[i]["bar_loc"])
-        testdict[i]["location"] = json.dumps(testdict[i]["location"])
-        testdict[i]["proposal"] = json.dumps(testdict[i]["proposal"])
+        ## Below code worked, but probably not a good long-term solution
+        #testdict[i]["acq_history"] = json.dumps(testdict[i]["acq_history"])
+        #testdict[i]["bar_loc"] = json.dumps(dict(testdict[i]["bar_loc"]))
+        #Location = []
+        #for MotorDict in testdict[i]["location"]:
+        #    Location.append(dict(MotorDict))
+        #testdict[i]["location"] = json.dumps(Location)
+        #testdict[i]["location"] = json.dumps([dict(testdict[i]["location"][0]), dict(testdict[i]["location"][1]), dict(testdict[i]["location"][2]), dict(testdict[i]["location"][3])]) ## This ran into error of index being out of bounds
+        #testdict[i]["proposal"] = json.dumps(dict(testdict[i]["proposal"])) ## Not saving this information for now while dealing with the TypeError of float type not being iterable
+        """
+        ## This did not work
+        testdict[i]["acq_history"] = orjson.dumps(testdict[i]["acq_history"])
+        testdict[i]["bar_loc"] = orjson.dumps(testdict[i]["bar_loc"])
+        testdict[i]["location"] = orjson.dumps(testdict[i]["location"])
+        testdict[i]["proposal"] = orjson.dumps(testdict[i]["proposal"])
+        """
         del testdict[i]["acquisitions"]
         cleansam = deepcopy(empty_sample)
         cleansam.update(testdict[i])
