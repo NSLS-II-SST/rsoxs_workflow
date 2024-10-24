@@ -5,6 +5,7 @@
 # imports
 import datetime
 import numpy as np
+import redis_json_dict
 import matplotlib.pyplot as plt
 from copy import deepcopy
 import warnings
