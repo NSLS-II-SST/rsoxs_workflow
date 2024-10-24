@@ -167,7 +167,7 @@ def get_energies(edge, frames=default_frames, ratios=None, quiet=False, **kwargs
     if isinstance(frames, str):
         if frames.lower() in frames_table.keys():
             frames = frames_table[frames.lower()]
-    if isinstance(frames, (list, tuple)):
+    if isinstance(frames, (list, tuple, redis_json_dict.redis_json_dict.ObservableSequence)):
         if singleinput:
             raise TypeError(f"when only a single edge threshold is given there is no valid list option for frames")
         for frame in frames:
@@ -179,7 +179,7 @@ def get_energies(edge, frames=default_frames, ratios=None, quiet=False, **kwargs
         raise TypeError(f"frame number {frames} was not found or is not a valid number")
     read_frames = False
     if ratios == None or ratios == "":
-        if isinstance(frames, (list, tuple)):
+        if isinstance(frames, (list, tuple, redis_json_dict.redis_json_dict.ObservableSequence)):
             ratios = None
             read_frames = True
         elif str(edge_input).lower() in rsoxs_ratios_table.keys():
@@ -189,11 +189,11 @@ def get_energies(edge, frames=default_frames, ratios=None, quiet=False, **kwargs
         else:
             ratios = (1,) * (len(edge) - 1)
     else:
-        if isinstance(frames, (list, tuple)):
+        if isinstance(frames, (list, tuple, redis_json_dict.redis_json_dict.ObservableSequence)):
             ValueError(f"frames and ratios cannot both be specified")
-        if not isinstance(ratios, (tuple, int, float, list)):
+        if not isinstance(ratios, (tuple, int, float, list, redis_json_dict.redis_json_dict.ObservableSequence)):
             ratios = rsoxs_ratios_table[ratios]
-    if not isinstance(ratios, (tuple, list)) and not read_frames:
+    if not isinstance(ratios, (tuple, list, redis_json_dict.redis_json_dict.ObservableSequence)) and not read_frames:
         raise TypeError(f"invalid ratios {ratios}")
     if read_frames:
         ratios = (1,) * (len(edge) - 1)
