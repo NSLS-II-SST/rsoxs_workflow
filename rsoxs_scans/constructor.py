@@ -5,6 +5,7 @@
 # imports
 import datetime
 import numpy as np
+import redis_json_dict
 import matplotlib.pyplot as plt
 from copy import deepcopy
 import warnings
@@ -66,7 +67,7 @@ def get_nexafs_scan_params(edge, speed=default_speed, ratios=None, quiet=False, 
             edge_input = edge.lower()
         if edge.lower() in nexafs_edges.keys():
             edge = nexafs_edges[edge.lower()]
-    if not isinstance(edge, (tuple, list)):
+    if not isinstance(edge, (tuple, list, redis_json_dict.redis_json_dict.ObservableSequence)):
         raise TypeError(f"invalid edge {edge} - no key of that name was found")
     if isinstance(speed, str):
         if speed.lower() in nexafs_speed_table.keys():
@@ -81,9 +82,9 @@ def get_nexafs_scan_params(edge, speed=default_speed, ratios=None, quiet=False, 
         else:
             ratios = (1,) * (len(edge) - 1)
     else:
-        if not isinstance(ratios, (tuple, list)):
+        if not isinstance(ratios, (tuple, list, redis_json_dict.redis_json_dict.ObservableSequence)):
             ratios = nexafs_ratios_table[ratios]
-    if not isinstance(ratios, (tuple, list)):
+    if not isinstance(ratios, (tuple, list, redis_json_dict.redis_json_dict.ObservableSequence)):
         raise TypeError(f"invalid ratios {ratios}")
     if len(ratios) + 1 != len(edge):
         raise ValueError(f"got the wrong number of intervals {len(ratios)} expected {len(edge)-1}")
@@ -153,9 +154,9 @@ def get_energies(edge, frames=default_frames, ratios=None, quiet=False, **kwargs
     if isinstance(edge_input, (float, int)):
         edge = (edge_input, edge_input)
         singleinput = True
-    if isinstance(edge,np.ndarray):
+    if isinstance(edge, (np.ndarray, redis_json_dict.redis_json_dict.ObservableSequence)):
         edge = list(edge)
-    if not isinstance(edge, (tuple, list)):
+    if not isinstance(edge, (tuple, list, redis_json_dict.redis_json_dict.ObservableSequence)):
         raise TypeError(f"invalid edge {edge} - no key of that name was found")
     if len(edge)==1:
         edge *=2
@@ -166,7 +167,7 @@ def get_energies(edge, frames=default_frames, ratios=None, quiet=False, **kwargs
     if isinstance(frames, str):
         if frames.lower() in frames_table.keys():
             frames = frames_table[frames.lower()]
-    if isinstance(frames, (list, tuple)):
+    if isinstance(frames, (list, tuple, redis_json_dict.redis_json_dict.ObservableSequence)):
         if singleinput:
             raise TypeError(f"when only a single edge threshold is given there is no valid list option for frames")
         for frame in frames:
@@ -174,11 +175,11 @@ def get_energies(edge, frames=default_frames, ratios=None, quiet=False, **kwargs
                 raise TypeError(f"if a list of frames is given all must be numbers {frame} is not a valid number")
             if frame < 0 or frame > 1000:
                 raise ValueError(f"frame numbers should be between 0 and 1000 {frame} is not a valid number")
-    if not isinstance(frames, (int, float, list)):
+    if not isinstance(frames, (int, float, list, redis_json_dict.redis_json_dict.ObservableSequence)):
         raise TypeError(f"frame number {frames} was not found or is not a valid number")
     read_frames = False
     if ratios == None or ratios == "":
-        if isinstance(frames, (list, tuple)):
+        if isinstance(frames, (list, tuple, redis_json_dict.redis_json_dict.ObservableSequence)):
             ratios = None
             read_frames = True
         elif str(edge_input).lower() in rsoxs_ratios_table.keys():
@@ -188,11 +189,11 @@ def get_energies(edge, frames=default_frames, ratios=None, quiet=False, **kwargs
         else:
             ratios = (1,) * (len(edge) - 1)
     else:
-        if isinstance(frames, (list, tuple)):
+        if isinstance(frames, (list, tuple, redis_json_dict.redis_json_dict.ObservableSequence)):
             ValueError(f"frames and ratios cannot both be specified")
-        if not isinstance(ratios, (tuple, int, float, list)):
+        if not isinstance(ratios, (tuple, int, float, list, redis_json_dict.redis_json_dict.ObservableSequence)):
             ratios = rsoxs_ratios_table[ratios]
-    if not isinstance(ratios, (tuple, list)) and not read_frames:
+    if not isinstance(ratios, (tuple, list, redis_json_dict.redis_json_dict.ObservableSequence)) and not read_frames:
         raise TypeError(f"invalid ratios {ratios}")
     if read_frames:
         ratios = (1,) * (len(edge) - 1)
@@ -267,7 +268,7 @@ def construct_exposure_times(energies, exposure_time=1, repeats=1, quiet=False):
         exposure_time = 1
     if isinstance(exposure_time, (float, int)):
         times[:] = float(exposure_time)
-    elif isinstance(exposure_time, list):
+    elif isinstance(exposure_time, (list, redis_json_dict.redis_json_dict.ObservableSequence)):
         times[:] = float(exposure_time[0])
         for test, value in zip(exposure_time[1::2], exposure_time[2::2]):
             if test[0] in ["less_than", "less than"]:
@@ -315,7 +316,7 @@ def construct_exposure_times_nexafs(energies, exposure_time=1, quiet=False):
         exposure_time = 1
     if isinstance(exposure_time, (float, int)):
         times[:] = float(exposure_time)
-    elif isinstance(exposure_time, list):
+    elif isinstance(exposure_time, (list, redis_json_dict.redis_json_dict.ObservableSequence)):
         times[:] = float(exposure_time[0])
         for test, value in zip(exposure_time[1::2], exposure_time[2::2]):
             if test[0] in ["less_than", "less than"]:
