@@ -310,10 +310,12 @@ def load_samplesxlsx(filename: str, verbose=False):
         acq = {key: val for key, val in acq.items() if val == val and val != ""}
 
         # Parse edge
+        """
         try:
             acq["edge"] = json.loads(acq["edge"])
         except:  # if edge isn't json parsable, it's probably just a string, and that's fine
             pass
+        """
         if isinstance(acq["edge"], str):
             if "," in acq["edge"]:  # if the string looks like a list
                 acq["edge"] = [
