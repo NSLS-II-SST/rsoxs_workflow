@@ -7,6 +7,7 @@ import numpy as np
 from copy import deepcopy
 from .constructor import get_nexafs_scan_params, get_energies, construct_exposure_times_nexafs
 from .rsoxs import rotate_sample, rotatedx, sanitize_angle
+import redis_json_dict
 
 def nexafs_scan_enqueue(
     scan_params,
