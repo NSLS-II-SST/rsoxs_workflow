@@ -6,6 +6,7 @@
 import numpy as np
 from copy import deepcopy
 from .constructor import get_energies, construct_exposure_times
+import redis_json_dict
 
 # code for finding a rotated position of a sample - needed to test locations
 def rotate_sample(samp, force=False):
@@ -345,7 +346,7 @@ def dryrun_rsoxs_plan(
 
     # construct the locations list
     locations = []
-    if isinstance(angles, list):
+    if isinstance(angles, (list, redis_json_dict.redis_json_dict.ObservableSequence)):
         for angle in angles:
             md["angle"] = angle
             md["bar_loc"]["x0"] = md["bar_loc"].get(
