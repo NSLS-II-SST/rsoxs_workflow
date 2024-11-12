@@ -7,6 +7,7 @@ import numpy as np
 from copy import deepcopy
 from .constructor import get_nexafs_scan_params, get_energies, construct_exposure_times_nexafs
 from .rsoxs import rotate_sample, rotatedx, sanitize_angle
+import redis_json_dict
 
 def nexafs_scan_enqueue(
     scan_params,
@@ -139,9 +140,9 @@ def dryrun_nexafs_plan(
                     valid = False
                     valid_text += f"\n\nERROR - temperature ramp speed of {temp_ramp_speed} is not valid\n\n"
 
-    if not isinstance(angles, list):
+    if not isinstance(angles, (list, redis_json_dict.redis_json_dict.ObservableSequence)):
         angles = [None]
-    if not isinstance(polarizations, list):
+    if not isinstance(polarizations, (list, redis_json_dict.redis_json_dict.ObservableSequence)):
         polarizations = [0]
     if not valid:
         # don't go any further, because we know the inputs are wrong
@@ -256,7 +257,7 @@ def dryrun_nexafs_step_plan(
 
     # construct the locations list
     locations = []
-    if isinstance(angles, list):
+    if isinstance(angles, (list, redis_json_dict.redis_json_dict.ObservableSequence)):
         for angle in angles:
             md["angle"] = angle
             md["bar_loc"]["x0"] = md["bar_loc"].get(
