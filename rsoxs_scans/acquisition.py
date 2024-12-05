@@ -71,7 +71,7 @@ def dryrun_acquisition(acq, sample):
     )
 
     # Assign the RSoXS Detector based on configuration specified
-    if acq["configuration"] in ["WAXS", "WAXS_liquid"]:
+    if acq["configuration"] in ["WAXS", "WAXS_LowFlux", "WAXS_liquid"]:
         sample.update({"RSoXS_Main_DET": "waxs_det"})
     elif acq["configuration"] in ["SAXS", "SAXS_liquid"]:
         sample.update({"RSoXS_Main_DET": "saxs_det"})
