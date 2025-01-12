@@ -298,7 +298,7 @@ def nexafs_step_scan_enqueue(
     locations=None,  # locations to run together as an outer loop  (cycler multiply with previous) list of location dicts
     temperatures=None,  # locations to run as an outer loop  (cycler multiply with previous generally, but optionally add to locations - see next)
     temps_with_locations=False,  # indicates to move locations and temperatures at the same time, not multiplying exposures (they must be the same length!)
-    plan_name="rsoxs",
+    plan_name="nexafsstep",
     md=None,
     **kwargs,  # extraneous settings from higher level plans are just passed along
 ):
