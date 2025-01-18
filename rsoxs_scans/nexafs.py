@@ -8,6 +8,37 @@ from copy import deepcopy
 from .constructor import get_nexafs_scan_params, get_energies, construct_exposure_times_nexafs
 from .rsoxs import rotate_sample, rotatedx, sanitize_angle
 import redis_json_dict
+from nbs_bl.plans.scan_base import _make_gscan_points
+
+
+
+
+
+def dryrun_step_scan_energy(
+        energy_parameters
+):
+    energies = _make_gscan_points(energy_parameters)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+## Old code below
 
 def nexafs_scan_enqueue(
     scan_params,

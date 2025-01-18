@@ -23,6 +23,14 @@ from .defaults import (
 )
 
 
+
+
+
+
+
+
+## Old code below.  New code above.
+
 def get_nexafs_scan_params(edge, speed=default_speed, ratios=None, quiet=False, **kwargs):
     """Creates fly NEXAFS scan parameters and time estimate, given an edge (which includes thresholds for different speed regions) base speed (eV/sec) and speed ratios between the different regions
 
