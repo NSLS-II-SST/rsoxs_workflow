@@ -3,7 +3,7 @@
 """
 
 
-CURRENT_CYCLE = '2024-3' ## Currently, this needs to be changed manually at the beginning of each cycle.
+CURRENT_CYCLE = '2025-1' ## Currently, this needs to be changed manually at the beginning of each cycle.
 
 # set the defaults one place
 default_frames = "full"
