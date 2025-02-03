@@ -11,7 +11,6 @@ import numpy as np
 
 
 
-
 def pickLocationsFromSpirals( ## Intended to be an updated, data-security-compliant version of resolve_spirals.  Probably will just have this function pick spots for one sample and then it can be rerun for multiple samples.  That way, not all spirals have to be resolved in one go.
         configuration, ## Up-to-date spreadsheet with current sample locations.  TODO: maybe load sheet separately and then pick spots and then save out a new sheet
         sampleID,
@@ -29,10 +28,17 @@ def pickLocationsFromSpirals( ## Intended to be an updated, data-security-compli
     ## Load spiral scan from tiled and gather location coordinates
     scanSurvey = catalog[int(scanID_Survey)]
     ## TODO: If sample_id from tiled does not equal the sample ID here, then give warning
-    locations_OutboardInboard = scanSurvey["primary"]["data"]["RSoXS Sample Outboard-Inboard"].read()
-    locations_DownUp = scanSurvey["primary"]["data"]["RSoXS Sample Up-Down"].read()
-    locations_UpstreamDownstream = scanSurvey["baseline"]["data"]["RSoXS Sample Downstream-Upstream"][0]
-    locations_Theta = scanSurvey["baseline"]["data"]["RSoXS Sample Rotation"][0]
+    try: locations_OutboardInboard = scanSurvey["primary"]["data"]["RSoXS Sample Outboard-Inboard"].read()
+    except KeyError: locations_OutboardInboard = scanSurvey["primary"]["data"]["manipulator_x"].read()
+    
+    try: locations_DownUp = scanSurvey["primary"]["data"]["RSoXS Sample Up-Down"].read()
+    except KeyError: locations_DownUp = scanSurvey["primary"]["data"]["manipulator_y"].read()
+    
+    try: locations_UpstreamDownstream = scanSurvey["baseline"]["data"]["RSoXS Sample Downstream-Upstream"][0]
+    except KeyError: locations_UpstreamDownstream = scanSurvey["baseline"]["data"]["manipulator_z"][0]
+
+    try: locations_Theta = scanSurvey["baseline"]["data"]["RSoXS Sample Rotation"][0]
+    except KeyError: locations_Theta = scanSurvey["baseline"]["data"]["manipulator_r"][0]
     
     
     ## Find the sample to update location
@@ -54,7 +60,7 @@ def pickLocationsFromSpirals( ## Intended to be an updated, data-security-compli
                     sampleNew["sample_id"]+=f'_{index_locationSelected_Indices}'
                     configuration.append(sampleNew)
             break ## Exit after the sample is found and do not spend time looking through the other samples
-
+    return configuration
 
 
 ## How to use pick_locations_from_spirals
@@ -84,16 +90,18 @@ Catalog
 """
 ## Use the function
 
-pathConfiguration = r"/content/drive/Shareddrives/NISTPostdoc/CharacterizationData/BeamTime/20241202_SST1_Murphy/DataAnalysis/out_2024-12-08_spirals_resolved_TEST2.xlsx"
+pathConfiguration = r"/content/drive/Shareddrives/NISTPostdoc/CharacterizationData/BeamTime/20250123_SST1_Commissioning_Jordan-Sweet/DataAnalysis/in_2025-02-01_UpdatedBar.xlsx"
 configuration = load_samplesxlsx(pathConfiguration) ## (load_spreadsheet with update_configuration=False in my new code)
 
-pick_locations_from_spirals(configuration=configuration,
-                            sampleID="KR151", 
+configuration = pickLocationsFromSpirals(configuration=configuration,
+                            sampleID="OpenBeam_NIST",
                             catalog=Catalog,
-                            scanID_Survey=90681, 
-                            locationsSelected_Indices=[0, 1]
+                            scanID_Survey=91532,
+                            locationsSelected_Indices=[0, 8, 15]
                             )
-save_samplesxlsx(bar=configuration, name="TestOut", path=r"/content/drive/Shareddrives/NISTPostdoc/CharacterizationData/BeamTime/20241202_SST1_Murphy/DataAnalysis/")
+
+save_samplesxlsx(bar=configuration, name="TestOut", path=r"/content/drive/Shareddrives/NISTPostdoc/CharacterizationData/BeamTime/20250123_SST1_Commissioning_Jordan-Sweet/DataAnalysis/")
+
 """
 
 
