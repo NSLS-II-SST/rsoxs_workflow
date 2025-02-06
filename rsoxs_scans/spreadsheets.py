@@ -222,7 +222,7 @@ def load_samplesxlsx(filename: str, verbose=False):
         verbose=verbose,
     )
 
-    # Replace NaNs with empty string
+    # Replace NaNs with empty string ## PK: Why is this necessary?
     df_bar.replace(np.nan, "", regex=True, inplace=True)
 
     # Convert dataframe to a list of dictionaries, each row is a list element and each column is a key->value pair
