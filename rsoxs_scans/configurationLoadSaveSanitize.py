@@ -1,9 +1,11 @@
 ## New spreadsheet loader and saver
 
-
+import os
+import numpy as np
 import pandas as pd
 import copy
 import json
+import datetime
 import re, warnings, httpx
 from .defaults import (
     CURRENT_CYCLE,
@@ -12,10 +14,7 @@ from .defaults import (
 
 
 
-def loadSpreadsheet_Local(filePath):
-    ## TODO: copy over eliot's code piece by piece and make comments
-    ## TODO: Bar sheet should remain same but rename to samples maybe (see my partway done spreadsheet in rsoxs package)
-    ## TODO: redo acquisitions
+def loadConfigurationSpreadsheet_Local(filePath):
     ## TODO: use natsort to get things in order of bar location
 
     ## The following are items that were present in Eliot's spreadsheet loader, but I might not keep going forward.
@@ -37,12 +36,9 @@ def loadSpreadsheet_Local(filePath):
     ## Store acquisitions into its respective sample dictionary.  Consider making this a separate function so that dictionaries written directly in Bluesky can be fed into this function.
     for indexAcquisition, acquisition in enumerate(acquisitionsDict):
         for indexSample, sample in enumerate(configuration):
-            if sample["sample_id"] == acquisitionsDict["sample_id"]: configuration[indexSample]["acquisitions"].append(acquisition)
+            if sample["sample_id"] == acquisition["sample_id"]: configuration[indexSample]["acquisitions"].append(acquisition)
 
-    ## TODO: bookmark for what I have copied over from Eliot's code: https://github.com/NSLS-II-SST/rsoxs_scans/blob/main/rsoxs_scans/spreadsheets.py#L451
-
-
-
+    
     return configuration
 
 
@@ -51,20 +47,42 @@ def loadSpreadsheet_Local(filePath):
 
 
 ## TODO: For now, I am keeping Sample/Bar parameters exactly the same as how Eliot had them, but I would like to refactor these later on.
+sampleParameters_Empty = {
+    "bar_name": np.nan, ## TODO: Would like to eliminate in the future
+    "sample_id": np.nan, ## TODO: Would like to rename to sampleID
+    "sample_name": np.nan, ## TODO: Would like to eliminate and consolidate with sample_id
+    "project_name": np.nan,
+    "institution": np.nan,
+    "proposal_id": np.nan,
+    "bar_spot": np.nan,
+    "front": np.nan,
+    "grazing": np.nan,
+    "angle": np.nan, ## TODO: Would like to refactor so that there is a single angle definition
+    "height": np.nan, ## Required for now to get z offset
+    "sample_priority": np.nan, ## TODO: Would like to eliminate, becasue in practice, Acquisitions priority is what matters
+    "notes": np.nan,
+    "location": np.nan,
+    "bar_loc": np.nan,
+    "proposal": np.nan,
+    "SAF": np.nan,
+    "analysis_dir": np.nan,
+    "data_session": np.nan,
+}
 samplesParameters_Required = [
-    "bar_name", ## TODO: Would like to eliminate in the future
-    "sample_id", ## TODO: Would like to rename to sampleID
-    "sample_name", ## TODO: Would like to eliminate and consolidate with sample_id
+    "bar_name", 
+    "sample_id", 
+    "sample_name", 
     "project_name",
     "institution",
     "proposal_id",
     "bar_spot",
     "front",
     "grazing",
-    "angle", ## TODO: Would like to refactor so that there is a single angle definition
-    "height", ## Required for now to get z offset
-    "sample_priority", ## TODO: Would like to eliminate, becasue in practice, Acquisitions priority is what matters
+    "angle", 
+    "height", 
+    "sample_priority", 
 ]
+## TODO: I want to have a notes parameter, but not as a required parameter
 samplesParameters_Strings = [
     "bar_name", 
     "sample_id", 
@@ -151,7 +169,10 @@ def sanitizeSamples(configuration):
             del configuration[indexSample][key]
 
         ## TODO: In the future, might want to have this more flexible, so users could add acquisitions to this dictionary and feed it in directly through Bluesky, but for now, acquisitions have to be entered separately
-        sample["acquisitions"] = []
+        configuration[indexSample]["acquisitions"] = []
+
+        ## Adding in non-essential parameters so that they show up
+        if sample.get("notes", "Not present") == "Not present": configuration[indexSample]["notes"] = ""
         
     return configuration
 
@@ -265,12 +286,12 @@ def get_proposal_info(proposal_id, beamline="SST1", path_base="/sst/", cycle=CUR
 
 
 
-
+## TODO: not complete, add more sanitization here.  Check Eliot's code for anything I might want to add.
 ## TODO: import this into rsoxs scans and set those as defaults in the functions so that the defaults are decided in one root place
 acquisitionParameters_Default = {
     "sample_id": "",
     "configurationInstrument": "allRetracted",
-    "scanType": "nexafs_step",
+    "scanType": "time",
     "energyListParameters": "carbon_NEXAFS",
     "polarizationFrame": "lab",
     "polarizations": [0],
@@ -280,11 +301,12 @@ acquisitionParameters_Default = {
     "spiralDimensions": [0.3, 1.8, 1.8], ## [step_size, diameter_x, diameter_y], useful if our windows are rectangles, not squares
     "groupName": "Group",
     "priority": 1,
+    "acquireStatus": "",
+    "notes": "",
 }
 ## TODO: would like a cycles-like parameter where I can sleep up and down in energy.  Lucas would want that.
 
 def sanitizeAcquisitions(acquisitionsDict, configuration):
-    ## TODO: not complete, add more sanitization here.  Check Eliot's code for anything I might want to add.
     sampleIDs = [sample["sample_id"] for sample in configuration]
 
     for indexAcquisition, acquisition in enumerate(copy.deepcopy(acquisitionsDict)):
@@ -299,7 +321,8 @@ def sanitizeAcquisitions(acquisitionsDict, configuration):
         
 
     return acquisitionsDict
-
+## TODO: run this sanitization for each individual acquisition that gets run.
+## Might need to break the above into sanitize Acquisitions which has the loop and then sanitizeAcquisition which does the individual acquisition.
 
 def sanitizeNEXAFS(acquisition):
     ## TODO: Most of the sanitization here can be reused for rsoxs scans.  This then would get called in sanitizeAcquisitions.
@@ -314,4 +337,63 @@ def sanitizeSpirals(acquisition):
 
 ## TODO: Philosophical question: is dry running necessary if any errors can be captured through sanitization?
 ## It is still important to generate time estimates, but that could be separate.
-## One of the features of dry running in the old code was that it could indicate if something might fall out of a motor range.  But if that is documented and sanitized here, that might be better?
+## One of the features of dry running in the old code was that it could indicate if something might fall out of a motor range.  But if that is documented and hard-coded and sanitized here, that might be better?
+
+
+
+
+
+
+
+
+
+
+
+
+
+def saveConfigurationSpreadsheet_Local(configuration, filePath, fileLabel=""):
+    
+    ## TODO: undecided if I want to sanitize anything here or just faithfully save what is in rsoxs_config and can let load_sheet deal with all sanitization
+    ## I think probably erring on the side of less sanitization here is better so that users can save something and investivate what might be the issue.
+
+    ## Take acquisitions from the configuration and gather into a list of dictionaries to save as separate Acquisitions sheet
+    ## If the parameters are not transferred to the template dictionary, they might show up in a different order in the spreadsheet.
+    ## Then delete ["acquisitions"] key from each sample
+    acquisitions_ToExport = []
+    acquisition_ToExport = copy.deepcopy(acquisitionParameters_Default)
+    for indexSample, sample in enumerate(copy.deepcopy(configuration)):
+        for indexAcquisition, acquisition in enumerate(sample["acquisitions"]):
+            for indexParameter, parameter in enumerate(list(acquisitionParameters_Default.keys())):
+                if acquisition.get(parameter, "Not present") == "Not present": acquisition_ToExport[parameter] = np.nan
+                else: acquisition_ToExport[parameter] = acquisition[parameter]
+            acquisitions_ToExport.append(acquisition_ToExport)
+        del configuration[indexSample]["acquisitions"]
+    
+    ## Organize sample parameters into the correct order
+    samples_ToExport = []
+    for indexSample, sample in enumerate(copy.deepcopy(configuration)):
+        sample_ToExport = copy.deepcopy(sampleParameters_Empty)
+        ## Copy over core parameters
+        for indexParameter, parameter in enumerate(list(sampleParameters_Empty.keys())):
+            if sample.get(parameter, "Not present") == "Not present": sample_ToExport[parameter] = np.nan
+            else: sample_ToExport[parameter] = sample[parameter]
+        ## Copy over extra parameters that users may have defined beyond my codebase
+        extraParameters = set(sample.keys()) - set(sampleParameters_Empty.keys())
+        for indexParameter, parameter in enumerate(extraParameters):
+            if sample.get(parameter, "Not present") == "Not present": sample_ToExport[parameter] = np.nan
+            else: sample_ToExport[parameter] = sample[parameter]
+        samples_ToExport.append(sample_ToExport)
+    
+
+    ## TODO: for now, I am not including acq_history becuase I need to understand it better.  Anyways, my plans don't save acq_history so not needed urgently.
+
+    ## Export file
+    timeStamp = datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
+    fileName = "out_" + str(timeStamp) + "_" + str(fileLabel) + ".xlsx"
+    acquisitions_ToExport_df = pd.DataFrame.from_dict(acquisitions_ToExport, orient="columns")
+    samples_ToExport_df = pd.DataFrame.from_dict(samples_ToExport, orient="columns")
+
+    writer = pd.ExcelWriter(os.path.join(filePath, fileName))
+    samples_ToExport_df.to_excel(writer, index=False, sheet_name="Samples")
+    acquisitions_ToExport_df.to_excel(writer, index=False, sheet_name="Acquisitions")
+    writer.close()
