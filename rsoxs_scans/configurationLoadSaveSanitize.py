@@ -359,14 +359,8 @@ def saveConfigurationSpreadsheet_Local(configuration, filePath, fileLabel=""):
     ## Take acquisitions from the configuration and gather into a list of dictionaries to save as separate Acquisitions sheet
     ## If the parameters are not transferred to the template dictionary, they might show up in a different order in the spreadsheet.
     ## Then delete ["acquisitions"] key from each sample
-    acquisitions_ToExport = []
-    acquisition_ToExport = copy.deepcopy(acquisitionParameters_Default)
+    acquisitions_ToExport = gatherAcquisitionsFromConfiguration(configuration)
     for indexSample, sample in enumerate(copy.deepcopy(configuration)):
-        for indexAcquisition, acquisition in enumerate(sample["acquisitions"]):
-            for indexParameter, parameter in enumerate(list(acquisitionParameters_Default.keys())):
-                if acquisition.get(parameter, "Not present") == "Not present": acquisition_ToExport[parameter] = np.nan
-                else: acquisition_ToExport[parameter] = acquisition[parameter]
-            acquisitions_ToExport.append(acquisition_ToExport)
         del configuration[indexSample]["acquisitions"]
     
     ## Organize sample parameters into the correct order
@@ -397,3 +391,14 @@ def saveConfigurationSpreadsheet_Local(configuration, filePath, fileLabel=""):
     samples_ToExport_df.to_excel(writer, index=False, sheet_name="Samples")
     acquisitions_ToExport_df.to_excel(writer, index=False, sheet_name="Acquisitions")
     writer.close()
+
+def gatherAcquisitionsFromConfiguration(configuration):
+    acquisitions_ToGather = []
+    acquisition_ToGather = copy.deepcopy(acquisitionParameters_Default)
+    for indexSample, sample in enumerate(copy.deepcopy(configuration)):
+        for indexAcquisition, acquisition in enumerate(sample["acquisitions"]):
+            for indexParameter, parameter in enumerate(list(acquisitionParameters_Default.keys())):
+                if acquisition.get(parameter, "Not present") == "Not present": acquisition_ToGather[parameter] = np.nan
+                else: acquisition_ToGather[parameter] = acquisition[parameter]
+            acquisitions_ToGather.append(acquisition_ToGather)
+    return acquisitions_ToGather
