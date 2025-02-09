@@ -289,22 +289,23 @@ def get_proposal_info(proposal_id, beamline="SST1", path_base="/sst/", cycle=CUR
 ## TODO: not complete, add more sanitization here.  Check Eliot's code for anything I might want to add.
 ## TODO: import this into rsoxs scans and set those as defaults in the functions so that the defaults are decided in one root place
 acquisitionParameters_Default = {
-    "sample_id": "",
-    "configurationInstrument": "allRetracted",
+    "sample_id": np.nan,
+    "configurationInstrument": np.nan,
     "scanType": "time",
-    "energyListParameters": "carbon_NEXAFS",
+    "energyListParameters": np.nan,
     "polarizationFrame": "lab",
-    "polarizations": [0],
-    "exposureTime": 0.01,
+    "polarizations": np.nan,
+    "exposureTime": 1,
     "exposuresPerEnergy": 1,
     "sampleAngles": [0],
-    "spiralDimensions": [0.3, 1.8, 1.8], ## [step_size, diameter_x, diameter_y], useful if our windows are rectangles, not squares
+    "spiralDimensions": np.nan, ## default for spirals is [0.3, 1.8, 1.8], [step_size, diameter_x, diameter_y], useful if our windows are rectangles, not squares
     "groupName": "Group",
     "priority": 1,
     "acquireStatus": "",
     "notes": "",
 }
 ## TODO: would like a cycles-like parameter where I can sleep up and down in energy.  Lucas would want that.
+## TODO: maybe name the above as acquisitionParameters_Blank and then have a different acquisitionParameters_Default with the default values that I would liek to enter into the scan functions
 
 def sanitizeAcquisitions(acquisitionsDict, configuration):
     sampleIDs = [sample["sample_id"] for sample in configuration]
@@ -313,27 +314,49 @@ def sanitizeAcquisitions(acquisitionsDict, configuration):
         if acquisition["sample_id"] not in sampleIDs:
             raise ValueError("sample_id " + str(acquisition["sample_id"]) + " in Acquisitions row " + str(indexAcquisition) + " was not found in Samples list")
         
-        ## TODO: try to define configurations in this local package as dictionaries and then just import into rsoxs package.  That way, I do not have to update list of valid configurations manually.  I can just auto-generate a list.
+        acquisitionsDict[indexAcquisition] = sanitizeAcquisition(acquisition)
+    
+    return acquisitionsDict
 
-        ## Sanitize parameters for specific scan types
-        if acquisition["scanType"]=="spiral": acquisitionsDict[indexAcquisition] = sanitizeSpirals(acquisition)
-        if acquisition["scanType"]=="nexafs": acquisitionsDict[indexAcquisition] = sanitizeNEXAFS(acquisition)
+def sanitizeAcquisition(acquisition):
+    ## Sanitize general parameters
+    for indexParameter, parameter in enumerate(list(acquisitionParameters_Default.keys())):
+        if (copy.deepcopy(acquisition).get(parameter, "Not present") == "Not present"
+            or acquisition[parameter] is None
+            or np.isnan(acquisition[parameter])):
+            acquisition[parameter] = acquisitionParameters_Default[parameter]
+
+    ## Sanitize parameters for specific scan types
+    if acquisition["scanType"]=="time": acquisition = sanitizeTimeScan(acquisition)
+    if acquisition["scanType"]=="spiral": acquisition = sanitizeSpirals(acquisition)
+    if acquisition["scanType"]=="nexafs": acquisition = sanitizeNEXAFS(acquisition)
         
 
-    return acquisitionsDict
-## TODO: run this sanitization for each individual acquisition that gets run.
-## Might need to break the above into sanitize Acquisitions which has the loop and then sanitizeAcquisition which does the individual acquisition.
+    return acquisition
 
-def sanitizeNEXAFS(acquisition):
-    ## TODO: Most of the sanitization here can be reused for rsoxs scans.  This then would get called in sanitizeAcquisitions.
+def sanitizeTimeScan(acquisition):
+    for indexParameter, parameter in enumerate(["energyListParameters", "polarizations"]):
+        if not (np.isnan(acquisition[parameter])
+                or isinstance(acquisition[parameter], (float, int))):
+            raise TypeError(str(parameter) + " must be a single number or left blank.")
+    
     return acquisition
 
 def sanitizeSpirals(acquisition):
+    if np.isnan(acquisition["spiralDimensions"]): acquisition["spiralDimensions"] = [0.3, 1.8, 1.8]
     if len(acquisition["spiralDimensions"]) != 3:
         raise ValueError("spiralDimensions must have 3 elements.")
     
     return acquisition
 
+def sanitizeNEXAFS(acquisition):
+    ## TODO: Most of the sanitization here can be reused for rsoxs scans.  This then would get called in sanitizeAcquisitions.
+    if np.isnan(acquisition["energyListParameters"]): acquisition["energyListParameters"] = "carbon_NEXAFS"
+    if isinstance(acquisition["energyListParameters"], (float, int)): acquisition["energyListParameters"] = (acquisition["energyListParameters"], acquisition["energyListParameters"], 0)
+    
+    if np.isnan(acquisition["polarizations"]): acquisition["polarizations"] = [0]
+
+    return acquisition
 
 ## TODO: Philosophical question: is dry running necessary if any errors can be captured through sanitization?
 ## It is still important to generate time estimates, but that could be separate.
