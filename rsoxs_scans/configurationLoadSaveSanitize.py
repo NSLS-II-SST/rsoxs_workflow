@@ -116,7 +116,8 @@ samplesParameters_Ints = [
     "sample_priority",
 ]
 
-def sanitizeSamples(configuration):
+def sanitizeSamples(configurationInput):
+    configuration = copy.deepcopy(configurationInput)
     for indexSample, sample in enumerate(copy.deepcopy(configuration)): ## Making a copy so that I am not changing the configuration that I am iterating over
         
         ## There were a couple options on how to handle this:
@@ -163,16 +164,19 @@ def sanitizeSamples(configuration):
 
         ## Sanitize location and acquisition history
         ## This is mostly copied from Eliot's code without much reorganization
-        if sample.get("location", "Not present") == "Not present":
+        if (copy.deepcopy(sample).get("location", "Not present") == "Not present"
+            or sample["location"] is None):
             configuration[indexSample]["location"] = "[]"
-        configuration[indexSample]["location"] = json.loads(sample.get("location", "[]").replace("'", '"'))
-        if sample.get("bar_loc", "Not present") == "Not present":
+        configuration[indexSample]["location"] = json.loads(copy.deepcopy(configuration[indexSample]).get("location", "[]").replace("'", '"'))
+        if (copy.deepcopy(sample).get("bar_loc", "Not present") == "Not present"
+            or sample["bar_loc"] is None):
             configuration[indexSample]["bar_loc"] = "{}" ## TODO: need a better name, such as location_relative.  bar_loc stores information from bar image and offset values.
-        configuration[indexSample]["bar_loc"] = json.loads(sample.get("bar_loc", "{}").replace("'", '"'))
-        if sample.get("acq_history", "Not present") == "Not present":
+        configuration[indexSample]["bar_loc"] = json.loads(copy.deepcopy(configuration[indexSample]).get("bar_loc", "{}").replace("'", '"'))
+        if (copy.deepcopy(sample).get("acq_history", "Not present") == "Not present"
+            or sample["acq_history"] is None):
             configuration[indexSample]["acq_history"] = "[]"
         configuration[indexSample]["acq_history"] = json.loads(
-            sample.get("acq_history", "[]").replace("'", '"').rstrip('\\"').lstrip('\\"')
+            copy.deepcopy(configuration[indexSample]).get("acq_history", "[]").replace("'", '"').rstrip('\\"').lstrip('\\"')
         )
 
         ## Grab proposal information from PASS.  Copied from Eliot's code.
@@ -340,7 +344,8 @@ def sanitizeAcquisitions(acquisitionsDict, configuration):
     
     return acquisitionsDict
 
-def sanitizeAcquisition(acquisition):
+def sanitizeAcquisition(acquisitionInput):
+    acquisition = copy.deepcopy(acquisitionInput)
     ## Sanitize general parameters
     for indexParameter, parameter in enumerate(list(acquisitionParameters_Default.keys())):
         if (copy.deepcopy(acquisition).get(parameter, "Not present") == "Not present"
@@ -349,6 +354,7 @@ def sanitizeAcquisition(acquisition):
             ):
             acquisition[parameter] = acquisitionParameters_Default[parameter]
     
+    if isinstance(acquisition["polarizations"], (int, float)): acquisition["polarizations"] = [acquisition["polarizations"]]
     ## Sanitize parameters for specific scan types
     if acquisition["scanType"]=="time": acquisition = sanitizeTimeScan(acquisition)
     if acquisition["scanType"]=="spiral": acquisition = sanitizeSpirals(acquisition)
@@ -362,7 +368,8 @@ def sanitizeAcquisition(acquisition):
 
     return acquisition
 
-def sanitizeTimeScan(acquisition):
+def sanitizeTimeScan(acquisitionInput):
+    acquisition = copy.deepcopy(acquisitionInput)
     parameter = "energyListParameters"
     if not (acquisition[parameter] is None
             or acquisition[parameter]==""
@@ -377,7 +384,8 @@ def sanitizeTimeScan(acquisition):
     
     return acquisition
 
-def sanitizeSpirals(acquisition):
+def sanitizeSpirals(acquisitionInput):
+    acquisition = copy.deepcopy(acquisitionInput)
     parameter = "energyListParameters"
     if not (acquisition[parameter] is None
             or isinstance(acquisition[parameter], (float, int))):
@@ -394,7 +402,8 @@ def sanitizeSpirals(acquisition):
     
     return acquisition
 
-def sanitizeNEXAFS(acquisition):
+def sanitizeNEXAFS(acquisitionInput):
+    acquisition = copy.deepcopy(acquisitionInput)
     ## TODO: Most of the sanitization here can be reused for rsoxs scans.  This then would get called in sanitizeAcquisitions.
     if acquisition["energyListParameters"] is None: acquisition["energyListParameters"] = "carbon_NEXAFS"
     if isinstance(acquisition["energyListParameters"], (float, int)): acquisition["energyListParameters"] = (acquisition["energyListParameters"], acquisition["energyListParameters"], 0)
@@ -421,7 +430,9 @@ def sortAcquisitionsQueue(acquisitions, sortBy=["priority"]):
     return queue
 
 
-def updateConfigurationWithAcquisition(configuration, acquisition):
+def updateConfigurationWithAcquisition(configurationInput, acquisitionInput):
+    configuration = copy.deepcopy(configurationInput)
+    acquisition = copy.deepcopy(acquisitionInput)
     ## When I run scans, I will be updating the acquireStatus among other things.  I want to feed the updated acquisition dictionary back into the main configuration
 
     for indexSample, sample in enumerate(copy.deepcopy(configuration)):

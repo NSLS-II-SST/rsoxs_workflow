@@ -10,4 +10,10 @@ energyListParameters = {
     "oxygen_NEXAFS":  (500, 525, 1.1, 540, 0.2, 560, 1.1), ## Intended to recreate edge=(500, 525, 540, 560), ratios=(5, 1, 5), frames=112
     "fluorine_NEXAFS":  (650, 680, 1.5, 700, 0.3, 740, 1.5), ## Intended to recreate edge=(650, 680, 700, 740), ratios=(5, 1, 5), frames=112
     "sulfurL_NEXAFS":  (150, 160, 0.8, 170, 0.15, 200, 0.8), ## Intended to recreate edge=(150, 160, 170, 200), ratios=(5, 1, 5), frames=112
+
+    "carbon_RSoXS":  (250, 270, 5, 282, 1, 287, 0.1, 292, 0.2, 305, 1, 350, 5), ## Intended to recreate edge=(250, 270, 282, 287, 292, 305, 350), ratios=(5, 1, 0.1, 0.2, 1, 5), frames=112
+    "nitrogen_RSoXS":  (380, 397, 0.3, 407, 0.1, 440, 0.3), ## Intended to recreate edge=(380, 397, 407, 440), ratios=(2, 0.2, 2), frames=112
+    "oxygen_RSoXS":  (510, 525, 1.65, 540, 0.15, 560, 1.65), ## Intended to recreate edge=(510, 525, 540, 560), ratios=(2, 0.2, 2), frames=112
 }
+
+#energies_eliot = get_energies(edge=[380, 397, 407, 440], ratios=[2, 0.2, 2], frames=112)
