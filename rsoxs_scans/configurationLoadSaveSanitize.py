@@ -3,6 +3,7 @@
 import os
 import numpy as np
 import pandas as pd
+import ast
 import copy
 import json
 import datetime
@@ -27,11 +28,13 @@ def loadConfigurationSpreadsheet_Local(filePath):
 
     ## Load list of samples and metadata, make a configuration dictionary, and sanitize
     samplesDF = pd.read_excel(filePath, sheet_name="Samples")
+    samplesDF = sanitizeSpreadsheet(samplesDF)
     configuration = samplesDF.to_dict(orient="records")
     configuration = sanitizeSamples(configuration)
 
     ## Load list of acquisitions, make a dictionary, and sanitize
     acquisitionsDF = pd.read_excel(filePath, sheet_name="Acquisitions")
+    acquisitionsDF = sanitizeSpreadsheet(acquisitionsDF)
     acquisitionsDict = acquisitionsDF.to_dict(orient="records")
     acquisitionsDict = sanitizeAcquisitions(acquisitionsDict, configuration)
     
@@ -43,31 +46,43 @@ def loadConfigurationSpreadsheet_Local(filePath):
     return configuration
 
 
+def sanitizeSpreadsheet(df):
+    ## These sanitizations are needed specifically if a configuration is loaded using a spreadsheet, but not if the configuration is entered directly into the terminal
+    
+    ## Blank cells are loaded as nan by default.  Replace with empty None.
+    df = df.replace({np.nan: None})
 
+    ## Lists, etc. will get imported as strings
+    for indexKey, key in enumerate(list((df.keys()))):
+        if key not in ("location", "bar_loc", "acq_history"):
+            try: df[key] = df[key].apply(ast.literal_eval)
+            except (ValueError, SyntaxError): pass
+        
+    return df
 
 
 
 ## TODO: For now, I am keeping Sample/Bar parameters exactly the same as how Eliot had them, but I would like to refactor these later on.
 sampleParameters_Empty = {
-    "bar_name": np.nan, ## TODO: Would like to eliminate in the future
-    "sample_id": np.nan, ## TODO: Would like to rename to sampleID
-    "sample_name": np.nan, ## TODO: Would like to eliminate and consolidate with sample_id
-    "project_name": np.nan,
-    "institution": np.nan,
-    "proposal_id": np.nan,
-    "bar_spot": np.nan,
-    "front": np.nan,
-    "grazing": np.nan,
-    "angle": np.nan, ## TODO: Would like to refactor so that there is a single angle definition
-    "height": np.nan, ## Required for now to get z offset
-    "sample_priority": np.nan, ## TODO: Would like to eliminate, becasue in practice, Acquisitions priority is what matters
-    "notes": np.nan,
-    "location": np.nan,
-    "bar_loc": np.nan,
-    "proposal": np.nan,
-    "SAF": np.nan,
-    "analysis_dir": np.nan,
-    "data_session": np.nan,
+    "bar_name": None, ## TODO: Would like to eliminate in the future
+    "sample_id": None, ## TODO: Would like to rename to sampleID
+    "sample_name": None, ## TODO: Would like to eliminate and consolidate with sample_id
+    "project_name": None,
+    "institution": None,
+    "proposal_id": None,
+    "bar_spot": None,
+    "front": None,
+    "grazing": None,
+    "angle": None, ## TODO: Would like to refactor so that there is a single angle definition
+    "height": None, ## Required for now to get z offset
+    "sample_priority": None, ## TODO: Would like to eliminate, becasue in practice, Acquisitions priority is what matters
+    "notes": None,
+    "location": None,
+    "bar_loc": None,
+    "proposal": None,
+    "SAF": None,
+    "analysis_dir": None,
+    "data_session": None,
 }
 samplesParameters_Required = [
     "bar_name", 
@@ -108,7 +123,12 @@ def sanitizeSamples(configuration):
         ## 1) Have a template, and make sure spreadsheets adhere exactly to that template.
         ## 2) Have some required parameters, but otherwise, users can have additional columns of their choosing.
         ## I am opting for option 2 becuase this way, users can decide what metadata matters to them and how they want to organize it.
-        
+        """
+        ## Convert nan to None
+        for indexParameter, parameter in enumerate(list(sample.keys())):
+            if isinstance(sample[parameter], float):
+                if np.isnan(sample[parameter]): configuration[indexSample][parameter] = None
+        """
         ## Check that required parameters exist
         ## For a spreadsheet, this would probably be more efficient to check once when the spreadsheet is loaded rather than one-by-one for each sample.  But it is good to have in case sample configuration is loaded as dictionary directly in Bluesky rather than using spreadsheet.
         for indexParameter, parameter in enumerate(samplesParameters_Required):
@@ -174,7 +194,7 @@ def sanitizeSamples(configuration):
 
         ## Adding in non-essential parameters so that they show up
         if sample.get("notes", "Not present") == "Not present": configuration[indexSample]["notes"] = ""
-        
+
     return configuration
 
 ## This is directly copied from Eliot's code
@@ -290,21 +310,21 @@ def get_proposal_info(proposal_id, beamline="SST1", path_base="/sst/", cycle=CUR
 ## TODO: not complete, add more sanitization here.  Check Eliot's code for anything I might want to add.
 ## TODO: import this into rsoxs scans and set those as defaults in the functions so that the defaults are decided in one root place
 acquisitionParameters_Default = {
-    "sample_id": np.nan,
-    "configurationInstrument": np.nan,
+    "sample_id": None,
+    "configurationInstrument": None,
     "scanType": "time",
-    "energyListParameters": np.nan,
+    "energyListParameters": None,
     "polarizationFrame": "lab",
-    "polarizations": np.nan,
+    "polarizations": None,
     "exposureTime": 1,
     "exposuresPerEnergy": 1,
     "sampleAngles": [0],
-    "spiralDimensions": np.nan, ## default for spirals is [0.3, 1.8, 1.8], [step_size, diameter_x, diameter_y], useful if our windows are rectangles, not squares
+    "spiralDimensions": None, ## default for spirals is [0.3, 1.8, 1.8], [step_size, diameter_x, diameter_y], useful if our windows are rectangles, not squares
     "groupName": "Group",
     "priority": 1,
     "acquireStatus": "",
-    "uid_Local": "", ## Intended so that I can store updates back into this same acquisition
-    "notes": "",
+    "uid_Local": None, ## Intended so that I can store updates back into this same acquisition
+    "notes": None,
 }
 ## TODO: would like a cycles-like parameter where I can sleep up and down in energy.  Lucas would want that.
 ## TODO: maybe name the above as acquisitionParameters_Blank and then have a different acquisitionParameters_Default with the default values that I would liek to enter into the scan functions
@@ -325,9 +345,9 @@ def sanitizeAcquisition(acquisition):
     for indexParameter, parameter in enumerate(list(acquisitionParameters_Default.keys())):
         if (copy.deepcopy(acquisition).get(parameter, "Not present") == "Not present"
             or acquisition[parameter] is None
-            or np.isnan(acquisition[parameter])):
+            #or acquisition[parameter]==""
+            ):
             acquisition[parameter] = acquisitionParameters_Default[parameter]
-
     
     ## Sanitize parameters for specific scan types
     if acquisition["scanType"]=="time": acquisition = sanitizeTimeScan(acquisition)
@@ -335,25 +355,40 @@ def sanitizeAcquisition(acquisition):
     if acquisition["scanType"]=="nexafs": acquisition = sanitizeNEXAFS(acquisition)
 
     ## Adding a local UID (not the same as Tiled's UID) so that I can identify this scan when I want to update it with data while it is running like acquireStatus
-    acquisition["uid_Local"] = uuid.uuid4()   
+    if (copy.deepcopy(acquisition).get("uid_Local", "Not present") == "Not present"
+            or acquisition["uid_Local"] is None
+            ):
+        acquisition["uid_Local"] = uuid.uuid4() 
 
     return acquisition
 
 def sanitizeTimeScan(acquisition):
-    for indexParameter, parameter in enumerate(["energyListParameters", "polarizations"]):
-        if not (np.isnan(acquisition[parameter])
-                or isinstance(acquisition[parameter], (float, int))):
+    parameter = "energyListParameters"
+    if not (acquisition[parameter] is None
+            or acquisition[parameter]==""
+            or isinstance(acquisition[parameter], (float, int))):
+        raise TypeError(str(parameter) + " must be a single number or left blank.")
+    parameter = "polarizations"
+    if not (acquisition[parameter] is None
+            or acquisition[parameter]==""
+            or isinstance(acquisition[parameter], (float, int))):
+        if len(acquisition[parameter]) != 1:
             raise TypeError(str(parameter) + " must be a single number or left blank.")
     
     return acquisition
 
 def sanitizeSpirals(acquisition):
-    for indexParameter, parameter in enumerate(["energyListParameters", "polarizations"]):
-        if not (np.isnan(acquisition[parameter])
-                or isinstance(acquisition[parameter], (float, int))):
+    parameter = "energyListParameters"
+    if not (acquisition[parameter] is None
+            or isinstance(acquisition[parameter], (float, int))):
+        raise TypeError(str(parameter) + " must be a single number or left blank.")
+    parameter = "polarizations"
+    if not (acquisition[parameter] is None
+            or isinstance(acquisition[parameter], (float, int))):
+        if len(acquisition[parameter]) != 1:
             raise TypeError(str(parameter) + " must be a single number or left blank.")
         
-    if np.isnan(acquisition["spiralDimensions"]): acquisition["spiralDimensions"] = [0.3, 1.8, 1.8]
+    if acquisition["spiralDimensions"] is None: acquisition["spiralDimensions"] = [0.3, 1.8, 1.8]
     if len(acquisition["spiralDimensions"]) != 3:
         raise ValueError("spiralDimensions must have 3 elements.")
     
@@ -361,13 +396,13 @@ def sanitizeSpirals(acquisition):
 
 def sanitizeNEXAFS(acquisition):
     ## TODO: Most of the sanitization here can be reused for rsoxs scans.  This then would get called in sanitizeAcquisitions.
-    if np.isnan(acquisition["energyListParameters"]): acquisition["energyListParameters"] = "carbon_NEXAFS"
+    if acquisition["energyListParameters"] is None: acquisition["energyListParameters"] = "carbon_NEXAFS"
     if isinstance(acquisition["energyListParameters"], (float, int)): acquisition["energyListParameters"] = (acquisition["energyListParameters"], acquisition["energyListParameters"], 0)
     if isinstance(acquisition["energyListParameters"], str):
         if acquisition["energyListParameters"] not in list(energyListParameters.keys()):
             raise ValueError("Please enter valid energy plan.") 
 
-    if np.isnan(acquisition["polarizations"]): acquisition["polarizations"] = [0]
+    if acquisition["polarizations"] is None: acquisition["polarizations"] = [0]
 
     return acquisition
 
@@ -389,7 +424,7 @@ def sortAcquisitionsQueue(acquisitions, sortBy=["priority"]):
 def updateConfigurationWithAcquisition(configuration, acquisition):
     ## When I run scans, I will be updating the acquireStatus among other things.  I want to feed the updated acquisition dictionary back into the main configuration
 
-    for indexSample, sample in enumerate(configuration):
+    for indexSample, sample in enumerate(copy.deepcopy(configuration)):
         if sample["sample_id"] == acquisition["sample_id"]: 
             configurationUpdated = False
             for indexAcquisitionExisting, acquisitionExisting in enumerate(configuration[indexSample]["acquisitions"]):
@@ -419,22 +454,23 @@ def saveConfigurationSpreadsheet_Local(configuration, filePath, fileLabel=""):
     ## Take acquisitions from the configuration and gather into a list of dictionaries to save as separate Acquisitions sheet
     ## If the parameters are not transferred to the template dictionary, they might show up in a different order in the spreadsheet.
     ## Then delete ["acquisitions"] key from each sample
-    acquisitions_ToExport = gatherAcquisitionsFromConfiguration(configuration)
-    for indexSample, sample in enumerate(copy.deepcopy(configuration)):
-        del configuration[indexSample]["acquisitions"]
+    configurationCopy = copy.deepcopy(configuration)
+    acquisitions_ToExport = gatherAcquisitionsFromConfiguration(configurationCopy)
+    for indexSample, sample in enumerate(copy.deepcopy(configurationCopy)):
+        del configurationCopy[indexSample]["acquisitions"]
     
     ## Organize sample parameters into the correct order
     samples_ToExport = []
-    for indexSample, sample in enumerate(copy.deepcopy(configuration)):
+    for indexSample, sample in enumerate(copy.deepcopy(configurationCopy)):
         sample_ToExport = copy.deepcopy(sampleParameters_Empty)
         ## Copy over core parameters
         for indexParameter, parameter in enumerate(list(sampleParameters_Empty.keys())):
-            if sample.get(parameter, "Not present") == "Not present": sample_ToExport[parameter] = np.nan
+            if sample.get(parameter, "Not present") == "Not present": sample_ToExport[parameter] = None
             else: sample_ToExport[parameter] = sample[parameter]
         ## Copy over extra parameters that users may have defined beyond my codebase
         extraParameters = set(sample.keys()) - set(sampleParameters_Empty.keys())
         for indexParameter, parameter in enumerate(extraParameters):
-            if sample.get(parameter, "Not present") == "Not present": sample_ToExport[parameter] = np.nan
+            if sample.get(parameter, "Not present") == "Not present": sample_ToExport[parameter] = None
             else: sample_ToExport[parameter] = sample[parameter]
         samples_ToExport.append(sample_ToExport)
     
@@ -453,12 +489,13 @@ def saveConfigurationSpreadsheet_Local(configuration, filePath, fileLabel=""):
     writer.close()
 
 def gatherAcquisitionsFromConfiguration(configuration):
+    ## TODO: This function still requires troubleshooting.  See 20250210 notes.  Oftentimes, but not always, this function changes the UIDs of the scans
     acquisitions_ToGather = []
-    acquisition_ToGather = copy.deepcopy(acquisitionParameters_Default)
     for indexSample, sample in enumerate(copy.deepcopy(configuration)):
         for indexAcquisition, acquisition in enumerate(sample["acquisitions"]):
+            acquisition_ToGather = copy.deepcopy(acquisitionParameters_Default) ## Need to define here rather than outside loop or else a shallow copy gets overwritten and makes duplicates of the last acquisition
             for indexParameter, parameter in enumerate(list(acquisitionParameters_Default.keys())):
-                if acquisition.get(parameter, "Not present") == "Not present": acquisition_ToGather[parameter] = np.nan
+                if acquisition.get(parameter, "Not present") == "Not present": acquisition_ToGather[parameter] = None
                 else: acquisition_ToGather[parameter] = acquisition[parameter]
             acquisitions_ToGather.append(acquisition_ToGather)
     return acquisitions_ToGather
