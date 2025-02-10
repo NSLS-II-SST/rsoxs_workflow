@@ -7,6 +7,7 @@ import copy
 import json
 import datetime
 import re, warnings, httpx
+import uuid
 from .defaults import (
     CURRENT_CYCLE,
 )
@@ -35,8 +36,7 @@ def loadConfigurationSpreadsheet_Local(filePath):
     
     ## Store acquisitions into its respective sample dictionary.  Consider making this a separate function so that dictionaries written directly in Bluesky can be fed into this function.
     for indexAcquisition, acquisition in enumerate(acquisitionsDict):
-        for indexSample, sample in enumerate(configuration):
-            if sample["sample_id"] == acquisition["sample_id"]: configuration[indexSample]["acquisitions"].append(acquisition)
+        configuration = updateConfigurationWithAcquisition(configuration, acquisition)
 
     
     return configuration
@@ -302,6 +302,7 @@ acquisitionParameters_Default = {
     "groupName": "Group",
     "priority": 1,
     "acquireStatus": "",
+    "uid_Local": "", ## Intended so that I can store updates back into this same acquisition
     "notes": "",
 }
 ## TODO: would like a cycles-like parameter where I can sleep up and down in energy.  Lucas would want that.
@@ -326,11 +327,14 @@ def sanitizeAcquisition(acquisition):
             or np.isnan(acquisition[parameter])):
             acquisition[parameter] = acquisitionParameters_Default[parameter]
 
+    
     ## Sanitize parameters for specific scan types
     if acquisition["scanType"]=="time": acquisition = sanitizeTimeScan(acquisition)
     if acquisition["scanType"]=="spiral": acquisition = sanitizeSpirals(acquisition)
     if acquisition["scanType"]=="nexafs": acquisition = sanitizeNEXAFS(acquisition)
-        
+
+    ## Adding a local UID (not the same as Tiled's UID) so that I can identify this scan when I want to update it with data while it is running like acquireStatus
+    acquisition["uid_Local"] = uuid.uuid4()   
 
     return acquisition
 
@@ -343,6 +347,11 @@ def sanitizeTimeScan(acquisition):
     return acquisition
 
 def sanitizeSpirals(acquisition):
+    for indexParameter, parameter in enumerate(["energyListParameters", "polarizations"]):
+        if not (np.isnan(acquisition[parameter])
+                or isinstance(acquisition[parameter], (float, int))):
+            raise TypeError(str(parameter) + " must be a single number or left blank.")
+        
     if np.isnan(acquisition["spiralDimensions"]): acquisition["spiralDimensions"] = [0.3, 1.8, 1.8]
     if len(acquisition["spiralDimensions"]) != 3:
         raise ValueError("spiralDimensions must have 3 elements.")
@@ -362,10 +371,34 @@ def sanitizeNEXAFS(acquisition):
 ## It is still important to generate time estimates, but that could be separate.
 ## One of the features of dry running in the old code was that it could indicate if something might fall out of a motor range.  But if that is documented and hard-coded and sanitized here, that might be better?
 
+def sortAcquisitionsQueue(acquisitions, sortBy=["priority"]):
+    queue = []
+    for indexAcquisition, acquisition in enumerate(copy.deepcopy(acquisitions)):
+        if "Finished" not in acquisition["acquireStatus"]: queue.append(acquisition)
+
+    for indexSortingCriterion, sortingCriterion in enumerate(sortBy):
+        if sortingCriterion == "priority": queue = sorted(queue, key=lambda x: x["priority"])
+
+    return queue
 
 
+def updateConfigurationWithAcquisition(configuration, acquisition):
+    ## When I run scans, I will be updating the acquireStatus among other things.  I want to feed the updated acquisition dictionary back into the main configuration
 
+    for indexSample, sample in enumerate(configuration):
+        if sample["sample_id"] == acquisition["sample_id"]: 
+            configurationUpdated = False
+            for indexAcquisitionExisting, acquisitionExisting in enumerate(configuration[indexSample]["acquisitions"]):
+                ## If there already is an acquisition with the same uid_Local, update that acquisition
+                if acquisitionExisting["uid_Local"] == acquisition["uid_Local"]: 
+                    configuration[indexSample]["acquisitions"][indexAcquisitionExisting] = acquisition
+                    configurationUpdated = True
+                    break
+            ## If this acquisition does not exist in the configuration, add it to the list
+            if not configurationUpdated: configuration[indexSample]["acquisitions"].append(acquisition)
+            break
 
+    return configuration
 
 
 
