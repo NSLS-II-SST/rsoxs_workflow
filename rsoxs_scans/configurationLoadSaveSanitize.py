@@ -11,6 +11,7 @@ import uuid
 from .defaults import (
     CURRENT_CYCLE,
 )
+from rsoxs_scans.defaultEnergyParameters import energyListParameters
 
 
 
@@ -362,7 +363,10 @@ def sanitizeNEXAFS(acquisition):
     ## TODO: Most of the sanitization here can be reused for rsoxs scans.  This then would get called in sanitizeAcquisitions.
     if np.isnan(acquisition["energyListParameters"]): acquisition["energyListParameters"] = "carbon_NEXAFS"
     if isinstance(acquisition["energyListParameters"], (float, int)): acquisition["energyListParameters"] = (acquisition["energyListParameters"], acquisition["energyListParameters"], 0)
-    
+    if isinstance(acquisition["energyListParameters"], str):
+        if acquisition["energyListParameters"] not in list(energyListParameters.keys()):
+            raise ValueError("Please enter valid energy plan.") 
+
     if np.isnan(acquisition["polarizations"]): acquisition["polarizations"] = [0]
 
     return acquisition
