@@ -56,7 +56,7 @@ def sanitizeSpreadsheet(df):
     pandas.DataFrame
         Sanitized DataFrame
     """
-    # Replace NaN with None
+     ## Blank cells are loaded as nan by default.  Replace with empty None.
     df = df.replace({np.nan: None})
 
     # Define type conversion functions
