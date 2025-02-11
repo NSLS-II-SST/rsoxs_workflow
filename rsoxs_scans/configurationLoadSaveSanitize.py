@@ -66,6 +66,7 @@ def sanitizeSpreadsheet(df):
         if isinstance(val, (bool, int, float)):
             return val
         try:
+            ## Lists, etc. will get imported as strings, so need to convert to the intended data type.
             # Handle string representations of Python literals
             return ast.literal_eval(str(val))
         except (ValueError, SyntaxError) as e:
