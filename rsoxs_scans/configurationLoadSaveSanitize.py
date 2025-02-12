@@ -333,16 +333,18 @@ acquisitionParameters_Default = {
 ## TODO: would like a cycles-like parameter where I can sleep up and down in energy.  Lucas would want that.
 ## TODO: maybe name the above as acquisitionParameters_Blank and then have a different acquisitionParameters_Default with the default values that I would liek to enter into the scan functions
 
-def sanitizeAcquisitions(acquisitionsDict, configuration):
+def sanitizeAcquisitions(acquisitionsInput, configuration):
+    acquisitions = copy.deepcopy(acquisitionsInput)
+
     sampleIDs = [sample["sample_id"] for sample in configuration]
 
-    for indexAcquisition, acquisition in enumerate(copy.deepcopy(acquisitionsDict)):
+    for indexAcquisition, acquisition in enumerate(copy.deepcopy(acquisitions)):
         if acquisition["sample_id"] not in sampleIDs:
             raise ValueError("sample_id " + str(acquisition["sample_id"]) + " in Acquisitions row " + str(indexAcquisition) + " was not found in Samples list")
         
-        acquisitionsDict[indexAcquisition] = sanitizeAcquisition(acquisition)
+        acquisitions[indexAcquisition] = sanitizeAcquisition(acquisition)
     
-    return acquisitionsDict
+    return acquisitions
 
 def sanitizeAcquisition(acquisitionInput):
     acquisition = copy.deepcopy(acquisitionInput)
