@@ -9,10 +9,11 @@ import json
 import datetime
 import re, warnings, httpx
 import uuid
-from .defaults import (
-    CURRENT_CYCLE,
-)
+
 from rsoxs_scans.defaultEnergyParameters import energyListParameters
+
+
+CURRENT_CYCLE = '2025-1' ## Currently, this needs to be changed manually at the beginning of each cycle.
 
 
 def loadConfigurationSpreadsheet_Local(filePath):
@@ -56,9 +57,7 @@ def sanitizeSpreadsheet(df):
     pandas.DataFrame
         Sanitized DataFrame
     """
-     ## Blank cells are loaded as nan by default.  Replace with empty None.
-    df = df.replace({np.nan: None})
-
+    
     # Define type conversion functions
     def safe_eval(val):
         if val is None:
@@ -79,7 +78,7 @@ def sanitizeSpreadsheet(df):
         "location",
         "bar_loc",
         "acq_history",
-        "acquireStatus",
+        "acquire_status",
         "sample_id",
         "sample_name",
         "sample_state",
@@ -87,11 +86,11 @@ def sanitizeSpreadsheet(df):
         "project_name",
         "project_desc",
         "institution",
-        "configurationInstrument",
-        "scanType",
-        "polarizationFrame",
-        "groupName",
-        "uid_Local",
+        "configuration_instrument",
+        "scan_type",
+        "polarization_frame",
+        "group_name",
+        "uid_local",
         "notes",
         "proposal_id",
         "bar_spot",
@@ -112,7 +111,12 @@ def sanitizeSpreadsheet(df):
         except Exception as e:
             print(f"Error processing column {column}: {e}")
             continue
-
+    
+    
+    ## Blank cells are loaded as nan by default.  Replace with None.
+    ## Need this line at the end rather than the beginning because the above sanitization somehow turns None back into NaN
+    df = df.replace({np.nan: None})
+    
     return df
 
 
@@ -382,19 +386,19 @@ def get_proposal_info(proposal_id, beamline="SST1", path_base="/sst/", cycle=CUR
 ## TODO: import this into rsoxs scans and set those as defaults in the functions so that the defaults are decided in one root place
 acquisitionParameters_Default = {
     "sample_id": None,
-    "configurationInstrument": None,
-    "scanType": "time",
-    "energyListParameters": None,
-    "polarizationFrame": "lab",
+    "configuration_instrument": None,
+    "scan_type": "time",
+    "energy_list_parameters": None,
+    "polarization_frame": "lab",
     "polarizations": None,
-    "exposureTime": 1,
-    "exposuresPerEnergy": 1,
-    "sampleAngles": [0],
-    "spiralDimensions": None,  ## default for spirals is [0.3, 1.8, 1.8], [step_size, diameter_x, diameter_y], useful if our windows are rectangles, not squares
-    "groupName": "Group",
+    "exposure_time": 1,
+    "exposures_per_energy": 1,
+    "sample_angles": [0],
+    "spiral_dimensions": None,  ## default for spirals is [0.3, 1.8, 1.8], [step_size, diameter_x, diameter_y], useful if our windows are rectangles, not squares
+    "group_name": "Group",
     "priority": 1,
-    "acquireStatus": "",
-    "uid_Local": None,  ## Intended so that I can store updates back into this same acquisition
+    "acquire_status": "Not begun",
+    "uid_local": None,  ## Intended so that I can store updates back into this same acquisition
     "notes": None,
 }
 ## TODO: would like a cycles-like parameter where I can sleep up and down in energy.  Lucas would want that.
@@ -424,30 +428,32 @@ def sanitizeAcquisition(acquisitionInput):
             # or acquisition[parameter]==""
         ):
             acquisition[parameter] = acquisitionParameters_Default[parameter]
+    
 
     if isinstance(acquisition["polarizations"], (int, float)):
         acquisition["polarizations"] = [acquisition["polarizations"]]
+    acquisition["exposures_per_energy"] = int(acquisition["exposures_per_energy"])
     ## Sanitize parameters for specific scan types
-    if acquisition["scanType"] == "time":
+    if acquisition["scan_type"] in ("time", "time2D"):
         acquisition = sanitizeTimeScan(acquisition)
-    if acquisition["scanType"] == "spiral":
+    if acquisition["scan_type"] == "spiral":
         acquisition = sanitizeSpirals(acquisition)
-    if acquisition["scanType"] == "nexafs":
-        acquisition = sanitizeNEXAFS(acquisition)
+    if acquisition["scan_type"] in ("nexafs", "rsoxs"):
+        acquisition = sanitizeEnergyScan(acquisition)
 
     ## Adding a local UID (not the same as Tiled's UID) so that I can identify this scan when I want to update it with data while it is running like acquireStatus
     if (
-        copy.deepcopy(acquisition).get("uid_Local", "Not present") == "Not present"
-        or acquisition["uid_Local"] is None
+        copy.deepcopy(acquisition).get("uid_local", "Not present") == "Not present"
+        or acquisition["uid_local"] is None
     ):
-        acquisition["uid_Local"] = uuid.uuid4()
+        acquisition["uid_local"] = uuid.uuid4()
 
     return acquisition
 
 
 def sanitizeTimeScan(acquisitionInput):
     acquisition = copy.deepcopy(acquisitionInput)
-    parameter = "energyListParameters"
+    parameter = "energy_list_parameters"
     if not (
         acquisition[parameter] is None
         or acquisition[parameter] == ""
@@ -468,7 +474,7 @@ def sanitizeTimeScan(acquisitionInput):
 
 def sanitizeSpirals(acquisitionInput):
     acquisition = copy.deepcopy(acquisitionInput)
-    parameter = "energyListParameters"
+    parameter = "energy_list_parameters"
     if not (acquisition[parameter] is None or isinstance(acquisition[parameter], (float, int))):
         raise TypeError(str(parameter) + " must be a single number or left blank.")
     parameter = "polarizations"
@@ -476,29 +482,30 @@ def sanitizeSpirals(acquisitionInput):
         if len(acquisition[parameter]) != 1:
             raise TypeError(str(parameter) + " must be a single number or left blank.")
 
-    if acquisition["spiralDimensions"] is None:
-        acquisition["spiralDimensions"] = [0.3, 1.8, 1.8]
-    if len(acquisition["spiralDimensions"]) != 3:
+    if acquisition["spiral_dimensions"] is None:
+        acquisition["spiral_dimensions"] = [0.3, 1.8, 1.8]
+    if len(acquisition["spiral_dimensions"]) != 3:
         raise ValueError(
-            f"spiralDimensions must have 3 elements, got {acquisition['spiralDimensions']} with length {len(acquisition['spiralDimensions'])}"
+            f"spiral_dimensions must have 3 elements, got {acquisition['spiral_dimensions']} with length {len(acquisition['spiral_dimensions'])}"
         )
 
     return acquisition
 
 
-def sanitizeNEXAFS(acquisitionInput):
+def sanitizeEnergyScan(acquisitionInput):
     acquisition = copy.deepcopy(acquisitionInput)
     ## TODO: Most of the sanitization here can be reused for rsoxs scans.  This then would get called in sanitizeAcquisitions.
-    if acquisition["energyListParameters"] is None:
-        acquisition["energyListParameters"] = "carbon_NEXAFS"
-    if isinstance(acquisition["energyListParameters"], (float, int)):
-        acquisition["energyListParameters"] = (
-            acquisition["energyListParameters"],
-            acquisition["energyListParameters"],
+    parameter = "energy_list_parameters"
+    if acquisition[parameter] is None:
+        acquisition[parameter] = "carbon_NEXAFS"
+    if isinstance(acquisition[parameter], (float, int)):
+        acquisition[parameter] = (
+            acquisition[parameter],
+            acquisition[parameter],
             0,
         )
-    if isinstance(acquisition["energyListParameters"], str):
-        if acquisition["energyListParameters"] not in list(energyListParameters.keys()):
+    if isinstance(acquisition[parameter], str):
+        if acquisition[parameter] not in list(energyListParameters.keys()):
             raise ValueError("Please enter valid energy plan.")
 
     if acquisition["polarizations"] is None:
@@ -515,7 +522,7 @@ def sanitizeNEXAFS(acquisitionInput):
 def sortAcquisitionsQueue(acquisitions, sortBy=["priority"]):
     queue = []
     for indexAcquisition, acquisition in enumerate(copy.deepcopy(acquisitions)):
-        if "Finished" not in acquisition["acquireStatus"]:
+        if "Finished" not in acquisition["acquire_status"]:
             queue.append(acquisition)
 
     for indexSortingCriterion, sortingCriterion in enumerate(sortBy):
@@ -537,7 +544,7 @@ def updateConfigurationWithAcquisition(configurationInput, acquisitionInput):
                 configuration[indexSample]["acquisitions"]
             ):
                 ## If there already is an acquisition with the same uid_Local, update that acquisition
-                if acquisitionExisting["uid_Local"] == acquisition["uid_Local"]:
+                if acquisitionExisting["uid_local"] == acquisition["uid_local"]:
                     configuration[indexSample]["acquisitions"][indexAcquisitionExisting] = acquisition
                     configurationUpdated = True
                     break
