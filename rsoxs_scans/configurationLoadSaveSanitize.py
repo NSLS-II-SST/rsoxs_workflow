@@ -442,10 +442,33 @@ def sanitizeAcquisition(acquisitionInput):
     parameterName = "polarization_frame"
     if acquisition[parameterName] not in ("lab", "sample"): raise ValueError("Please enter valid " + str(parameterName))
 
-    parameterName = "polarizations"
-    if isinstance(acquisition[parameterName], (int, float)):
-        acquisition[parameterName] = [acquisition[parameterName]]
-    acquisition["exposures_per_energy"] = int(acquisition["exposures_per_energy"])
+    for parameterName in ["polarizations", "sample_angles"]:
+        if isinstance(acquisition[parameterName], (int, float)):
+            acquisition[parameterName] = [acquisition[parameterName]]
+        elif acquisition[parameterName] is not None:
+            if not isinstance(acquisition[parameterName], (list, tuple)): raise ValueError("Please enter valid " + str(parameterName))
+            else:
+                for angle in acquisition[parameterName]:
+                    if parameterName == "polarizations" and (acquisition[parameterName] is not None):
+                        if not (angle == -1
+                                or (0 <= angle <= 180)):
+                            raise ValueError("Please enter valid " + str(parameterName))
+                    if parameterName == "sample_angles":
+                        temp = 0 ## TODO: replace placeholder with something meaningful
+                        ## TODO: need better way to deal with Sample tab entries.  Probably need to have configuration as an input
+                        ## TODO: on a broader level, probably want to remove angle from bar entry and only have it in acquisitions
+                
+    
+    parameterName = "exposure_time"
+    if not isinstance(acquisition[parameterName], (int, float)): raise TypeError(str(parameterName) + " must be a single number.")
+    elif acquisition[parameterName] < 0.001 or acquisition[parameterName] > 10: raise ValueError(str(parameterName) + " must be between 0.001 and 10 s.")
+
+    parameterName = "exposures_per_energy"
+    acquisition[parameterName] = int(acquisition[parameterName])
+
+    parameterName = "priority"
+    if not isinstance(acquisition[parameterName], (int, float)): raise TypeError(str(parameterName) + " must be an integer.")
+    
     
     ## Sanitize parameters for specific scan types
     parameterName = "scan_type"
@@ -476,14 +499,6 @@ def sanitizeTimeScan(acquisitionInput):
         or isinstance(acquisition[parameter], (float, int))
     ):
         raise TypeError(str(parameter) + " must be a single number or left blank.")
-    parameter = "polarizations"
-    if not (
-        acquisition[parameter] is None
-        or acquisition[parameter] == ""
-        or isinstance(acquisition[parameter], (float, int))
-    ):
-        if len(acquisition[parameter]) != 1:
-            raise TypeError(str(parameter) + " must be a single number or left blank.")
 
     return acquisition
 
@@ -491,18 +506,18 @@ def sanitizeTimeScan(acquisitionInput):
 def sanitizeSpirals(acquisitionInput):
     acquisition = copy.deepcopy(acquisitionInput)
     parameter = "energy_list_parameters"
-    if not (acquisition[parameter] is None or isinstance(acquisition[parameter], (float, int))):
+    if not (acquisition[parameter] is None 
+            or isinstance(acquisition[parameter], (float, int))):
         raise TypeError(str(parameter) + " must be a single number or left blank.")
-    parameter = "polarizations"
-    if not (acquisition[parameter] is None or isinstance(acquisition[parameter], (float, int))):
-        if len(acquisition[parameter]) != 1:
-            raise TypeError(str(parameter) + " must be a single number or left blank.")
 
-    if acquisition["spiral_dimensions"] is None:
-        acquisition["spiral_dimensions"] = [0.3, 1.8, 1.8]
-    if len(acquisition["spiral_dimensions"]) != 3:
+    parameterName = "spiral_dimensions"
+    if acquisition[parameterName] is None:
+        acquisition[parameterName] = [0.3, 1.8, 1.8]
+    elif not isinstance(acquisition[parameterName], (list, tuple)):
+        raise TypeError(str(parameterName) + " must be a list.")
+    elif len(acquisition[parameterName]) != 3:
         raise ValueError(
-            f"spiral_dimensions must have 3 elements, got {acquisition['spiral_dimensions']} with length {len(acquisition['spiral_dimensions'])}"
+            f"spiral_dimensions must have 3 elements, got {acquisition[parameterName]} with length {len(acquisition[parameterName])}"
         )
 
     return acquisition
@@ -511,21 +526,17 @@ def sanitizeSpirals(acquisitionInput):
 def sanitizeEnergyScan(acquisitionInput):
     acquisition = copy.deepcopy(acquisitionInput)
     ## TODO: Most of the sanitization here can be reused for rsoxs scans.  This then would get called in sanitizeAcquisitions.
-    parameter = "energy_list_parameters"
-    if acquisition[parameter] is None:
-        acquisition[parameter] = "carbon_NEXAFS"
-    if isinstance(acquisition[parameter], (float, int)):
-        acquisition[parameter] = (
-            acquisition[parameter],
-            acquisition[parameter],
+    parameterName = "energy_list_parameters"
+    if acquisition[parameterName] is None: raise ValueError("Please enter valid " + str(parameterName))
+    if isinstance(acquisition[parameterName], (float, int)):
+        acquisition[parameterName] = (
+            acquisition[parameterName],
+            acquisition[parameterName],
             0,
         )
-    if isinstance(acquisition[parameter], str):
-        if acquisition[parameter] not in list(energyListParameters.keys()):
+    if isinstance(acquisition[parameterName], str):
+        if acquisition[parameterName] not in list(energyListParameters.keys()):
             raise ValueError("Please enter valid energy plan.")
-
-    if acquisition["polarizations"] is None:
-        acquisition["polarizations"] = [0]
 
     return acquisition
 
