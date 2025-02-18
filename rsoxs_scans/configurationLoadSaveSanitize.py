@@ -386,8 +386,8 @@ def get_proposal_info(proposal_id, beamline="SST1", path_base="/sst/", cycle=CUR
 ## TODO: import this into rsoxs scans and set those as defaults in the functions so that the defaults are decided in one root place
 acquisitionParameters_Default = {
     "sample_id": None,
-    "configuration_instrument": None,
-    "scan_type": "time",
+    "configuration_instrument": "",
+    "scan_type": "",
     "energy_list_parameters": None,
     "polarization_frame": "lab",
     "polarizations": None,
@@ -430,16 +430,32 @@ def sanitizeAcquisition(acquisitionInput):
             acquisition[parameter] = acquisitionParameters_Default[parameter]
     
 
-    if isinstance(acquisition["polarizations"], (int, float)):
-        acquisition["polarizations"] = [acquisition["polarizations"]]
+    ## TODO: would like to find a way to automate configurations list
+    parameterName = "configuration_instrument"
+    if acquisition[parameterName] not in ("NoBeam",
+                                        "WAXS_OpenBeamImages",
+                                        "WAXSNEXAFS",
+                                        "WAXS",
+                                        ):
+        raise ValueError("Please enter valid " + str(parameterName))
+
+    parameterName = "polarization_frame"
+    if acquisition[parameterName] not in ("lab", "sample"): raise ValueError("Please enter valid " + str(parameterName))
+
+    parameterName = "polarizations"
+    if isinstance(acquisition[parameterName], (int, float)):
+        acquisition[parameterName] = [acquisition[parameterName]]
     acquisition["exposures_per_energy"] = int(acquisition["exposures_per_energy"])
+    
     ## Sanitize parameters for specific scan types
-    if acquisition["scan_type"] in ("time", "time2D"):
+    parameterName = "scan_type"
+    if acquisition[parameterName] in ("time", "time2D"):
         acquisition = sanitizeTimeScan(acquisition)
-    if acquisition["scan_type"] == "spiral":
+    elif acquisition[parameterName] == "spiral":
         acquisition = sanitizeSpirals(acquisition)
-    if acquisition["scan_type"] in ("nexafs", "rsoxs"):
+    elif acquisition[parameterName] in ("nexafs", "rsoxs"):
         acquisition = sanitizeEnergyScan(acquisition)
+    else: raise ValueError("Please enter valid " + str(parameterName))
 
     ## Adding a local UID (not the same as Tiled's UID) so that I can identify this scan when I want to update it with data while it is running like acquireStatus
     if (
