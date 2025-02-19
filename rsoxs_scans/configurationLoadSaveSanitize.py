@@ -74,6 +74,7 @@ def sanitizeSpreadsheet(df):
             return val
 
     # List of columns that should remain as strings
+    ## TODO: energy_list_parameters is sometimes a string or sometimes a list.  Figure out a way to handle that.
     string_columns = [
         "location",
         "bar_loc",
