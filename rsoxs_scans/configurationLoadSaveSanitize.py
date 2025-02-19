@@ -415,6 +415,7 @@ def sanitizeAcquisitions(acquisitionsInput, configuration):
         
         acquisitions[indexAcquisition] = sanitizeAcquisition(acquisition)
     
+
     return acquisitions
 
 
@@ -630,7 +631,7 @@ def saveConfigurationSpreadsheet_Local(configuration, filePath, fileLabel=""):
 
 
 def gatherAcquisitionsFromConfiguration(configuration):
-    ## TODO: This function still requires troubleshooting.  See 20250210 notes.  Oftentimes, but not always, this function changes the UIDs of the scans
+    
     acquisitions_ToGather = []
     for indexSample, sample in enumerate(copy.deepcopy(configuration)):
         for indexAcquisition, acquisition in enumerate(sample["acquisitions"]):
@@ -643,4 +644,6 @@ def gatherAcquisitionsFromConfiguration(configuration):
                 else:
                     acquisition_ToGather[parameter] = acquisition[parameter]
             acquisitions_ToGather.append(acquisition_ToGather)
+    
+    
     return acquisitions_ToGather
