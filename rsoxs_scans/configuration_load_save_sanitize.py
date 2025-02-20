@@ -551,6 +551,7 @@ def sanitizeEnergyScan(acquisitionInput):
 def sortAcquisitionsQueue(acquisitions, sortBy=["priority"]):
     queue = []
     for indexAcquisition, acquisition in enumerate(copy.deepcopy(acquisitions)):
+        ## Acquisitions that should not be added to queue
         if "Finished" in acquisition["acquire_status"]: continue ## Don't rerun scans that are completed.
         if acquisition["scan_type"] == "spiral":
             ## If a good spot is found before the spiral scan is complete, can pause the queue.  Once the queue is resumed, a started spiral scan will get skipped.
