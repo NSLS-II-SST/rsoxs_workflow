@@ -16,7 +16,7 @@ from rsoxs_scans.defaultEnergyParameters import energyListParameters
 CURRENT_CYCLE = '2025-1' ## Currently, this needs to be changed manually at the beginning of each cycle.
 
 
-def loadConfigurationSpreadsheet_Local(filePath):
+def load_configuration_spreadsheet_local(file_path):
     ## TODO: use natsort to get things in order of bar location
 
     ## The following are items that were present in Eliot's spreadsheet loader, but I might not keep going forward.
@@ -25,13 +25,13 @@ def loadConfigurationSpreadsheet_Local(filePath):
     ## Most probably getting rid of the Parameter/Index
 
     ## Load list of samples and metadata, make a configuration dictionary, and sanitize
-    samplesDF = pd.read_excel(filePath, sheet_name="Samples")
+    samplesDF = pd.read_excel(file_path, sheet_name="Samples")
     samplesDF = sanitizeSpreadsheet(samplesDF)
     configuration = samplesDF.to_dict(orient="records")
     configuration = sanitizeSamples(configuration)
 
     ## Load list of acquisitions, make a dictionary, and sanitize
-    acquisitionsDF = pd.read_excel(filePath, sheet_name="Acquisitions")
+    acquisitionsDF = pd.read_excel(file_path, sheet_name="Acquisitions")
     acquisitionsDF = sanitizeSpreadsheet(acquisitionsDF)
     acquisitionsDict = acquisitionsDF.to_dict(orient="records")
     acquisitionsDict = sanitizeAcquisitions(acquisitionsDict, configuration)
@@ -551,8 +551,12 @@ def sanitizeEnergyScan(acquisitionInput):
 def sortAcquisitionsQueue(acquisitions, sortBy=["priority"]):
     queue = []
     for indexAcquisition, acquisition in enumerate(copy.deepcopy(acquisitions)):
-        if "Finished" not in acquisition["acquire_status"]:
-            queue.append(acquisition)
+        if "Finished" in acquisition["acquire_status"]: continue ## Don't rerun scans that are completed.
+        if acquisition["scan_type"] == "spiral":
+            ## If a good spot is found before the spiral scan is complete, can pause the queue.  Once the queue is resumed, a started spiral scan will get skipped.
+            if "Started" in acquisition["acquire_status"]: continue
+        
+        queue.append(acquisition)
 
     for indexSortingCriterion, sortingCriterion in enumerate(sortBy):
         if sortingCriterion == "priority":
@@ -585,7 +589,7 @@ def updateConfigurationWithAcquisition(configurationInput, acquisitionInput):
     return configuration
 
 
-def saveConfigurationSpreadsheet_Local(configuration, filePath, fileLabel=""):
+def save_configuration_spreadsheet_local(configuration, file_path, file_label=""):
 
     ## TODO: undecided if I want to sanitize anything here or just faithfully save what is in rsoxs_config and can let load_sheet deal with all sanitization
     ## I think probably erring on the side of less sanitization here is better so that users can save something and investivate what might be the issue.
@@ -621,11 +625,11 @@ def saveConfigurationSpreadsheet_Local(configuration, filePath, fileLabel=""):
 
     ## Export file
     timeStamp = datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
-    fileName = "out_" + str(timeStamp) + "_" + str(fileLabel) + ".xlsx"
+    fileName = "out_" + str(timeStamp) + "_" + str(file_label) + ".xlsx"
     acquisitions_ToExport_df = pd.DataFrame.from_dict(acquisitions_ToExport, orient="columns")
     samples_ToExport_df = pd.DataFrame.from_dict(samples_ToExport, orient="columns")
 
-    writer = pd.ExcelWriter(os.path.join(filePath, fileName))
+    writer = pd.ExcelWriter(os.path.join(file_path, fileName))
     samples_ToExport_df.to_excel(writer, index=False, sheet_name="Samples")
     acquisitions_ToExport_df.to_excel(writer, index=False, sheet_name="Acquisitions")
     writer.close()
