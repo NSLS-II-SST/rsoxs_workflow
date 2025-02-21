@@ -66,8 +66,7 @@ def pickLocationsFromSpirals( ## Intended to be an updated, data-security-compli
 """
 ## Imports
 
-#from rsoxs_scans.spreadsheets import load_samplesxlsx, save_samplesxlsx
-from rsoxs_scans.configurationLoadSaveSanitize import loadConfigurationSpreadsheet_Local, saveConfigurationSpreadsheet_Local
+from rsoxs_scans.configuration_load_save_sanitize import load_configuration_spreadsheet_local, save_configuration_spreadsheet_local
 from rsoxs_scans.spiralsAnalysis import pickLocationsFromSpirals
 
 import PyHyperScattering as phs
@@ -84,7 +83,7 @@ Catalog
 ## Use the function
 
 pathConfiguration = r"/content/drive/Shareddrives/NISTPostdoc/CharacterizationData/BeamTime/20250123_SST1_Commissioning_Jordan-Sweet/DataAnalysis/in_2025-02-01_UpdatedBar.xlsx"
-configuration = loadConfigurationSpreadsheet_Local(pathConfiguration) 
+configuration = load_configuration_spreadsheet_local(pathConfiguration) 
 
 configuration = pickLocationsFromSpirals(configuration=configuration,
                             sampleID="OpenBeam_NIST",
@@ -93,6 +92,6 @@ configuration = pickLocationsFromSpirals(configuration=configuration,
                             locationsSelected_Indices=[0, 8, 15]
                             )
 
-saveConfigurationSpreadsheet_Local(configuration=configuration, name="SpiralSpotsPicked", path=r"/content/drive/Shareddrives/NISTPostdoc/CharacterizationData/BeamTime/20250123_SST1_Commissioning_Jordan-Sweet/DataAnalysis/")
+save_configuration_spreadsheet_local(configuration=configuration, file_label="SpiralSpotsPicked", file_path=r"/content/drive/Shareddrives/NISTPostdoc/CharacterizationData/BeamTime/20250123_SST1_Commissioning_Jordan-Sweet/DataAnalysis/")
 
 """
