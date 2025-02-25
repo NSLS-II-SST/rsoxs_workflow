@@ -389,9 +389,9 @@ acquisitionParameters_Default = {
     "sample_id": None,
     "configuration_instrument": "",
     "scan_type": "",
-    "energy_list_parameters": None,
+    "energy_list_parameters": 150,
     "polarization_frame": "lab",
-    "polarizations": None,
+    "polarizations": [0],
     "exposure_time": 1,
     "exposures_per_energy": 1,
     "sample_angles": [0],
@@ -448,19 +448,18 @@ def sanitizeAcquisition(acquisitionInput):
     for parameterName in ["polarizations", "sample_angles"]:
         if isinstance(acquisition[parameterName], (int, float)):
             acquisition[parameterName] = [acquisition[parameterName]]
-        elif acquisition[parameterName] is not None:
-            if not isinstance(acquisition[parameterName], (list, tuple)): raise ValueError("Please enter valid " + str(parameterName))
-            else:
-                for angle in acquisition[parameterName]:
-                    if parameterName == "polarizations" and (acquisition[parameterName] is not None):
-                        if not (angle == -1
-                                or (0 <= angle <= 180)):
-                            raise ValueError("Please enter valid " + str(parameterName))
-                    if parameterName == "sample_angles":
-                        temp = 0 ## TODO: replace placeholder with something meaningful
-                        ## TODO: need better way to deal with Sample tab entries.  Probably need to have configuration as an input
-                        ## TODO: on a broader level, probably want to remove angle from bar entry and only have it in acquisitions
-                
+        if not isinstance(acquisition[parameterName], (list, tuple)): raise ValueError("Please enter valid " + str(parameterName))
+        else:
+            for angle in acquisition[parameterName]:
+                if parameterName == "polarizations":
+                    if not (angle == -1
+                            or (0 <= angle <= 180)):
+                        raise ValueError("Please enter valid " + str(parameterName))
+                if parameterName == "sample_angles":
+                    temp = 0 ## TODO: replace placeholder with something meaningful
+                    ## TODO: need better way to deal with Sample tab entries.  Probably need to have configuration as an input
+                    ## TODO: on a broader level, probably want to remove angle from bar entry and only have it in acquisitions
+            
     
     parameterName = "exposure_time"
     if not isinstance(acquisition[parameterName], (int, float)): raise TypeError(str(parameterName) + " must be a single number.")
@@ -497,11 +496,9 @@ def sanitizeTimeScan(acquisitionInput):
     acquisition = copy.deepcopy(acquisitionInput)
     parameter = "energy_list_parameters"
     if not (
-        acquisition[parameter] is None
-        or acquisition[parameter] == ""
-        or isinstance(acquisition[parameter], (float, int))
+        isinstance(acquisition[parameter], (float, int))
     ):
-        raise TypeError(str(parameter) + " must be a single number or left blank.")
+        raise TypeError(str(parameter) + " must be a single number.")
 
     return acquisition
 
@@ -509,9 +506,8 @@ def sanitizeTimeScan(acquisitionInput):
 def sanitizeSpirals(acquisitionInput):
     acquisition = copy.deepcopy(acquisitionInput)
     parameter = "energy_list_parameters"
-    if not (acquisition[parameter] is None 
-            or isinstance(acquisition[parameter], (float, int))):
-        raise TypeError(str(parameter) + " must be a single number or left blank.")
+    if not (isinstance(acquisition[parameter], (float, int))):
+        raise TypeError(str(parameter) + " must be a single number.")
 
     parameterName = "spiral_dimensions"
     if acquisition[parameterName] is None:
