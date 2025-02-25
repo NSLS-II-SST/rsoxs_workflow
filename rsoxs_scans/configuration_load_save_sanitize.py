@@ -438,6 +438,7 @@ def sanitizeAcquisition(acquisitionInput):
                                         "WAXS_OpenBeamImages",
                                         "WAXSNEXAFS",
                                         "WAXS",
+                                        "WAXS_LowFlux",
                                         ):
         raise ValueError("Please enter valid " + str(parameterName))
 
