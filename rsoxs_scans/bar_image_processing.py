@@ -35,3 +35,5 @@ def stitch_sample(images, step_size, y_off, from_image=None, flip_file=False):
     #fig.canvas.mpl_connect("key_press_event", plot_key_press)
     plt.show()
     return result
+
+
