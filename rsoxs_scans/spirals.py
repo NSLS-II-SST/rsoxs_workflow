@@ -3,9 +3,22 @@
 """
 
 # imports
+import copy
 from copy import deepcopy
 from .defaults import *
+import numpy as np
 
+
+
+
+
+
+
+
+
+
+
+## Eliot's old code is below
 
 def spiral_scan_enqueue(
     diameter=default_diameter,

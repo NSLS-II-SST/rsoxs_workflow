@@ -222,7 +222,7 @@ def load_samplesxlsx(filename: str, verbose=False):
         verbose=verbose,
     )
 
-    # Replace NaNs with empty string
+    # Replace NaNs with empty string ## PK: Why is this necessary?
     df_bar.replace(np.nan, "", regex=True, inplace=True)
 
     # Convert dataframe to a list of dictionaries, each row is a list element and each column is a key->value pair
@@ -714,6 +714,7 @@ def save_samplesxlsx(bar, name="", path=""):
 
     filename = path + f'out_{datetime.today().strftime("%Y-%m-%d_%H-%M-%S")}_{name}.xlsx'
 
+    ## PK: Why is this here twice?  There is something similar in load_samplexlsx as well.
     for samp in bar:
         for acq in samp.get("acq_history", []):
             for arg in acq["arguments"]:
@@ -734,7 +735,7 @@ def save_samplesxlsx(bar, name="", path=""):
                     cleanacq[key] = orjson.dumps(dict(acq[key])) #cleanacq[key] = json.dumps(acq[key]) ## This is causing JSON serialization issues
                 """
             acqlist.append(cleanacq)
-    sampledf = pd.DataFrame.from_dict(bar, orient="columns")
+    sampledf = pd.DataFrame.from_dict(bar, orient="columns") ## PK: Why is this line present if it is overwritten below?
     df_bar = deepcopy(sampledf)
     testdict = df_bar.to_dict(orient="records")
     cleanbar = []
