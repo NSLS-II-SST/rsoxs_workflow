@@ -1,6 +1,9 @@
 ===========
-RSoXS_Scans
+RSoXS_Workflow (formerly known as RSoXS_Scans)
 ===========
+
+Note: as of March 2025, none of the contents of this codebase have been used in beamline operation or experimental planning.  Please do not use notebooks or spreadsheets currently in this codebase.  The information below is out-of-date and will be updated to reflect upcoming changes.
+
 
 .. image:: https://img.shields.io/travis/EliotGann/rsoxs_scans.svg
         :target: https://travis-ci.org/EliotGann/rsoxs_scans
