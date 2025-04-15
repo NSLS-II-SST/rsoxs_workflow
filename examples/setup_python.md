@@ -25,7 +25,7 @@ To aid this workflow, download Git (https://git-scm.com/download/win).  Alternat
        conda create -n YOUR_ENVIRONMENT_NAME ipykernel ...
     ```
     The purpose of the conda environment is to contain the necessary package versions that will enable data reduction and not conflict with other packages.
-    - Run the following to add the environment to your Jupyter notebook selection.  The display name and environment name do not have to be the same.
+    - Run the following to add the environment to your Jupyter notebook selection.  The display name and environment name do not have to be the same. TODO: this might have to be done after activating the environment?  I had issues when I did outside the environment, like the kernel kept disconnecting.
   
     ```  
        python -m ipykernel install --user --name YOUR_ENVIRONMENT_NAME --display-name YOUR_ENVIRONMENT_NAME
