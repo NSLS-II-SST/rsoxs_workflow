@@ -8,6 +8,12 @@ import datetime
 import re, warnings, httpx
 import uuid
 
+from .default_energy_parameters import energy_list_parameters
+
+## Prior to 2025, this needs to be changed manually at the beginning of each cycle.
+## With data security upgrades in 2025, this data should be entered automatically into metadata and may no longer be needed.  Test this before removing.
+CURRENT_CYCLE = '2025-1' 
+
 
 
 def load_configuration_from_spreadsheet(file_path):
