@@ -24,7 +24,7 @@ To aid this workflow, download Git (https://git-scm.com/download/win).  Alternat
     ```  
        conda create -n YOUR_ENVIRONMENT_NAME ipykernel ...
     ```
-  The purpose of the conda environment is to contain the necessary package versions that will enable data reduction and not conflict with other packages.
+    The purpose of the conda environment is to contain the necessary package versions that will enable data reduction and not conflict with other packages.
     - Run the following to add the environment to your Jupyter notebook selection.  The display name and environment name do not have to be the same.
   
     ```  
