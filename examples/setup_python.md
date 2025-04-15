@@ -18,12 +18,19 @@ To aid this workflow, download Git (https://git-scm.com/download/win).  Alternat
      conda deactivate
   ```
 
-- Create a new environment if a suitable one does not exist.  Replace `YOUR_ENVIRONMENT_NAME` with a an environment name of choice that does not contain any spaces.  If needed, the ``...`` can be replaced with other conda packages to be installed in this environment.  The current notebook was run with the ``...`` omitted.  After loading some packages, you will be asked if you want to proceed.  Enter y (yes).
+- If a suitable environment does not exist, follow the steps below.  Otherwise, move onto activating an environment.
+    - Create a new environment.  Replace `YOUR_ENVIRONMENT_NAME` with a an environment name of choice that does not contain any spaces.  If needed, the `...` can be replaced with other conda packages to be installed in this environment.  The current notebook was run with the `...` omitted.  After loading some packages, you will be asked if you want to proceed.  Enter y (yes).
   
-  ```  
-     conda create -n YOUR_ENVIRONMENT_NAME ipykernel ...
-  ```
-  If there already is an appropriate environment, skip this step.  The purpose of the conda environment is to contain the necessary package versions that will enable data reduction and not conflict with other packages.
+    ```  
+       conda create -n YOUR_ENVIRONMENT_NAME ipykernel ...
+    ```
+  The purpose of the conda environment is to contain the necessary package versions that will enable data reduction and not conflict with other packages.
+    - Run the following to add the environment to your Jupyter notebook selection.  The display name and environment name do not have to be the same.
+  
+    ```  
+       python -m ipykernel install --user --name YOUR_ENVIRONMENT_NAME --display-name YOUR_ENVIRONMENT_NAME
+    ```
+
 
 - Activate the desired environment.  After running this command, the selected environment name should appear in parentheses in the command prompt.
   
@@ -32,12 +39,6 @@ To aid this workflow, download Git (https://git-scm.com/download/win).  Alternat
   ```
   If you do not remember your environment name, you can run `conda env list` to display a list of environments that currently exist.  If there is an environment you want to delete, first ensure it is not active, and then run `conda remove -n YOUR_ENVIRONMENT_NAME --all`.  The flat `--all` removes the entire environment.
 
-- Run the following to add the environment to your Jupyter notebook selection.  The display name and environment name do not have to be the same.
-  
-  ```  
-     python -m ipykernel install --user --name YOUR_ENVIRONMENT_NAME --display-name YOUR_ENVIRONMENT_NAME
-  ```
-  TODO: check if this step can be run before activating the environment so that all one-time steps can grouped together and then the activation step is done each time.
 
 ## Install packages and dependencies
 
@@ -69,6 +70,7 @@ If a CondaSSL error is encountered during this step, the following solution can 
 
 ### Install rsoxs_workflow
 
+TODO: add instructions
 (for testing spreadsheet sanitization and for alignment scans)
 
 ### Install JupyterLab
