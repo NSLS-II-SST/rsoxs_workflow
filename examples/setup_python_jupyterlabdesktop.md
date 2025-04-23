@@ -1,0 +1,109 @@
+# Set up Python for data viewing and reduction
+
+The instructions below are an example of how a Python environment can be set up to view and reduce data in a local JupyterLab notebook using the JupyterLab Desktop on a Windows computer.  In this example, all steps outlined here were run in a terminal command line interface, not a Jupyter notebook.  Some of these instructions *might* work on other platforms such as Google Colab or the NSLS II Jupyterhub, but there are no guarantees.
+
+## Perform one-time installations
+- Install JupyterLab Desktop: https://github.com/jupyterlab/jupyterlab-desktop
+- To aid this workflow, download Git (https://git-scm.com/download/win).  Alternatively GitHub desktop can be donwloaded.  Then in the command prompt (not Anaconda Prompt), run `winget install --id Git.Git -e --source winget`.  After this, if you are able to run ``git --version`` and have a version number outputted, the installation was successful.  If Anaconda Prompt was open, it may need to be restarted.
+
+TODO: everything below needs to be updated.
+## Create and activate an environment
+
+- Open the Anaconda Prompt.  Do not use the terminal feature after opening JupyterLab.
+  
+- Identify the current conda environment, which appears in parentheses at the beginning of the command prompt. If a conda environment that is not base and is not the desired environment is active, deactivate the conda environment. Do not deactivate the base environment.
+
+  ```
+     conda deactivate
+  ```
+
+- If a suitable environment does not exist, follow the steps below.  Otherwise, move onto activating an environment.
+    - Create a new environment.  Replace `YOUR_ENVIRONMENT_NAME` with a an environment name of choice that does not contain any spaces.  If needed, the `...` can be replaced with other conda packages to be installed in this environment.  The current notebook was run with the `...` omitted.  After loading some packages, you will be asked if you want to proceed.  Enter y (yes).
+  
+    ```  
+       conda create -n YOUR_ENVIRONMENT_NAME ipykernel ...
+    ```
+    The purpose of the conda environment is to contain the necessary package versions that will enable data reduction and not conflict with other packages.
+    - Run the following to add the environment to your Jupyter notebook selection.  The display name and environment name do not have to be the same. TODO: this might have to be done after activating the environment?  I had issues when I did outside the environment, like the kernel kept disconnecting.
+  
+    ```  
+       python -m ipykernel install --user --name YOUR_ENVIRONMENT_NAME --display-name YOUR_ENVIRONMENT_NAME
+    ```
+
+
+- Activate the desired environment.  After running this command, the selected environment name should appear in parentheses in the command prompt.
+  
+  ```
+       conda activate YOUR_ENVIRONMENT_NAME
+  ```
+  If you do not remember your environment name, you can run `conda env list` to display a list of environments that currently exist.  If there is an environment you want to delete, first ensure it is not active, and then run `conda remove -n YOUR_ENVIRONMENT_NAME --all`.  The flat `--all` removes the entire environment.
+
+
+## Install packages and dependencies
+
+### Install Python
+
+Check the Python version.  Use version 3.12 or lower for PyHyperScattering to work. (TODO: PyHyperScattering 0.2.9 should work on python 3.13, but I have gotten errors while doing that.)
+
+```  
+   python --version
+```
+  
+If needed, install the correct Python version.
+
+```  
+   conda install python==3.12
+```
+  
+If a CondaSSL error is encountered during this step, the following solution can be run, and then Python installation can be retried: https://github.com/conda/conda/issues/8273
+
+### Install PyHyperScattering
+
+`pip install pyhyperscattering[bluesky,ui]` installs PyHyperScattering.  The `bluesky` portion installs Bluesky-related dependencies needed to access the NSLS II Tiled database. The `ui` portion installs the necessary dependencies to draw a mask.  In some cases, it may be necessary to clone and check out a later PyHyperScattering commit or branch instead of the default version. Below are some examples.
+
+- `pip install "git+https://github.com/usnistgov/PyHyperScattering.git#egg=PyHyperScattering[bluesky, ui]"` installs the latest commit on the main branch.
+
+- `pip install "git+https://github.com/usnistgov/PyHyperScattering.git@Issue170_UpdateDatabrokerImports#egg=PyHyperScattering[bluesky, ui]"` installs the latest commit on the branch named `Issue170_UpdateDatabrokerImports`.
+
+- `pip install "git+https://github.com/usnistgov/PyHyperScattering.git@6657973#egg=PyHyperScattering[bluesky, ui]"` installs commit `6657973`.
+
+### Install rsoxs_workflow
+
+TODO: add instructions
+(for testing spreadsheet sanitization and for alignment scans)
+
+### Install JupyterLab
+
+`pip install jupyterlab` is required if using the Anaconda distribution but might not be necessary in other cases (e.g., NSLS II JupyterHub, Google Colab)
+
+### Other installs
+
+If there are errors during installation or later on, it might be necessary to install additional packages and then retry the pip installs.  Below is a list of what might be needed.
+
+- Microsoft C++ Build Tools (https://visualstudio.microsoft.com/visual-cpp-build-tools/).  This is installed outside the Anaconda prompt.  Computer should be restarted after this installation.
+
+- `pip install --upgrade holoviews`  This may be necessary if mask drawing is not working.  The `--upgrade` is necessary to ensure that the package will get upgraded even if some version of it is currently installed.
+
+- `pip install natsort` allows use of the natsort package, but is not necessary for the main functioning of PyHyperScattering.
+
+
+## Open JupyterLab
+
+- Start up JupyterLab from the Anaconda command prompt.  Do not open JupyterLab using Anaconda's GUI menu.
+  
+  ```
+     jupyter-lab
+  ```
+  
+- When prompted to select a kernel, choose the desired environment.  If not prompted, ensure that the kernel on the top right-hand corner of the page is set to the correct environment name.
+
+- Proceed to using a Jupyter notebook of choice to reduce and analyze data.
+
+
+## Additional resources
+- Full list of PyHyperScattering dependencies: https://github.com/usnistgov/PyHyperScattering/blob/main/pyproject.toml
+- Further guidance on creating and managing environments: https://jupyter.nsls2.bnl.gov/hub/guide
+- Conda documentation: https://docs.conda.io/projects/conda/en/stable/
+- Xarray documentation: https://docs.xarray.dev/en/stable/
+- Numpy documentation: https://numpy.org/doc/2.1/
+- MatPlotLib documentation: https://matplotlib.org/stable/index.html
