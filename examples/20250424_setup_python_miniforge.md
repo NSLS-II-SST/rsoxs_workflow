@@ -4,7 +4,7 @@ The instructions below are an example of how a Python environment can be set up 
 
 ## Perform one-time installations
 - Install Miniforge: https://github.com/conda-forge/miniforge/releases
-- To aid this workflow, download Git (https://git-scm.com/download/win).  Alternatively GitHub desktop can be donwloaded.  Then in the command prompt (not Anaconda Prompt), run `winget install --id Git.Git -e --source winget`.  After this, if you are able to run ``git --version`` and have a version number outputted, the installation was successful.  If Anaconda Prompt was open, it may need to be restarted.
+- To aid this workflow, download Git (https://git-scm.com/download/win).  Then in the command prompt (not Anaconda Prompt), run `winget install --id Git.Git -e --source winget`.  Alternatively GitHub desktop can be donwloaded.  After this, if you are able to run ``git --version`` and have a version number outputted, the installation was successful.  If Miniforge Prompt was open, it may need to be restarted.
 
 ## Create a new environment and install desired packages (one-time)
 
@@ -19,6 +19,7 @@ The purpose of the conda environment is to contain the necessary package version
   ```  
      conda create -n YOUR_ENVIRONMENT_NAME ipykernel jupyterlab ...
   ```
+  The `-n` is used to identify the environment by its name.  Alternatively, `-p` can be used followed by a file path to identify an environment by a desired file path. 
   
 - Activate the desired environment.
   
@@ -80,6 +81,8 @@ TODO: add instructions
        conda activate YOUR_ENVIRONMENT_NAME
   ```
 
+  If you do not remember your environment, you can run `conda env list` to display a list of environments that currently exist.  You can run `conda info --envs` to check which environment is active.
+
 - Start up JupyterLab.
   
   ```
@@ -101,6 +104,12 @@ If there are errors during installation or later on, it might be necessary to in
 
 - `pip install natsort` allows use of the natsort package, but is not necessary for the main functioning of PyHyperScattering.
 
+
+## Optional notes on environment management
+
+To exit out of an environment, `conda activate base` can be run.  Running `conda deactivate` also can achieve a similar result, but this should not be run if you are already in the base environment.
+
+If there is an environment you want to delete, first ensire it is not active and then run `conda remove -n YOUR_ENVIRONMENT_NAME --all`.  The flat `--all` removes the entire environment.
 
 ## Additional resources
 - Full list of PyHyperScattering dependencies: https://github.com/usnistgov/PyHyperScattering/blob/main/pyproject.toml
