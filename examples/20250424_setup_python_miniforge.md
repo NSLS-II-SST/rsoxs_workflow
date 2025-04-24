@@ -104,6 +104,12 @@ If there are errors during installation or later on, it might be necessary to in
 
 - `pip install natsort` allows use of the natsort package, but is not necessary for the main functioning of PyHyperScattering.
 
+Also note that some installs might not work on the same line as `conda create`.  These can be installed after activating the environment.
+
+- `pyhyperscattering[bluesky,ui]` may not install the necessary dependencies and may result in an older version of PyHyperScattering to be imported.  This might be an issue if trying to use a GUI to install packages (e.g., JupyterLab Desktop).
+  
+- Installs involving git cloning, such as installing a specific commit or branch.
+
 
 ## Optional notes on environment management
 
