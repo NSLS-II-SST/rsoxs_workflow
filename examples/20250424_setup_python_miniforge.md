@@ -2,6 +2,9 @@
 
 The instructions below are an example of how a Python environment can be set up to view and reduce data in a local JupyterLab notebook using Miniforge on a Windows computer.  In this example, all steps outlined here were run in a terminal command line interface, not a Jupyter notebook.  Some of these instructions *might* work on other platforms such as the NSLS II Jupyterhub, JupyterLab Desktop, or Google Colab, but there are no guarantees.
 
+<br>
+<br>
+
 ## Perform one-time installations
 - Install Miniforge: https://github.com/conda-forge/miniforge/releases
 - To aid this workflow, download Git (https://git-scm.com/download/win).  Then in the command prompt (not Anaconda Prompt), run `winget install --id Git.Git -e --source winget`.  Alternatively GitHub desktop can be donwloaded.  After this, if you are able to run ``git --version`` and have a version number outputted, the installation was successful.  If Miniforge Prompt was open, it may need to be restarted.
@@ -72,6 +75,8 @@ The `bluesky` portion installs Bluesky-related dependencies needed to access the
 Install rsoxs_workflow, which will be used to test the samples/acquisitions spreadsheet, perform some necessary sample alignment operations, and to view alignment scans.
 TODO: add instructions
 
+<br>
+<br>
 
 ## Open JupyterLab
 
@@ -93,10 +98,12 @@ TODO: add instructions
 
 - Proceed to using a Jupyter notebook of choice to reduce and analyze data.
 
+<br>
+<br>
 
 ## Troubleshooting and other installs
 
-If there are errors during installation or later on, it might be necessary to install additional packages and then retry the pip installs.  Below is a list of what might be needed.
+Issues may arise if certain package versions are not compatible with how they are being run.  In general, it can be helpful to run `pip freeze` to get a list of all packages and their versions in this environment.  This list can be compared to that from a different environment or user who is not running into the issues, and specific package versions can be adjusted in the orignal environment to troubleshoot.  Below is a list of some common installs that may be needed/helpful.
 
 - Microsoft C++ Build Tools (https://visualstudio.microsoft.com/visual-cpp-build-tools/).  This is installed outside the Anaconda prompt.  Computer should be restarted after this installation.
 
@@ -109,6 +116,10 @@ Also note that some installs might not work on the same line as `conda create`. 
 - `pyhyperscattering[bluesky,ui]` may not install the necessary dependencies and may result in an older version of PyHyperScattering to be imported.  This might be an issue if trying to use a GUI to install packages (e.g., JupyterLab Desktop).
   
 - Installs involving git cloning, such as installing a specific commit or branch.
+
+
+<br>
+<br>
 
 
 ## Optional notes on environment management
