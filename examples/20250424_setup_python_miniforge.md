@@ -40,19 +40,21 @@ The purpose of the conda environment is to contain the necessary package version
 
 ### Install Python
 
-Check the Python version.  Use version 3.12 or lower for PyHyperScattering to work.
+Check the Python version.
 
 ```  
    python --version
 ```
   
-It may be necessary to downgrade to Python version 3.12 for PyHyperScattering (even though some users have had success with Python version 3.13).
+It may be necessary to downgrade to Python version 3.12 for PyHyperScattering for Windows computers. (even though some users have had success with Python version 3.13).
 
 ```  
    conda install python==3.12
 ```
   
 If a CondaSSL error is encountered during this step, the following solution can be run, and then Python installation can be retried: https://github.com/conda/conda/issues/8273
+
+Although Python version 3.13 works successfully on Mac and Linux, the command interface (CI) build chain on a Windows computer may not be able to find a C compiler to build a 1.x numpy against Python 3.13, and the container might run out of resources while compiling.
 
 ### Install PyHyperScattering
 
