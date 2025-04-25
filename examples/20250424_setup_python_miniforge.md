@@ -103,7 +103,7 @@ TODO: add instructions
 
 ## Troubleshooting and other installs
 
-Issues may arise if certain package versions are not compatible with how they are being run.  In general, it can be helpful to run `pip freeze` to get a list of all packages and their versions in this environment.  This list can be compared to that from a different environment or user who is not running into the issues, and specific package versions can be adjusted in the orignal environment to troubleshoot.  Below is a list of some common installs that may be needed/helpful.
+Issues may arise if certain package versions are not compatible with how they are being run.  In general, it can be helpful to run `pip freeze` in the terminal (or `!pip freeze` in a Jupyter notebook) to get a list of all packages and their versions in this environment.  This list can be compared to that from a different environment or user who is not running into the issues, and specific package versions can be adjusted in the orignal environment to troubleshoot.  Below is a list of some common installs that may be needed/helpful.
 
 - Microsoft C++ Build Tools (https://visualstudio.microsoft.com/visual-cpp-build-tools/).  This is installed outside the Anaconda prompt.  Computer should be restarted after this installation.
 
