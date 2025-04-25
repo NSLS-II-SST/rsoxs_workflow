@@ -117,6 +117,9 @@ Also note that some installs might not work on the same line as `conda create`. 
   
 - Installs involving git cloning, such as installing a specific commit or branch.
 
+<br>
+<br>
+TODO: link to an issue where I can document specific issues I've had.
 
 <br>
 <br>
