@@ -135,6 +135,7 @@ If there is an environment you want to delete, first ensire it is not active and
 
 ## Additional resources
 - Miniforge installation instructions and python tutorial: https://sw-carpentry-python-2025-05-c5c065.ipages.nist.gov/
+- Git installation: https://carpentries.github.io/workshop-template/install_instructions/#git
 - Full list of PyHyperScattering dependencies: https://github.com/usnistgov/PyHyperScattering/blob/main/pyproject.toml
 - Further guidance on creating and managing environments: https://jupyter.nsls2.bnl.gov/hub/guide
 - Conda documentation: https://docs.conda.io/projects/conda/en/stable/
