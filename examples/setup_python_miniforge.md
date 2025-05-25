@@ -7,6 +7,7 @@ The instructions below are an example of how a Python environment can be set up 
 
 ## Perform one-time installations
 - Install Miniforge: https://github.com/conda-forge/miniforge/releases
+    - If it is necessary to switch from Anaconda to Miniforge, instructions can be found here for those with BNL accounts: https://docs.nsls2.bnl.gov/docs/how-to/miniforge.html.  Additional instructions are available here: https://stackoverflow.com/questions/67695893/how-do-i-completely-purge-and-disable-the-default-channel-in-anaconda-and-switch/67708768#67708768
 - To aid this workflow, download Git (https://git-scm.com/download/win).  Then in the command prompt (not Anaconda Prompt), run `winget install --id Git.Git -e --source winget`.  Alternatively GitHub desktop can be donwloaded.  After this, if you are able to run ``git --version`` and have a version number outputted, the installation was successful.  If Miniforge Prompt was open, it may need to be restarted.
 
 ## Create a new environment and install desired packages (one-time)
