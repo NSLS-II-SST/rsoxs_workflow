@@ -1,6 +1,6 @@
 # Set up Python for data viewing and reduction
 
-The instructions below are an example of how a Python environment can be set up to view and reduce data in a local JupyterLab notebook using Miniforge on a Windows computer.  In this example, all steps outlined here were run in a terminal command line interface, not a Jupyter notebook.  Some of these instructions *might* work on other platforms such as the NSLS II Jupyterhub, JupyterLab Desktop, or Google Colab, but there are no guarantees.
+The instructions below are an example of how a Python environment can be set up to view and reduce data in a local JupyterLab notebook using Miniforge on a Windows computer.  In this example, all steps outlined here were run in a terminal command line interface, not a Jupyter notebook.  Some of these instructions *might* work on other platforms such as the NSLS II Jupyterhub, JupyterLab Desktop, or Google Colab, but this has not been tested as thoroughly yet.
 
 <br>
 <br>
@@ -134,6 +134,7 @@ To exit out of an environment, `conda activate base` can be run.  Running `conda
 If there is an environment you want to delete, first ensire it is not active and then run `conda remove -n YOUR_ENVIRONMENT_NAME --all`.  The flat `--all` removes the entire environment.
 
 ## Additional resources
+- Miniforge installation instructions and python tutorial: https://sw-carpentry-python-2025-05-c5c065.ipages.nist.gov/
 - Full list of PyHyperScattering dependencies: https://github.com/usnistgov/PyHyperScattering/blob/main/pyproject.toml
 - Further guidance on creating and managing environments: https://jupyter.nsls2.bnl.gov/hub/guide
 - Conda documentation: https://docs.conda.io/projects/conda/en/stable/
