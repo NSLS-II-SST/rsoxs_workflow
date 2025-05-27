@@ -50,12 +50,12 @@ Check the Python version.
 It may be necessary to downgrade to Python version 3.12 for PyHyperScattering for Windows computers. (even though some users have had success with Python version 3.13).
 
 ```  
-   conda install python==3.12
+   conda install python==3.12.10
 ```
   
 If a CondaSSL error is encountered during this step, the following solution can be run, and then Python installation can be retried: https://github.com/conda/conda/issues/8273
 
-Although Python version 3.13 works successfully on Mac and Linux, the command interface (CI) build chain on a Windows computer may not be able to find a C compiler to build a 1.x numpy against Python 3.13, and the container might run out of resources while compiling.
+Although Python version 3.13 works successfully on Mac and Linux, the CI build chain on a Windows computer may not be able to find a C compiler to build a 1.x numpy against Python 3.13, and the container might run out of resources while compiling.  Using as new as possible of a version of Python 3.12 will include the most security and bug fix updates.
 
 ### Install PyHyperScattering
 
