@@ -78,6 +78,15 @@ The `bluesky` portion installs Bluesky-related dependencies needed to access the
 Install rsoxs_workflow, which will be used to test the samples/acquisitions spreadsheet, perform some necessary sample alignment operations, and to view alignment scans.
 TODO: add instructions
 
+Temporary workaround until rsoxs_workflow is usable:
+```
+    pip install "git+https://github.com/xraygui/nbs-core.git"
+    pip install "git+https://github.com/xraygui/nbs-bl.git"
+    pip install "git+https://github.com/NSLS-II-SST/sst_base.git"
+    pip install "git+https://github.com/usnistgov/sst-rsoxs.git@20250526_ModifySpreadsheet_"
+```
+
+
 <br>
 <br>
 
