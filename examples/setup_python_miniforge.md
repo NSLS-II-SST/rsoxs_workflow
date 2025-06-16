@@ -18,12 +18,12 @@ The purpose of the conda environment is to contain the necessary package version
 
 - Open the Miniforge Prompt (or Command Prompt or Windows PowerShell).  Do not use the terminal feature after opening JupyterLab.
 
-- Create a new environment.  Replace `YOUR_ENVIRONMENT_NAME` with a an environment name of choice that does not contain any spaces.  If needed, the `...` can be replaced with other conda packages to be installed in this environment separated by spaces.  In this example, `...` omitted.  After loading some packages, you will be asked if you want to proceed.  Enter y (yes).
+- Create a new environment.  Replace `YOUR_ENVIRONMENT_NAME` with a an environment name of choice that does not contain any spaces.  If needed, additional conda packages can be installed by adding the name of the packages separated by spaces at the end of the line.  After loading some packages, you will be asked if you want to proceed.  Enter y (yes).
 
   ```  
-     conda create -n YOUR_ENVIRONMENT_NAME ipykernel jupyterlab ...
+     conda create -n YOUR_ENVIRONMENT_NAME ipykernel jupyterlab zarr
   ```
-  The `-n` is used to identify the environment by its name.  Alternatively, `-p` can be used followed by a file path to identify an environment by a desired file path. 
+  The `-n` is used to identify the environment by its name.  Alternatively, `-p` can be used followed by a file path to identify an environment by a desired file path. The zarr package is useful for saving xarray data, but the installation can be skipped if desired; it is not essential to the functioning of PyHyperScattering or other NIST packages.
   
 - Activate the desired environment.
   
