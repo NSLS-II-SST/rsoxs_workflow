@@ -8,7 +8,7 @@ The instructions below are an example of how a Python environment can be set up 
 ## Perform one-time installations
 - Install Miniforge: https://github.com/conda-forge/miniforge/releases
     - If it is necessary to switch from Anaconda to Miniforge, instructions can be found here for those with BNL accounts: https://docs.nsls2.bnl.gov/docs/how-to/miniforge.html.  Additional instructions are available here: https://stackoverflow.com/questions/67695893/how-do-i-completely-purge-and-disable-the-default-channel-in-anaconda-and-switch/67708768#67708768
-- To aid this workflow, download Git (https://git-scm.com/download/win).  Then in the command prompt (not Anaconda Prompt), run `winget install --id Git.Git -e --source winget`.  Alternatively GitHub desktop can be donwloaded.  After this, if you are able to run ``git --version`` and have a version number outputted, the installation was successful.  If Miniforge Prompt was open, it may need to be restarted.
+- To aid this workflow, download Git (https://git-scm.com/download/win).  Then in the command prompt (not Miniforge Prompt), run `winget install --id Git.Git -e --source winget`.  Alternatively GitHub desktop can be donwloaded.  After this, if you are able to run ``git --version`` and have a version number outputted, the installation was successful.  If Miniforge Prompt was open, it may need to be restarted.
 
 ## Create a new environment and install desired packages (one-time)
 
@@ -104,7 +104,7 @@ The `bluesky` portion installs Bluesky-related dependencies needed to access the
 
 Issues may arise if certain package versions are not compatible with how they are being run.  In general, it can be helpful to run `pip freeze` in the terminal (or `!pip freeze` in a Jupyter notebook) to get a list of all packages and their versions in this environment.  This list can be compared to that from a different environment or user who is not running into the issues, and specific package versions can be adjusted in the orignal environment to troubleshoot.  Below is a list of some common installs that may be needed/helpful.
 
-- Microsoft C++ Build Tools (https://visualstudio.microsoft.com/visual-cpp-build-tools/).  This is installed outside the Anaconda prompt.  Computer should be restarted after this installation.
+- Microsoft C++ Build Tools (https://visualstudio.microsoft.com/visual-cpp-build-tools/).  This is installed outside the Miniforge prompt.  Computer should be restarted after this installation.
 
 - `pip install --upgrade holoviews`  This may be necessary if mask drawing is not working.  The `--upgrade` is necessary to ensure that the package will get upgraded even if some version of it is currently installed.
 
